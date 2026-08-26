@@ -50,7 +50,7 @@ export const PopoverContent = ({ record }: IProps) => {
     },
     {
       key: 'knowledgeDetails.process_duration',
-      label: t('processDuration'),
+      label: t('knowledgeDetails.processDuration'),
       children: `${(record.process_duration || 0).toFixed(2)} s`,
     },
     {

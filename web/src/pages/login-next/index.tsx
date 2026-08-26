@@ -304,7 +304,7 @@ const Login = () => {
       if (!data.nickname) {
         ctx.addIssue({
           path: ['nickname'],
-          message: 'nicknamePlaceholder',
+          message: t('nicknamePlaceholder'),
           code: z.ZodIssueCode.custom,
         });
         return;

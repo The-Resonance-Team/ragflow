@@ -1,15 +1,29 @@
 export default {
   translation: {
     common: {
+      confirm: 'Xác nhận',
+      back: 'Quay lại',
+      noResults: 'Không tìm thấy kết quả',
+      selectPlaceholder: 'Chọn giá trị',
+      selectAll: 'Chọn tất cả',
       delete: 'Xóa',
       deleteModalTitle: 'Bạn có chắc chắn muốn xóa mục này?',
-      ok: 'Có',
-      cancel: 'Không',
+      deleteThem: 'Bạn có chắc chắn muốn xóa các mục này?',
+      removeModalTitle: 'Bạn có chắc chắn muốn gỡ mục này?',
+      ok: 'OK',
+      cancel: 'Hủy',
+      yes: 'Có',
+      no: 'Không',
       total: 'Tổng cộng',
+      top: 'Top {{top}}',
       rename: 'Đổi tên',
       name: 'Tên',
       save: 'Lưu',
+      stop: 'Dừng',
+      resume: 'Tiếp tục chạy',
       namePlaceholder: 'Vui lòng nhập tên',
+      nameSlashError: 'Tên không được chứa dấu "/"',
+      descriptionPlaceholder: 'Nhập mô tả',
       next: 'Tiếp theo',
       create: 'Tạo mới',
       edit: 'Sửa',
@@ -18,13 +32,26 @@ export default {
       portugueseBr: 'Tiếng Bồ Đào Nha (Brazil)',
       chinese: 'Tiếng Trung giản thể',
       traditionalChinese: 'Tiếng Trung phồn thể',
+      russian: 'Tiếng Nga',
+      indonesian: 'Tiếng Indonesia',
+      indonesia: 'Tiếng Indonesia',
+      spanish: 'Tiếng Tây Ban Nha',
+      vietnamese: 'Tiếng Việt',
+      japanese: 'Tiếng Nhật',
+      german: 'Tiếng Đức',
+      french: 'Tiếng Pháp',
+      italian: 'Tiếng Ý',
       bulgarian: 'Tiếng Bulgaria',
       arabic: 'Tiếng Ả Rập',
+      turkish: 'Tiếng Thổ Nhĩ Kỳ',
+      dutch: 'Tiếng Hà Lan',
       language: 'Ngôn ngữ',
       languageMessage: 'Vui lòng chọn ngôn ngữ của bạn!',
       languagePlaceholder: 'chọn ngôn ngữ của bạn',
       copy: 'Sao chép',
       copied: 'Đã sao chép',
+      viewMore: 'Xem thêm',
+      viewLess: 'Thu gọn',
       comingSoon: 'Sắp ra mắt',
       download: 'Tải xuống',
       close: 'Đóng',
@@ -35,17 +62,39 @@ export default {
       s: 'S',
       pleaseSelect: 'Vui lòng chọn',
       pleaseInput: 'Vui lòng nhập',
+      modelUnavailable:
+        'Mô hình đã chọn trước đó đã bị xóa, vui lòng chọn mô hình khác',
       submit: 'Gửi',
-      vietnamese: 'Tiếng  việt',
-      spanish: 'Tiếng Tây Ban Nha',
-      japanese: 'Tiếng Nhật',
+      clear: 'Xóa bộ lọc',
       embedIntoSite: 'Nhúng vào trang web',
       openInNewTab: 'Mở trong tab mới',
-      nextPage: 'Tới',
-      previousPage: 'Lùi',
+      previousPage: 'Trước',
+      nextPage: 'Sau',
+      previous: 'Trước',
+      add: 'Thêm',
+      remove: 'Gỡ',
+      search: 'Tìm kiếm',
+      reset: 'Đặt lại',
+      noDataFound: 'Không tìm thấy dữ liệu.',
+      searchOrEnterToAdd: 'Tìm kiếm hoặc nhập để thêm',
+      noData: 'Không có dữ liệu',
+      promptPlaceholder: 'Nhập nội dung hoặc dùng / để chèn nhanh biến.',
+      mcp: {
+        namePlaceholder: 'Máy chủ MCP của tôi',
+        nameRequired:
+          'Phải dài từ 1–64 ký tự và chỉ chứa chữ cái, số, dấu gạch ngang và dấu gạch dưới.',
+        urlPlaceholder: 'https://api.example.com/v1/mcp',
+        tokenPlaceholder: 'vd. eyJhbGciOiJIUzI1Ni...',
+      },
+      selected: 'Đã chọn',
+      seeAll: 'Xem tất cả',
+      bulkOperate: 'Thao tác hàng loạt',
       owner: 'Chủ sở hữu',
+      running: 'Đang chạy...',
     },
     login: {
+      loginTitle: 'Đăng nhập vào tài khoản của bạn',
+      signUpTitle: 'Tạo tài khoản',
       login: 'Đăng nhập',
       signUp: 'Đăng ký',
       loginDescription: 'Rất vui được gặp lại bạn!',
@@ -61,310 +110,312 @@ export default {
       nicknamePlaceholder: 'Vui lòng nhập biệt danh',
       register: 'Tạo tài khoản',
       continue: 'Tiếp tục',
-      title: 'Bắt đầu xây dựng trợ lý ảo của bạn.',
+      title: 'Động cơ RAG hàng đầu cho ngữ cảnh LLM',
+      start: 'Bắt đầu ngay',
       description:
-        'Đăng ký miễn phí để khám phá công nghệ RAG hàng đầu. Tạo cơ sở kiến thức và AI để trao quyền cho doanh nghiệp của bạn.',
+        'Đăng ký miễn phí để khám phá công nghệ RAG hàng đầu. Tạo tập dữ liệu và AI để trao quyền cho doanh nghiệp của bạn.',
       review: 'từ hơn 500 đánh giá',
+      seeAll: 'Xem tất cả',
     },
     header: {
-      knowledgeBase: 'Cơ sở kiến thức',
+      knowledgeBase: 'Tập dữ liệu',
       chat: 'Chat',
       register: 'Đăng ký',
       signin: 'Đăng nhập',
       home: 'Trang chủ',
       setting: 'Cài đặt người dùng',
       logout: 'Đăng xuất',
-      fileManager: 'Quản lý tệp',
+      fileManager: 'Tệp',
+      skills: 'Kỹ năng',
       flow: 'Agent',
       search: 'Tìm kiếm',
+      welcome: 'Chào mừng đến với',
+      dataset: 'Tập dữ liệu',
+      memories: 'Bộ nhớ',
+      discord: 'Discord',
+      github: 'GitHub',
+      help: 'Trợ giúp',
     },
     knowledgeList: {
       welcome: 'Chào mừng trở lại',
-      description: 'Chúng ta sẽ sử dụng cơ sở kiến thức nào hôm nay?',
-      createKnowledgeBase: 'Tạo cơ sở kiến thức',
+      description: 'Hôm nay bạn sẽ sử dụng tập dữ liệu nào?',
+      createKnowledgeBase: 'Tạo tập dữ liệu',
       name: 'Tên',
-      namePlaceholder: 'Vui lòng nhập tên!',
+      namePlaceholder: 'Vui lòng nhập tên.',
       doc: 'Tài liệu',
       searchKnowledgePlaceholder: 'Tìm kiếm',
-      noMoreData: 'Tất cả chỉ có thế, không còn gì nữa',
+      noMoreData: 'Đã hết dữ liệu.',
+      parserRequired: 'Cần chọn phương thức phân khối',
+      dataFlowRequired: 'Cần chọn pipeline',
     },
     knowledgeDetails: {
-      dataset: 'Dữ liệu',
+      metadata: {
+        fields: 'trường',
+        selectFiles: 'Đã chọn {{count}} tệp',
+        fieldNameInvalid:
+          'Tên trường chỉ có thể chứa chữ cái hoặc dấu gạch dưới.',
+        builtIn: 'Có sẵn',
+        generation: 'Tạo tự động',
+        toMetadataSetting: 'Cài đặt tạo tự động',
+        toMetadataSettingTip: 'Đặt siêu dữ liệu tự động trong phần Cấu hình.',
+        descriptionTip:
+          'Cung cấp mô tả hoặc ví dụ để hướng dẫn LLM trích xuất giá trị cho trường này. Nếu để trống, hệ thống sẽ dựa vào tên trường.',
+        restrictDefinedValuesTip:
+          'Chế độ liệt kê: giới hạn LLM chỉ trích xuất theo các giá trị định sẵn. Xác định các giá trị bên dưới.',
+        valueExists:
+          'Giá trị đã tồn tại. Xác nhận để hợp nhất các mục trùng và kết hợp mọi tệp liên quan.',
+        fieldNameExists:
+          'Tên trường đã tồn tại. Xác nhận để hợp nhất các mục trùng và kết hợp mọi tệp liên quan.',
+        valueSingleExists:
+          'Giá trị đã tồn tại. Xác nhận để hợp nhất các mục trùng.',
+        fieldSingleNameExists:
+          'Tên trường đã tồn tại. Xác nhận để hợp nhất các mục trùng.',
+        fieldExists: 'Trường đã tồn tại.',
+        fieldSetting: 'Cài đặt trường',
+        changesAffectNewParses:
+          'Thay đổi chỉ ảnh hưởng đến các lần phân tích cú pháp mới.',
+        restrictDefinedValues: 'Giới hạn trong các giá trị đã định nghĩa',
+        metadataGenerationSettings: 'Cài đặt tạo siêu dữ liệu',
+        manageMetadata: 'Quản lý siêu dữ liệu',
+        metadata: 'Siêu dữ liệu',
+        values: 'Các giá trị',
+        value: 'Giá trị',
+        action: 'Hành động',
+        field: 'Trường',
+        type: 'Kiểu',
+        description: 'Mô tả',
+        fieldName: 'Tên trường',
+        editMetadata: 'Sửa siêu dữ liệu',
+        addMetadata: 'Thêm siêu dữ liệu',
+        deleteWarn: '{{field}} này sẽ bị xóa khỏi tất cả các tệp liên quan',
+        deleteManageFieldAllWarn:
+          'Trường này và toàn bộ giá trị tương ứng sẽ bị xóa khỏi tất cả các tệp liên quan.',
+        deleteManageValueAllWarn:
+          'Giá trị này sẽ bị xóa khỏi tất cả các tệp liên quan.',
+        deleteManageFieldSingleWarn:
+          'Trường này và toàn bộ giá trị tương ứng sẽ bị xóa khỏi tệp này.',
+        deleteManageValueSingleWarn: 'Giá trị này sẽ bị xóa khỏi tệp này.',
+        deleteSettingFieldWarn: `Trường này sẽ bị xóa; siêu dữ liệu hiện có không bị ảnh hưởng.`,
+        deleteSettingValueWarn: `Giá trị này sẽ bị xóa; siêu dữ liệu hiện có không bị ảnh hưởng.`,
+      },
+      redoAll: 'Xóa các khối hiện có',
+      applyAutoMetadataSettings: 'Áp dụng cài đặt siêu dữ liệu tự động toàn cục',
+      parseFileTip: 'Bạn có chắc chắn muốn phân tích cú pháp?',
+      parseFile: 'Phân tích cú pháp tệp',
+      pleaseSelectNonEmptyFileList:
+        'Vui lòng chọn một danh sách tệp không trống',
+      emptyMetadata: 'Chưa có siêu dữ liệu',
+      metadataField: 'Trường siêu dữ liệu',
+      systemAttribute: 'Thuộc tính hệ thống',
+      localUpload: 'Tải lên từ máy',
+      fileSize: 'Kích thước tệp',
+      fileType: 'Loại tệp',
+      uploadedBy: 'Người tải lên',
+      notGenerated: 'Chưa được tạo',
+      generatedOn: 'Được tạo vào ',
+      subbarFiles: 'Tệp',
+      generateKnowledgeGraph:
+        'Thao tác này sẽ trích xuất thực thể và quan hệ từ tất cả tài liệu trong tập dữ liệu này. Quá trình có thể mất một lúc để hoàn thành.',
+      generateRaptor:
+        'Thực hiện phân cụm và tóm tắt đệ quy các khối tài liệu để xây dựng cấu trúc cây phân cấp, giúp việc truy hồi nhận biết ngữ cảnh tốt hơn trên các tài liệu dài.',
+      generateArtifact:
+        'Biên dịch các trang artifact (wiki thực thể / khái niệm / chủ đề) từ mọi tài liệu được cấu hình với mẫu biên dịch tri thức. Mỗi lần chạy chỉ xử lý các khối mới thêm vào.',
+      generateToSkills:
+        'Xây dựng cây kỹ năng phân cấp từ tập dữ liệu này và lưu các trang kỹ năng đã tạo để tìm kiếm và tái sử dụng.',
+      raptor: 'RAPTOR',
+      artifact: 'Artifact',
+      toSkills: 'Chuyển thành kỹ năng',
+      processingType: 'Loại xử lý',
+      dataPipeline: 'Chuyển đổi hoặc cấu hình pipeline nạp dữ liệu.',
+      dataPipelineTitle: 'Pipeline nạp dữ liệu',
+      operations: 'Thao tác',
+      taskId: 'ID tác vụ',
+      duration: 'Thời lượng',
+      details: 'Chi tiết',
+      status: 'Trạng thái',
+      task: 'Tác vụ',
+      startDate: 'Ngày bắt đầu',
+      source: 'Nguồn',
+      fileName: 'Tên tệp',
+      datasetLogs: 'Tập dữ liệu',
+      fileLogs: 'Tệp',
+      overview: 'Nhật ký',
+      success: 'Thành công',
+      failed: 'Thất bại',
+      completed: 'Hoàn thành',
+      datasetLog: 'Nhật ký tập dữ liệu',
+      created: 'Đã tạo',
+      learnMore: 'Giới thiệu pipeline có sẵn',
+      general: 'Tổng hợp',
+      chunkMethodTab: 'Phương thức phân khối',
+      testResults: 'Kết quả',
+      testSetting: 'Cài đặt',
+      retrievalTesting: 'Kiểm tra truy hồi',
+      retrievalTestingDescription:
+        'Thực hiện kiểm tra truy hồi để kiểm tra xem RAGFlow có thể khôi phục nội dung mong muốn cho LLM hay không.',
+      Parse: 'Phân tích cú pháp',
+      dataset: 'Tập dữ liệu',
       testing: 'Kiểm tra truy hồi',
-      files: 'Các tệp',
+      files: 'các tệp',
       configuration: 'Cấu hình',
+      nextConfiguration: 'Cấu hình tập dữ liệu',
+      knowledgeGraph: 'Đồ thị tri thức',
+      compilation: 'Biên dịch',
       name: 'Tên',
       namePlaceholder: 'Vui lòng nhập tên!',
       doc: 'Tài liệu',
       datasetDescription:
-        ' Câu hỏi và câu trả lời chỉ có thể được trả lời sau khi phân tích cú pháp thành công.',
+        'Vui lòng đợi các tệp của bạn hoàn tất phân tích cú pháp trước khi bắt đầu trò chuyện với AI.',
       addFile: 'Thêm tệp',
       searchFiles: 'Tìm kiếm tệp của bạn',
       localFiles: 'Tệp cục bộ',
       emptyFiles: 'Tạo tệp trống',
-      webCrawl: 'Web Crawl',
-      chunkNumber: 'Số lượng khối',
+      webCrawl: 'Thu thập web',
+      chunkNumber: 'Số khối',
       uploadDate: 'Ngày tải lên',
-      chunkMethod: 'Phương thức khối',
+      chunkMethod: 'Phương thức phân khối',
       enabled: 'Bật',
       disabled: 'Tắt',
       action: 'Hành động',
       parsingStatus: 'Trạng thái phân tích cú pháp',
       parsingStatusTip:
-        'Thời gian xử lý tài liệu thay đổi tùy theo nhiều yếu tố. Bật các tính năng như Knowledge Graph, RAPTOR, Trích xuất Câu hỏi Tự động hoặc Trích xuất Từ khóa Tự động sẽ làm tăng đáng kể thời gian xử lý. Nếu thanh tiến trình bị dừng, vui lòng tham khảo hai câu hỏi thường gặp sau: https://ragflow.io/docs/dev/faq#why-does-my-document-parsing-stall-at-under-one-percent.',
-      processBeginAt: 'Bắt đầu xử lý lúc',
-      processDuration: 'Thời gian xử lý',
-      progressMsg: 'Thông báo tiến trình',
+        'Thời gian phân tích tài liệu phụ thuộc vào nhiều yếu tố. Bật các tính năng như Đồ thị tri thức, RAPTOR, Tự động trích xuất câu hỏi hoặc Tự động trích xuất từ khóa sẽ làm tăng đáng kể thời gian xử lý. Nếu thanh tiến trình bị treo, vui lòng tham khảo hai câu hỏi thường gặp sau: https://ragflow.io/docs/dev/faq#why-does-my-document-parsing-stall-at-under-one-percent.',
+      processBeginAt: 'Bắt đầu lúc',
+      processDuration: 'Thời lượng',
+      progressMsg: 'Tiến trình',
+      noTestResultsForRuned:
+        'Không tìm thấy kết quả phù hợp. Hãy thử điều chỉnh truy vấn hoặc tham số của bạn.',
+      noTestResultsForNotRuned:
+        'Chưa chạy bài kiểm tra nào. Kết quả sẽ hiển thị tại đây.',
       testingDescription:
-        'Thực hiện kiểm tra truy hồi để kiểm tra xem RAGFlow có thể phục hồi nội dung mong muốn cho LLM không.Vui lòng lưu ý rằng các thay đổi được thực hiện ở đây sẽ không được lưu tự động. Nếu bạn điều chỉnh các cài đặt mặc định ở đây, chẳng hạn như trọng số tương tự của từ khóa, hãy đảm bảo rằng bạn cập nhật các cài đặt liên quan theo cách đồng bộ trong cài đặt trợ lý trò chuyện hoặc cài đặt toán tử thu hồi.',
+        'Thực hiện kiểm tra truy hồi để kiểm tra xem RAGFlow có thể khôi phục nội dung mong muốn cho LLM hay không. Nếu bạn đã điều chỉnh các cài đặt mặc định, chẳng hạn như trọng số tương đồng từ khóa hoặc ngưỡng tương đồng, để đạt kết quả tối ưu, lưu ý rằng các thay đổi này sẽ không được lưu tự động. Bạn phải áp dụng chúng vào cài đặt trợ lý trò chuyện hoặc cài đặt thành phần Truy hồi.',
       similarityThreshold: 'Ngưỡng tương đồng',
       similarityThresholdTip:
-        'RAGFlow sử dụng kết hợp giữa độ tương đồng từ khóa được trọng số và độ tương đồng vectơ cosin được trọng số hoặc kết hợp giữa độ tương đồng từ khóa được trọng số và điểm xếp hạng được tính lại trong quá trình truy hồi. Tham số này đặt ngưỡng cho sự tương đồng giữa truy vấn của người dùng và các khối. Bất kỳ khối nào có điểm tương đồng dưới ngưỡng này sẽ bị loại khỏi kết quả. Theo mặc định, ngưỡng được đặt thành 0,2. Điều đó có nghĩa là chỉ những đoạn có điểm tương đồng hỗn hợp từ 20 trở lên mới được truy xuất.',
-      vectorSimilarityWeight: 'Trọng số tương đồng từ khóa',
+        'RAGFlow sử dụng kết hợp giữa độ tương đồng từ khóa có trọng số và độ tương đồng vectơ cosin có trọng số, hoặc kết hợp giữa độ tương đồng từ khóa có trọng số và điểm xếp hạng lại trong quá trình truy hồi. Tham số này đặt ngưỡng tương đồng giữa truy vấn của người dùng và các khối. Mọi khối có điểm tương đồng dưới ngưỡng này sẽ bị loại khỏi kết quả. Theo mặc định, ngưỡng được đặt là 0,2, nghĩa là chỉ những khối có điểm tương đồng lai từ 20 trở lên mới được truy xuất.',
+      vectorSimilarityWeight: 'Trọng số tương đồng vectơ',
       vectorSimilarityWeightTip:
-        'Cài đặt trọng số của độ tương đồng từ khóa trong điểm tương đồng kết hợp, được sử dụng với độ tương đồng vectơ cosin hoặc với điểm xếp hạng được tính lại. Tổng của hai trọng số phải bằng 1.0.',
+        'Thiết lập trọng số của độ tương đồng từ khóa trong điểm tương đồng kết hợp, dùng cùng với độ tương đồng vectơ cosin hoặc điểm xếp hạng lại. Tổng hai trọng số phải bằng 1,0.',
+      keywordSimilarityWeight: 'Trọng số tương đồng từ khóa',
+      keywordSimilarityWeightTip:
+        'Thiết lập trọng số của độ tương đồng từ khóa trong điểm tương đồng kết hợp, dùng cùng với độ tương đồng vectơ cosin hoặc điểm xếp hạng lại. Tổng hai trọng số phải bằng 1,0.',
       testText: 'Văn bản kiểm tra',
       testTextPlaceholder: 'Nhập câu hỏi của bạn tại đây!',
-      testingLabel: 'Kiểm tra',
-      similarity: 'Giống nhau lai',
-      termSimilarity: 'Giống nhau về thuật ngữ',
-      vectorSimilarity: 'Giống nhau về vectơ',
-      hits: 'Số lượt truy cập',
+      testingLabel: 'Chạy',
+      similarity: 'Tương đồng lai',
+      termSimilarity: 'Tương đồng thuật ngữ',
+      vectorSimilarity: 'Tương đồng vectơ',
+      hits: 'Lượt truy khớp',
       view: 'Xem',
-      filesSelected: 'Các tệp được chọn',
+      filesSelected: 'Các tệp đã chọn',
       upload: 'Tải lên',
       run: 'Phân tích cú pháp',
-      runningStatus0: 'Chưa được giải quyết',
-      runningStatus1: 'Parsing',
-      runningStatus2: 'CANCEL',
-      runningStatus3: 'SUCCESS',
-      runningStatus4: 'FAIL',
+      runningStatus0: 'Đang chờ',
+      runningStatus1: 'Đang phân tích',
+      runningStatus2: 'Đã hủy',
+      runningStatus3: 'Thành công',
+      runningStatus4: 'Thất bại',
       pageRanges: 'Phạm vi trang',
       pageRangesTip:
-        'Phạm vi trang: Xác định các phạm vi trang cần phân tích cú pháp. Các trang không nằm trong các phạm vi này sẽ bị bỏ qua.',
+        'Phạm vi các trang cần phân tích cú pháp; các trang ngoài phạm vi này sẽ không được xử lý.',
       fromPlaceholder: 'từ',
       fromMessage: 'Thiếu số trang bắt đầu',
       toPlaceholder: 'đến',
-      toMessage: 'Thiếu số trang kết thúc (được loại trừ)',
-      layoutRecognize: 'Nhận dạng bố cục',
+      toMessage: 'Thiếu số trang kết thúc (không bao gồm)',
+      layoutRecognize: 'Trình phân tích PDF',
       layoutRecognizeTip:
-        'Sử dụng các mô hình trực quan để phân tích bố cục nhằm xác định tốt hơn cấu trúc tài liệu, tìm vị trí của tiêu đề, khối văn bản, hình ảnh và bảng. Nếu không có tính năng này, chỉ có thể lấy được văn bản thuần của PDF. Để biết thêm thông tin, hãy xem https://ragflow.io/docs/dev/select_pdf_parser.',
+        'Dùng mô hình thị giác để phân tích bố cục PDF, giúp xác định chính xác tiêu đề, khối văn bản, hình ảnh và bảng trong tài liệu. Nếu chọn phương án thông thường, chỉ văn bản thuần trong PDF được trích xuất. Xin lưu ý rằng tùy chọn này hiện chỉ áp dụng cho tài liệu PDF.',
       taskPageSize: 'Kích thước trang tác vụ',
-      taskPageSizeMessage: 'Vui lòng nhập kích thước trang tác vụ của bạn!',
-      taskPageSizeTip: `Nếu sử dụng nhận dạng bố cục, tệp PDF sẽ được chia thành các nhóm trang liên tiếp. Phân tích bố cục sẽ được thực hiện song song giữa các nhóm để tăng tốc độ xử lý. 'Kích thước trang tác vụ' xác định kích thước của các nhóm. Kích thước trang càng lớn, khả năng chia tách văn bản liên tục giữa các trang thành các khối khác nhau càng thấp.`,
+      taskPageSizeMessage: 'Vui lòng nhập kích thước trang tác vụ!',
+      taskPageSizeTip: `Trong quá trình nhận dạng bố cục, tệp PDF được chia thành các khối và xử lý song song để tăng tốc độ. Tham số này đặt kích thước của mỗi khối. Kích thước khối càng lớn, khả năng làm đứt đoạn văn bản liền mạch giữa các trang càng thấp.`,
       addPage: 'Thêm trang',
       greaterThan: 'Giá trị hiện tại phải lớn hơn!',
       greaterThanPrevious: 'Giá trị hiện tại phải lớn hơn giá trị trước đó!',
       selectFiles: 'Chọn tệp',
       changeSpecificCategory: 'Thay đổi danh mục cụ thể',
-      uploadTitle: 'Nhấp hoặc kéo thả tệp vào khu vực này để tải lên',
+      uploadTitle: 'Kéo và thả tệp của bạn vào đây để tải lên',
       uploadDescription:
-        'RAGFlow hỗ trợ tải lên tệp một lần hoặc theo lô. Đối với RAGFlow triển khai cục bộ: giới hạn tổng kích thước tệp cho mỗi lần tải lên là 1GB, với giới hạn tải lên theo lô là 32 tệp. Không có giới hạn về tổng số tệp trên mỗi tài khoản. Đối với cloud.ragflow.io: giới hạn tổng kích thước tệp cho mỗi lần tải lên là 10MB, với mỗi tệp không vượt quá 10MB và tối đa là 128 tệp trên mỗi tài khoản.',
+        'Hỗ trợ tải lên tệp đơn lẻ hoặc theo lô. Với RAGFlow triển khai cục bộ: giới hạn tổng dung lượng mỗi lần tải lên là 1GB, giới hạn mỗi lô là 32 tệp. Không giới hạn tổng số tệp trên mỗi tài khoản. Với cloud.ragflow.io: giới hạn tổng dung lượng mỗi lần tải lên là 10MB, mỗi tệp không vượt quá 10MB và tối đa 128 tệp trên mỗi tài khoản.',
       chunk: 'Khối',
       bulk: 'Hàng loạt',
-      cancel: 'Hủy bỏ',
+      cancel: 'Hủy',
+      close: 'Đóng',
       rerankModel: 'Mô hình xếp hạng lại',
-      rerankPlaceholder: 'Vui lòng chọn',
-      rerankTip: `Tùy chọn. Nếu để trống, RAGFlow sẽ sử dụng kết hợp giữa độ tương đồng từ khóa có trọng số và độ tương đồng cosine vector có trọng số; nếu chọn mô hình rerank, điểm rerank có trọng số sẽ thay thế độ tương đồng cosine vector có trọng số. Xin lưu ý rằng việc sử dụng mô hình rerank sẽ làm tăng đáng kể thời gian phản hồi của hệ thống. Nếu bạn muốn sử dụng mô hình rerank, hãy đảm bảo sử dụng SaaS reranker; nếu bạn muốn sử dụng mô hình rerank triển khai cục bộ, hãy khởi động RAGFlow bằng docker-compose-gpu.yml.`,
+      rerankPlaceholder: 'Chọn giá trị',
+      rerankTip: `Tùy chọn. Nếu để trống, RAGFlow sẽ dùng kết hợp giữa độ tương đồng từ khóa có trọng số và độ tương đồng vectơ cosin có trọng số; nếu chọn mô hình xếp hạng lại, điểm xếp hạng lại có trọng số sẽ thay thế độ tương đồng vectơ cosin có trọng số. Xin lưu ý rằng dùng mô hình xếp hạng lại sẽ làm tăng đáng kể thời gian phản hồi của hệ thống. Nếu muốn dùng mô hình xếp hạng lại, hãy đảm bảo sử dụng dịch vụ xếp hạng lại dạng SaaS; nếu muốn dùng mô hình triển khai cục bộ, hãy khởi động RAGFlow bằng docker-compose-gpu.yml.`,
       topK: 'Top-K',
-      topKTip: `Sử dụng cùng với Rerank model, thiết lập này xác định số lượng đoạn văn cần gửi đến mô hình reranking được chỉ định.`,
-      delimiter: 'Dấu phân cách cho phân đoạn văn bản',
+      topKTip: `Dùng cùng với mô hình xếp hạng lại, thiết lập này xác định số lượng khối văn bản được gửi đến mô hình xếp hạng lại đã chỉ định.`,
+      delimiter: `Dấu phân cách văn bản`,
+      delimiterTip:
+        'Chuỗi dấu phân cách được phân tích thành danh sách các dấu phân cách. Cặp dấu backtick (` `) là "dấu phân cách của dấu phân cách": bất kỳ cặp backtick nào khớp nhau sẽ bọc các ký tự bên trong thành một dấu phân cách nhiều ký tự; mọi ký tự ngoài backtick tự nó là một dấu phân cách. Các dấu phân cách được khớp theo chiều dài giảm dần. Ví dụ: \\n`##`; phân tích thành ba dấu phân cách — xuống dòng (\\n), hai dấu # (##), chấm phẩy (;) — và văn bản sẽ được tách tại bất kỳ dấu nào trong số chúng. Dấu phân cách một ký tự (ví dụ !?; → !, ?, ;) không cần backtick; dấu nhiều ký tự (ví dụ ##, END) phải được bọc bằng backtick.',
+      enableChildrenDelimiter: 'Khối con được dùng để truy hồi',
+      childrenDelimiter: 'Dấu phân cách văn bản',
+      childrenDelimiterTip:
+        'Chuỗi dấu phân cách được phân tích thành danh sách các dấu phân cách. Cặp dấu backtick (` `) là "dấu phân cách của dấu phân cách": bất kỳ cặp backtick nào khớp nhau sẽ bọc các ký tự bên trong thành một dấu phân cách nhiều ký tự; mọi ký tự ngoài backtick tự nó là một dấu phân cách. Các dấu phân cách được khớp theo chiều dài giảm dần. Ví dụ: \\n`##`; phân tích thành ba dấu phân cách — xuống dòng (\\n), hai dấu # (##), chấm phẩy (;) — và văn bản sẽ được tách tại bất kỳ dấu nào trong số chúng. Dấu phân cách một ký tự (ví dụ !?; → !, ?, ;) không cần backtick; dấu nhiều ký tự (ví dụ ##, END) phải được bọc bằng backtick.',
+      delimiterPreviewLabel: 'Tách tại:',
+      delimiterPreviewEmpty:
+        'Không có dấu phân cách — văn bản sẽ chỉ được chia theo kích thước.',
+      delimiterPreviewCount: '({{count}})',
+
       html4excel: 'Excel sang HTML',
-      html4excelTip: `Sử dụng cùng với phương pháp cắt khúc General. Khi chưa được bật, tệp bảng tính (XLSX, XLS (Excel 97-2003)) sẽ được phân tích theo dòng thành các cặp khóa-giá trị. Khi bật, tệp bảng tính sẽ được phân tích thành bảng HTML. Nếu bảng gốc vượt quá 12 dòng, hệ thống sẽ tự động chia thành nhiều bảng HTML mỗi 12 dòng. Để biết thêm thông tin, vui lòng xem https://ragflow.io/docs/dev/enable_excel2html.`,
+      html4excelTip: `Dùng cùng với phương pháp phân khối Tổng hợp. Khi chưa bật, các bảng tính (XLSX hoặc XLS (Excel 97-2003)) trong tập dữ liệu sẽ được phân tích thành các cặp khóa-giá trị. Khi bật, chúng được phân tích thành bảng HTML, cứ mỗi 12 dòng sẽ tách thành một bảng nếu bảng gốc có hơn 12 dòng. Xem https://ragflow.io/docs/dev/enable_excel2html để biết chi tiết.`,
       autoKeywords: 'Từ khóa tự động',
-      autoKeywordsTip: `Tự động trích xuất N từ khóa cho mỗi khối để tăng thứ hạng của chúng trong các truy vấn chứa các từ khóa đó. Lưu ý rằng các token bổ sung sẽ được tiêu thụ bởi mô hình trò chuyện được chỉ định trong "Cài đặt mô hình hệ thống". Bạn có thể kiểm tra hoặc cập nhật các từ khóa đã thêm cho một khối từ danh sách khối. Để biết chi tiết, vui lòng xem https://ragflow.io/docs/dev/autokeyword_autoquestion.`,
+      autoKeywordsTip: `Tự động trích xuất N từ khóa cho mỗi khối để tăng thứ hạng của khối trong các truy vấn chứa những từ khóa đó. Lưu ý rằng mô hình đánh chỉ mục được chỉ định trong 'Cấu hình' sẽ tiêu thụ thêm token. Bạn có thể xem hoặc cập nhật từ khóa đã thêm của một khối từ danh sách khối. Để biết chi tiết, xem https://ragflow.io/docs/dev/autokeyword_autoquestion.`,
       autoQuestions: 'Câu hỏi tự động',
-      autoQuestionsTip: `Để tăng điểm xếp hạng, hãy trích xuất N câu hỏi cho mỗi đoạn kiến thức bằng mô hình trò chuyện được xác định trong "Cài đặt mô hình hệ thống". Lưu ý rằng việc này sẽ tiêu tốn thêm token. Kết quả có thể được xem và chỉnh sửa trong danh sách các đoạn. Lỗi trích xuất câu hỏi sẽ không chặn quá trình phân đoạn; kết quả trống sẽ được thêm vào đoạn gốc. Để biết chi tiết, vui lòng xem https://ragflow.io/docs/dev/autokeyword_autoquestion.`,
-      delimiterTip: `Hỗ trợ nhiều ký tự phân cách, và các ký tự phân cách nhiều ký tự được bao bọc bởi dấu . Ví dụ: nếu được cấu hình như thế này: "##"; thì văn bản sẽ được phân tách bởi dấu xuống dòng, hai dấu # và dấu chấm phẩy, sau đó được lắp ráp theo kích thước của "số token". Thiết lập các dấu phân cách chỉ sau khi hiểu cơ chế phân đoạn và phân khối văn bản.`,
-      redo: `Bạn có muốn xóa các đoạn {{chunkNum}} hiện có không?`,
-      knowledgeGraph: 'Đồ thị tri thức',
-      setMetaData: 'Đặt dữ liệu Meta',
-      pleaseInputJson: 'Vui lòng nhập dữ liệu JSON',
-      metaData: 'Dữ liệu Meta',
+      autoQuestionsTip: `Tự động trích xuất N câu hỏi cho mỗi khối để tăng thứ hạng của khối trong các truy vấn chứa những câu hỏi đó. Bạn có thể xem hoặc cập nhật câu hỏi đã thêm của một khối từ danh sách khối. Tính năng này không làm gián đoạn quá trình phân khối nếu xảy ra lỗi, ngoại trừ việc có thể thêm một kết quả rỗng vào khối gốc. Lưu ý rằng mô hình đánh chỉ mục được chỉ định trong 'Cấu hình' sẽ tiêu thụ thêm token. Để biết chi tiết, xem https://ragflow.io/docs/dev/autokeyword_autoquestion.`,
+      autoTags: 'Tự động gắn thẻ',
+      redo: 'Bạn có muốn xóa {{chunkNum}} khối hiện có không?',
+      setMetaData: 'Đặt siêu dữ liệu',
+      pleaseInputJson: 'Vui lòng nhập JSON',
+      documentMetaTips: `<p>Siêu dữ liệu ở định dạng Json (không tìm kiếm được). Nó sẽ được thêm vào prompt cho LLM nếu bất kỳ khối nào của tài liệu này nằm trong prompt.</p>
+<p>Ví dụ:</p>
+<b>Siêu dữ liệu là:</b><br>
+<code>
+  {
+      "Author": "Alex Dowson",
+      "Date": "2024-11-12"
+  }
+</code><br>
+<b>Prompt sẽ là:</b><br>
+<p>Tài liệu: the_name_of_document</p>
+<p>Tác giả: Alex Dowson</p>
+<p>Ngày: 2024-11-12</p>
+<p>Các đoạn liên quan như sau:</p>
+<ul>
+<li>  Đây là nội dung khối....</li>
+<li>  Đây là nội dung khối....</li>
+</ul>
+`,
+      metaData: 'Siêu dữ liệu',
       deleteDocumentConfirmContent:
-        'Tài liệu này được liên kết với đồ thị tri thức. Sau khi xóa, các thông tin về nút và quan hệ liên quan sẽ bị xóa theo, nhưng đồ thị sẽ không được cập nhật ngay lập tức. Việc cập nhật đồ thị được thực hiện trong quá trình phân tích tài liệu mới chứa tác vụ trích xuất đồ thị tri thức.',
-      documentMetaTips: `<p>Dữ liệu meta ở định dạng Json (không thể tìm kiếm). Nó sẽ được thêm vào prompt cho LLM nếu bất kỳ đoạn nào của tài liệu này được đưa vào prompt.</p> <p>Ví dụ:</p> <b>Dữ liệu meta là:</b><br> <code> { "Author": "Alex Dowson", "Date": "2024-11-12" } </code><br><b>Prompt sẽ là:</b><br> <p>Tài liệu: the_name_of_document</p> <p>Tác giả: Alex Dowson</p> <p>Ngày: 2024-11-12</p> <p>Các đoạn liên quan như sau:</p> <ul> <li> Đây là nội dung của đoạn...</li> <li> Đây là nội dung của đoạn...</li> </ul>`,
+        'Tài liệu này được liên kết với đồ thị tri thức. Sau khi xóa, thông tin về các nút và quan hệ liên quan sẽ bị xóa theo, nhưng đồ thị sẽ không được cập nhật ngay lập tức. Việc cập nhật đồ thị được thực hiện trong quá trình phân tích tài liệu mới chứa tác vụ trích xuất đồ thị tri thức.',
+      plainText: 'Ngây thơ',
+      reRankModelWaring: 'Mô hình xếp hạng lại rất tốn thời gian.',
     },
     knowledgeConfiguration: {
+      randomSeedTip:
+        'Seed là điểm bắt đầu của thuật toán giả ngẫu nhiên, đảm bảo khả năng tái lập cùng một kết quả giữa các lần chạy.',
+      datasetDescription: 'Mô tả tập dữ liệu của bạn',
+      overlappedPercentTip: 'Phần trăm chồng lấp giữa hai khối liền kề',
+      globalIndexModelTip:
+        'Dùng để tạo Đồ thị tri thức, RAPTOR, siêu dữ liệu tự động, từ khóa tự động và câu hỏi tự động. Hiệu suất mô hình sẽ ảnh hưởng đến chất lượng tạo sinh.',
+      globalIndexModel: 'Mô hình đánh chỉ mục',
+      settings: 'Cài đặt',
+      autoMetadataTip: `Tự động tạo siêu dữ liệu. Áp dụng cho tệp mới trong quá trình phân tích cú pháp. Các tệp hiện có cần phân tích lại để cập nhật (các khối được giữ nguyên). Lưu ý rằng mô hình đánh chỉ mục được chỉ định trong 'Cấu hình' sẽ tiêu thụ thêm token.`,
       imageTableContextWindow: 'Cửa sổ ngữ cảnh hình ảnh & bảng',
       imageTableContextWindowTip:
-        'Trích xuất N token văn bản phía trên và phía dưới hình ảnh và bảng để cung cấp bối cảnh phong phú hơn.',
-      titleDescription:
-        'Cập nhật cấu hình cơ sở kiến thức của bạn tại đây, đặc biệt là phương thức phân khối.',
-      name: 'Tên cơ sở kiến thức',
-      photo: 'Ảnh cơ sở kiến thức',
-      description: 'Mô tả',
-      language: 'Ngôn ngữ',
-      languageMessage: 'Vui lòng nhập ngôn ngữ của bạn!',
-      languagePlaceholder: 'Vui lòng nhập ngôn ngữ của bạn!',
-      permissions: 'Quyền hạn',
-      embeddingModel: 'Mô hình nhúng',
-      chunkTokenNumber: 'Kích thước khối được khuyến nghị',
-      chunkTokenNumberMessage: 'Số token khối là bắt buộc',
-      embeddingModelTip:
-        'Mô hình nhúng mặc định của cơ sở tri thức. Khi cơ sở tri thức đã có các đoạn (chunk), lúc thay đổi mô hình nhúng, hệ thống sẽ lấy ngẫu nhiên một số chunk để kiểm tra tương thích, mã hóa lại bằng mô hình nhúng mới và tính độ tương đồng cosine giữa vector mới và vector cũ. Chỉ cho phép chuyển khi độ tương đồng trung bình của mẫu ≥ 0.9. Nếu không, bạn phải xóa tất cả các chunk trong cơ sở tri thức trước khi có thể thay đổi.',
-      permissionsTip:
-        'Nếu được đặt thành "Đội", tất cả các thành viên trong nhóm sẽ có thể quản lý cơ sở kiến thức.',
-      chunkTokenNumberTip:
-        'Nó đặt ngưỡng token cho một khối. Một đoạn văn có ít token hơn ngưỡng này sẽ được kết hợp với đoạn văn tiếp theo cho đến khi số lượng token vượt quá ngưỡng, tại thời điểm đó, một khối được tạo. Không có khối mới nào được tạo ra trừ khi một dấu phân cách được gặp, ngay cả khi ngưỡng này bị vượt quá.',
-      chunkMethod: 'Phương thức khối',
-      chunkMethodTip: 'Mẹo ở bên phải.',
-      upload: 'Tải lên',
-      english: 'Tiếng Anh',
-      chinese: 'Tiếng Trung',
-      embeddingModelPlaceholder: 'Vui lòng chọn một mô hình nhúng',
-      chunkMethodPlaceholder: 'Vui lòng chọn một phương thức phân khối',
-      save: 'Lưu',
-      me: 'Chỉ tôi',
-      team: 'Nhóm',
-      cancel: 'Hủy bỏ',
-      methodTitle: 'Mô tả phương thức phân khối',
-      methodExamples: 'Ví dụ',
-      methodExamplesDescription:
-        'Để giúp bạn hiểu rõ hơn, chúng tôi đã cung cấp ảnh chụp màn hình liên quan để tham khảo.',
-      dialogueExamplesTitle: 'Ví dụ hội thoại',
-      methodEmpty: 'Mô tả bằng hình ảnh các danh mục cơ sở kiến thức',
-      audio: `<p>Các định dạng tệp được hỗ trợ là <b>WAV, MP3, AAC, FLAC, OGG</b> và các định dạng âm thanh phổ biến khác.</p>
-<p>Phương pháp này phiên âm các tệp âm thanh thành văn bản bằng mô hình chuyển giọng nói thành văn bản.</p>`,
-      email: `<p>Các định dạng tệp được hỗ trợ là <b>EML</b> và <b>MSG</b>.</p>
-<p>Phương pháp này phân tích các tệp email, trích xuất các trường tiêu đề (như Từ, Đến, CC, Chủ đề và Ngày), nội dung thân thư và tệp đính kèm.</p>`,
-      knowledgeCompiler: `<p>Pipeline này phân tích và chia nhỏ tệp thành các chunk, sau đó biên dịch các chunk thành các đơn vị tri thức có cấu trúc (đồ thị tri thức, wiki, RAPTOR, sơ đồ tư duy hoặc điều hướng tập dữ liệu) thông qua thành phần Knowledge Compiler.</p>
-<p>Các đơn vị tri thức đã biên dịch được xuất dưới dạng chunk hợp nhất vào luồng chunk, rất lý tưởng để xây dựng lớp tri thức có thể truy xuất trên các tài liệu đã chia nhỏ.</p>`,
-      book: `<p>Các định dạng tệp được hỗ trợ là <b>DOCX</b>, <b>PDF</b>, <b>TXT</b>.</p><p>
-      Đối với mỗi sách trong PDF, vui lòng đặt <i>phạm vi trang</i> để loại bỏ thông tin không mong muốn và giảm thời gian phân tích.</p>`,
-      laws: `<p>Các định dạng tệp được hỗ trợ là <b>DOCX</b>, <b>PDF</b>, <b>TXT</b>.</p><p>
-      Các tài liệu pháp lý thường tuân theo định dạng viết nghiêm ngặt. Chúng tôi sử dụng tính năng văn bản để xác định điểm phân chia.
-      </p><p>
-      Khối có độ chi tiết nhất quán với 'ARTICLE', đảm bảo tất cả văn bản cấp trên được bao gồm trong khối.
-      </p>`,
-      manual: `<p>Chỉ hỗ trợ <b>PDF</b>.</p><p>
-      Chúng tôi giả định rằng sách hướng dẫn có cấu trúc phân cấp theo mục, sử dụng tiêu đề mục thấp nhất làm đơn vị cơ bản để phân đoạn tài liệu. Do đó, các hình ảnh và bảng trong cùng một mục sẽ không bị tách rời, điều này có thể dẫn đến kích thước khối lớn hơn.
-      </p>`,
-      naive: `<p>Phương thức này phân đoạn tệp bằng phương pháp 'ngây thơ': </p>
-      <p>
-      <li>Sử dụng mô hình nhận dạng thị giác để chia các văn bản thành các phân đoạn nhỏ hơn.</li>
-      <li>Sau đó, kết hợp các phân đoạn liền kề cho đến khi số lượng token vượt quá ngưỡng được chỉ định bởi 'Số token khối', tại thời điểm đó, một khối được tạo.</li></p>
-      <p>Các định dạng tệp được hỗ trợ là <b>MD, MDX, DOCX, XLSX, XLS (Excel 97-2003), PPT, PDF, TXT, JPEG, JPG, PNG, TIF, GIF, CSV, JSON, EML, HTML</b>.</p>`,
-      paper: `<p>Chỉ hỗ trợ tệp <b>PDF</b>.</p><p>
-      Bài báo sẽ được chia theo các phần, chẳng hạn như <i>tóm tắt, 1.1, 1.2</i>. </p><p>
-      Cách tiếp cận này cho phép LLM tóm tắt bài báo hiệu quả hơn và cung cấp các phản hồi toàn diện, dễ hiểu hơn.
-      Tuy nhiên, nó cũng làm tăng ngữ cảnh cho các cuộc hội thoại AI và tăng thêm chi phí tính toán cho LLM. Vì vậy, trong quá trình trò chuyện, hãy cân nhắc giảm giá trị của '<b>topN</b>'.</p>`,
-      presentation: `<p>Các định dạng tệp được hỗ trợ là <b>PDF</b>, <b>PPTX</b>.</p><p>
-      Mỗi trang trong slide được coi là một khối, với hình thu nhỏ của nó được lưu trữ.</p><p>
-      <i>Phương thức phân khối này được tự động áp dụng cho tất cả các tệp PPT được tải lên, do đó bạn không cần phải chỉ định thủ công.</i></p>`,
-      qa: `
-      <p>
-      Phương thức phân khối này hỗ trợ các định dạng tệp <b>XLSX</b> và <b>CSV/TXT</b>.
-      </p>
-      <li>
-      Nếu tệp ở định dạng <b>XLSX</b>, nó phải chứa hai cột
-      không có tiêu đề: một cột cho câu hỏi và cột còn lại cho câu trả lời, với
-      cột câu hỏi đứng trước cột câu trả lời. Nhiều trang tính được chấp nhận, miễn là các cột được cấu trúc chính xác.
-      </li>
-      <li>
-      Nếu tệp ở định dạng <b>CSV/TXT</b>, tệp phải được mã hóa UTF-8 với TAB làm dấu phân cách để phân tách câu hỏi và câu trả lời.
-      </li>
-      <p>
-      <i>
-      Các dòng văn bản không tuân theo các quy tắc trên sẽ bị bỏ qua và
-      mỗi cặp Q&A sẽ được coi là một khối riêng biệt.
-      </i>
-      </p>
-      `,
-      resume: `<p>Các định dạng tệp được hỗ trợ là <b>DOCX</b>, <b>PDF</b>, <b>TXT</b>.
-      </p><p>
-      Các bản lý lịch với nhiều hình thức khác nhau được phân tích cú pháp và tổ chức thành dữ liệu có cấu trúc để hỗ trợ nhà tuyển dụng tìm kiếm ứng viên.
-      </p>`,
-      table: `<p>Các định dạng tệp được hỗ trợ là <b>XLSX</b> và <b>CSV/TXT</b>.</p><p>
-      Dưới đây là một số điều kiện tiên quyết và mẹo:
-      <ul>
-      <li>Đối với tệp CSV hoặc TXT, dấu phân cách giữa các cột phải là <em><b>TAB</b></em>.</li>
-      <li>Dòng đầu tiên phải là tiêu đề cột.</li>
-      <li>Tiêu đề cột phải là các thuật ngữ có nghĩa để hỗ trợ sự hiểu biết của LLM của bạn.
-      Cách tốt nhất là đặt các từ đồng nghĩa cạnh nhau được phân cách bằng dấu gạch chéo <i>'/'</i> và liệt kê các giá trị bằng ngoặc vuông, ví dụ: <i>'Giới tính/Giới tính (nam, nữ)'</i>.<p>
-      Dưới đây là một số ví dụ về tiêu đề:
-      <ol>
-      <li>nhà cung cấp/nhà cung cấp<b>'TAB'</b>Màu sắc (Vàng, Xanh lam, Nâu)<b>'TAB'</b>Giới tính/Giới tính (nam, nữ)<b>'TAB'</b>kích thước (M, L, XL, XXL)</li>
-      </ol>
-      </li>
-      <li>Mỗi hàng trong bảng sẽ được coi là một khối.</li>
-      </ul>`,
-      picture: `
-      <p>Các tệp hình ảnh được hỗ trợ, với hỗ trợ video sắp ra mắt.</p><p>
-      Phương pháp này sử dụng mô hình OCR để trích xuất văn bản từ hình ảnh.
-      </p><p>
-      Nếu văn bản được trích xuất bởi mô hình OCR được coi là không đủ, một LLM hình ảnh được chỉ định sẽ được sử dụng để cung cấp mô tả về hình ảnh.
-      </p>`,
-      one: `
-      <p>Các định dạng tệp được hỗ trợ là <b>DOCX, EXCEL, PDF, TXT</b>.
-      </p><p>
-      Phương pháp này xử lý toàn bộ tài liệu thành một khối.
-      </p><p>
-      Áp dụng khi bạn yêu cầu LLM tóm tắt toàn bộ tài liệu, với điều kiện nó có thể xử lý được lượng ngữ cảnh đó.
-      </p>`,
-      knowledgeGraph: `<p>Các định dạng tệp được hỗ trợ là <b>DOCX, EXCEL, PPT, IMAGE, PDF, TXT, MD, JSON, EML</b>
-
-      <p>Cách tiếp cận này phân đoạn tệp bằng phương pháp 'ngây thơ'/'Tổng hợp'. Nó chia tài liệu thành các phân đoạn và sau đó kết hợp các phân đoạn liền kề cho đến khi số lượng token vượt quá ngưỡng được chỉ định bởi 'Số token khối', tại thời điểm đó, một khối được tạo.</p>
-      <p>Các khối sau đó được đưa vào LLM để trích xuất các thực thể và mối quan hệ cho biểu đồ tri thức và sơ đồ tư duy.</p>
-      <p>Đảm bảo bạn đã đặt <b>Loại thực thể</b>.</p>`,
-      useRaptor: 'Sử dụng RAPTOR để cải thiện truy xuất',
-      useRaptorTip:
-        'Kích hoạt RAPTOR cho các tác vụ hỏi đáp đa bước. Xem chi tiết tại https://ragflow.io/docs/dev/enable_raptor.',
-      prompt: 'Nhắc nhở',
-      promptTip:
-        'Sử dụng lời nhắc hệ thống để mô tả nhiệm vụ cho LLM, chỉ định cách nó nên phản hồi và phác thảo các yêu cầu khác nhau. Lời nhắc hệ thống thường được sử dụng kết hợp với các khóa (biến), đóng vai trò là các đầu vào dữ liệu khác nhau cho LLM. Sử dụng dấu gạch chéo `/` hoặc nút (x) để hiển thị các khóa cần sử dụng.',
-      promptMessage: 'Nhắc nhở là bắt buộc',
-      promptText: `Vui lòng tóm tắt các đoạn văn sau. Cẩn thận với các số, đừng bịa ra. Các đoạn văn như sau:
-      {cluster_content}
-      Nội dung ở trên là nội dung bạn cần tóm tắt.`,
-      maxToken: 'Số token tối đa',
-      maxTokenTip: 'Số lượng token tối đa cho mỗi đoạn tóm tắt được tạo ra.',
-      maxTokenMessage: 'Số token tối đa là bắt buộc',
-      threshold: 'Ngưỡng',
-      thresholdTip:
-        'Trong RAPTOR, các đoạn văn bản được nhóm lại dựa trên sự tương đồng ngữ nghĩa của chúng. Tham số Ngưỡng thiết lập mức độ tương đồng tối thiểu cần thiết để các đoạn được nhóm lại với nhau. Ngưỡng càng cao thì mỗi nhóm sẽ có ít đoạn hơn, còn ngưỡng càng thấp thì mỗi nhóm sẽ có nhiều đoạn hơn.',
-      thresholdMessage: 'Ngưỡng là bắt buộc',
-      maxCluster: 'Cụm tối đa',
-      maxClusterTip: 'Số lượng cụm tối đa được tạo ra.',
-      maxClusterMessage: 'Cụm tối đa là bắt buộc',
-      randomSeed: 'Hạt giống ngẫu nhiên',
-      randomSeedMessage: 'Hạt giống ngẫu nhiên là bắt buộc',
-      entityTypes: 'Loại thực thể',
-      vietnamese: 'Tiếng Việt',
-      pageRank: 'Xếp hạng trang',
-      pageRankTip: `Bạn có thể gán điểm PageRank cao hơn cho các cơ sở kiến thức cụ thể trong quá trình truy xuất. Điểm tương ứng được cộng vào điểm tương đồng lai của các đoạn được truy xuất từ các cơ sở kiến thức này, làm tăng thứ hạng của chúng. Xem https://ragflow.io/docs/dev/set_page_rank để biết thêm chi tiết.`,
-      tag: `<p>Cơ sở kiến thức sử dụng phương pháp phân đoạn 'Tag' hoạt động như một tập hợp thẻ. Các cơ sở kiến thức khác có thể sử dụng nó để gắn thẻ cho các đoạn của riêng chúng và các truy vấn tới các cơ sở kiến thức này cũng sẽ được gắn thẻ bằng tập hợp thẻ này.</p>
-      <p>Một bộ thẻ sẽ không trực tiếp tham gia vào quá trình Tạo sinh tăng cường truy xuất (Retrieval-Augmented Generation, RAG).</p>
-      <p>Mỗi đoạn trong cơ sở kiến thức này là một cặp mô tả-thẻ độc lập.</p>
-      <p>Các định dạng tệp được hỗ trợ bao gồm <b>XLSX</b> và <b>CSV/TXT</b>:</p>
-      <p>Nếu tệp ở định dạng <b>XLSX</b>, tệp đó phải chứa hai cột không có tiêu đề: một cột dành cho mô tả thẻ và cột còn lại dành cho tên thẻ, với cột Mô tả đứng trước cột Thẻ. Có thể chấp nhận nhiều trang tính, miễn là cấu trúc cột được cấu trúc đúng cách.</p>
-      <p>Nếu tệp ở định dạng <b>CSV/TXT</b>, tệp đó phải được mã hóa UTF-8 với TAB làm dấu phân cách để phân tách mô tả và thẻ.</p>
-      <p>Trong cột Thẻ, <b>dấu phẩy</b> được sử dụng để phân tách các thẻ.</p>
-      <i>Các dòng văn bản không tuân theo các quy tắc trên sẽ bị bỏ qua.</i>`,
-      tagName: 'Thẻ',
-      frequency: 'Tần số',
-      searchTags: 'Thẻ tìm kiếm',
-      tagTable: 'Bảng',
-      tagSet: 'Thư viện',
-      tagSetTip: `<p>Việc chọn các cơ sở kiến thức 'Tag' giúp gắn thẻ cho từng đoạn.</p> <p>Truy vấn đến các đoạn đó cũng sẽ kèm theo thẻ.</p> Quy trình này sẽ cải thiện độ chính xác của việc truy xuất bằng cách thêm nhiều thông tin hơn vào bộ dữ liệu, đặc biệt là khi có một tập hợp lớn các đoạn. <p>Sự khác biệt giữa thẻ và từ khóa:</p> <ul> <li>Thẻ là một tập hợp khép kín được người dùng định nghĩa và thao tác trong khi từ khóa là một tập hợp mở.</li> <li>Bạn cần tải lên các tập hợp thẻ với các mẫu trước khi sử dụng.</li> <li>Từ khóa được tạo bởi LLM, tốn kém và mất thời gian.</li> </ul><p>Xem https://ragflow.io/docs/dev/use_tag_sets để biết thêm chi tiết.</p>`,
-      topnTags: 'Thẻ Top-N',
-      tags: 'Thẻ',
-      addTag: 'Thêm thẻ',
-      useGraphRag: 'Trích xuất đồ thị tri thức',
-      portugueseBr: 'Tiếng Bồ Đào Nha',
-      tagCloud: 'Đám mây',
-      graphRagMethod: 'Phương pháp',
-      graphRagMethodTip: `Light: Câu lệnh trích xuất thực thể và quan hệ này được lấy từ GitHub - HKUDS/LightRAG: "LightRAG: Tạo sinh tăng cường truy xuất đơn giản và nhanh chóng".
-      General: Câu lệnh trích xuất thực thể và quan hệ này được lấy từ GitHub - microsoft/graphrag: Một hệ thống Tạo sinh tăng cường truy xuất (RAG) dựa trên đồ thị theo mô-đun.
-      NER: Sử dụng spaCy NER và trích xuất từ khóa dựa trên quy tắc để trích xuất thực thể và quan hệ. Không cần LLM cho việc trích xuất, giúp nhanh chóng và tiết kiệm tài nguyên.`,
-      useGraphRagTip:
-        'Xây dựng một biểu đồ tri thức trên các đoạn tệp của cơ sở tri thức hiện tại để tăng cường khả năng trả lời câu hỏi đa bước liên quan đến logic lồng nhau. Xem https://ragflow.io/docs/dev/construct_knowledge_graph để biết thêm chi tiết.',
-      resolution: 'Hợp nhất thực thể',
-      resolutionTip:
-        'Quy trình phân giải sẽ hợp nhất các thực thể có cùng ý nghĩa lại với nhau, giúp đồ thị trở nên cô đọng và chính xác hơn. Các thực thể sau đây nên được hợp nhất: President Trump, Donald Trump, Donald J. Trump, Donald John Trump.',
-      community: 'Xây dựng mối quan hệ cộng đồng',
-      communityTip:
-        'Các liên kết được nhóm lại thành các cộng đồng phân cấp, với các thực thể và mối quan hệ kết nối từng phân đoạn lên các cấp độ trừu tượng cao hơn. Sau đó, chúng tôi sử dụng một LLM để tạo ra bản tóm tắt cho mỗi cộng đồng, được gọi là báo cáo cộng đồng. Xem thêm: https://www.microsoft.com/en-us/research/blog/graphrag-improving-global-search-via-dynamic-community-selection/',
+        'Trích xuất N token văn bản phía trên và phía dưới hình ảnh và bảng để cung cấp ngữ cảnh phong phú hơn.',
+      autoMetadata: 'Siêu dữ liệu tự động',
+      mineruOptions: 'Tùy chọn MinerU',
+      mineruParseMethod: 'Phương thức phân tích',
+      mineruParseMethodTip:
+        'Phương thức phân tích PDF: auto (tự động phát hiện), txt (trích xuất văn bản), ocr (nhận dạng ký tự quang học)',
+      mineruFormulaEnable: 'Nhận dạng công thức',
+      mineruFormulaEnableTip:
+        'Bật nhận dạng công thức. Lưu ý: có thể không hoạt động chính xác với tài liệu chữ Cyrillic.',
+      mineruTableEnable: 'Nhận dạng bảng',
+      mineruTableEnableTip: 'Bật nhận dạng và trích xuất bảng.',
+      mineruLanguage: 'Ngôn ngữ',
+      mineruLanguageTip: 'Ngôn ngữ OCR ưu tiên cho MinerU.',
       paddleocrOptions: 'Tùy chọn PaddleOCR',
       paddleocrApiUrl: 'URL API PaddleOCR',
       paddleocrApiUrlTip: 'URL điểm cuối API của dịch vụ PaddleOCR',
@@ -376,7 +427,292 @@ export default {
       paddleocrAlgorithm: 'Thuật toán PaddleOCR',
       paddleocrAlgorithmTip: 'Thuật toán được sử dụng để xử lý PaddleOCR',
       paddleocrSelectAlgorithm: 'Chọn thuật toán',
-      paddleocrModelNamePlaceholder: 'Ví dụ: paddleocr-môi-trường-1',
+      paddleocrModelNamePlaceholder: 'Ví dụ: paddleocr-from-env-1',
+      overlappedPercent: 'Phần trăm chồng lấp (%)',
+      generationScopeTip:
+        'Xác định việc tạo RAPTOR cho toàn bộ tập dữ liệu hay cho một tệp duy nhất.',
+      scopeDataset: 'Tập dữ liệu',
+      generationScope: 'Phạm vi tạo sinh',
+      scopeSingleFile: 'Một tệp',
+      autoParse: 'Tự động phân tích',
+      rebuildTip:
+        'Tải lại các tệp từ nguồn dữ liệu được liên kết và phân tích cú pháp chúng một lần nữa.',
+      baseInfo: 'Thông tin cơ bản',
+      globalIndex: 'Chỉ mục toàn cục',
+      dataSource: 'Nguồn dữ liệu',
+      linkSourceSetTip: 'Quản lý liên kết nguồn dữ liệu với tập dữ liệu này',
+      linkDataSource: 'Liên kết nguồn dữ liệu',
+      deleteGenerateModalContent: `
+        <p>Xóa kết quả <strong class='text-text-primary'>{{type}}</strong> đã tạo
+        sẽ loại bỏ tất cả thực thể và quan hệ phái sinh khỏi tập dữ liệu này.
+        Các tệp gốc của bạn vẫn được giữ nguyên.<p>
+        <br/>
+        Bạn có muốn tiếp tục không?
+      `,
+      extractRaptor: 'Trích xuất Raptor',
+      extractKnowledgeGraph: 'Trích xuất đồ thị tri thức',
+      filterPlaceholder: 'vui lòng nhập bộ lọc',
+      fileFilterTip: '',
+      fileFilter: 'Bộ lọc tệp',
+      setDefaultTip: '',
+      setDefault: 'Đặt làm mặc định',
+      editLinkDataPipeline: 'Sửa pipeline nạp dữ liệu',
+      linkPipelineSetTip: 'Quản lý liên kết pipeline nạp dữ liệu với tập dữ liệu này',
+      default: 'Mặc định',
+      dataPipeline: 'Chuyển đổi hoặc cấu hình pipeline nạp dữ liệu.',
+      linkDataPipeline: 'Liên kết pipeline nạp dữ liệu',
+      enableAutoGenerate: 'Bật tự động tạo',
+      teamPlaceholder: 'Vui lòng chọn một nhóm.',
+      dataFlowPlaceholder: 'Vui lòng chọn một pipeline.',
+      buildItFromScratch: 'Tự xây dựng từ đầu',
+      dataFlow: 'Pipeline',
+      parseType: 'Kiểu phân tích',
+      manualSetup: 'Pipeline',
+      builtIn: 'Có sẵn',
+      titleDescription:
+        'Cập nhật cấu hình tập dữ liệu của bạn tại đây, đặc biệt là LLM và lời nhắc.',
+      name: 'Tên tập dữ liệu',
+      photo: 'Ảnh tập dữ liệu',
+      photoTip: 'Bạn có thể tải lên hình ảnh tối đa 4 MB.',
+      description: 'Mô tả',
+      language: 'Ngôn ngữ tài liệu',
+      languageMessage: 'Vui lòng nhập ngôn ngữ của bạn!',
+      languagePlaceholder: 'Vui lòng nhập ngôn ngữ của bạn!',
+      permissions: 'Quyền hạn',
+      embeddingModel: 'Mô hình nhúng',
+      chunkTokenNumber: 'Kích thước khối đề xuất',
+      chunkTokenNumberMessage: 'Số token khối cho văn bản là bắt buộc',
+      embeddingModelTip:
+        'Mô hình nhúng mặc định mà tập dữ liệu sử dụng. Khi tập dữ liệu đã có các khối, việc chuyển đổi mô hình nhúng sẽ khiến hệ thống lấy ngẫu nhiên một vài khối để kiểm tra tính tương thích, nhúng lại chúng bằng mô hình mới và tính độ tương đồng cosin giữa vectơ mới và cũ. Việc chuyển đổi chỉ được cho phép khi độ tương đồng trung bình của mẫu ≥ 0,9. Nếu không, bạn phải xóa tất cả các khối trong tập dữ liệu trước khi có thể thay đổi.',
+      permissionsTip:
+        "Nếu đặt thành 'Nhóm', tất cả thành viên nhóm của bạn sẽ có thể quản lý tập dữ liệu.",
+      chunkTokenNumberTip:
+        'Thiết lập ngưỡng token để tạo một khối. Đoạn văn có số token ít hơn ngưỡng này sẽ được kết hợp với các đoạn tiếp theo cho đến khi vượt quá ngưỡng, lúc đó một khối được tạo ra. Không có khối mới nào được tạo trừ khi gặp dấu phân cách, ngay cả khi ngưỡng đã bị vượt qua.',
+      chunkMethod: 'Phương thức phân khối',
+      chunkMethodTip: 'Xem mẹo ở bên phải.',
+      upload: 'Tải lên',
+      english: 'Tiếng Anh',
+      chinese: 'Tiếng Trung',
+      portugueseBr: 'Tiếng Bồ Đào Nha (Brazil)',
+      embeddingModelPlaceholder: 'Vui lòng chọn một mô hình nhúng.',
+      chunkMethodPlaceholder: 'Vui lòng chọn một phương thức phân khối.',
+      tableColumnMode: 'Chế độ cột',
+      tableColumnModeAuto: 'Tự động',
+      tableColumnModeManual: 'Thủ công',
+      tableColumnModeAutoDescription:
+        'Tất cả các cột được đưa vào văn bản khối và lưu dưới dạng siêu dữ liệu (mặc định của RAGFlow).',
+      tableColumnRoles: 'Vai trò cột',
+      tableColumnRolesTip:
+        'Chọn cột nào được đưa vào văn bản khối (đánh chỉ mục cho tìm kiếm vectơ và toàn văn), chỉ lưu dưới dạng siêu dữ liệu (có thể lọc), hoặc cả hai. Thay đổi áp dụng cho các lần phân tích mới; hãy phân tích lại tài liệu hiện có để vai trò mới có hiệu lực.',
+      tableColumnRoleIndexing: 'Đánh chỉ mục',
+      tableColumnRoleMetadata: 'Siêu dữ liệu',
+      tableColumnRoleBoth: 'Cả hai',
+      tableColumnRolesEmpty:
+        'Tải lên và phân tích cú pháp một tệp CSV hoặc Excel để bắt đầu cấu hình vai trò cột.',
+      tableColumnRolesReparseTip:
+        'Hãy phân tích cú pháp lại các tài liệu hiện có để vai trò cột mới có hiệu lực.',
+      parserLabel: {
+        naive: 'Tổng hợp',
+        general: 'Tổng hợp',
+        qa: 'Hỏi & Đáp',
+        resume: 'Sơ yếu lý lịch',
+        manual: 'Hướng dẫn sử dụng',
+        table: 'Bảng',
+        paper: 'Bài báo',
+        book: 'Sách',
+        laws: 'Văn bản pháp luật',
+        presentation: 'Bản trình bày',
+        picture: 'Hình ảnh',
+        one: 'Một khối',
+        audio: 'Âm thanh',
+        email: 'Email',
+        tag: 'Thẻ',
+      },
+      save: 'Lưu',
+      me: 'Chỉ tôi',
+      team: 'Nhóm',
+      cancel: 'Hủy',
+      methodTitle: 'Mô tả phương thức phân khối',
+      methodExamples: 'Ví dụ',
+      methodExamplesDescription:
+        'Các ảnh chụp màn hình sau đây được cung cấp để làm rõ.',
+      dialogueExamplesTitle: 'Xem',
+      methodEmpty:
+        'Phần này sẽ hiển thị giải thích trực quan về các danh mục tập dữ liệu',
+      audio: `<p>Các định dạng tệp được hỗ trợ là <b>WAV, MP3, AAC, FLAC, OGG</b> và các định dạng âm thanh phổ biến khác.</p>
+<p>Phương pháp này phiên âm các tệp âm thanh thành văn bản bằng mô hình chuyển giọng nói thành văn bản.</p>`,
+      email: `<p>Các định dạng tệp được hỗ trợ là <b>EML</b> và <b>MSG</b>.</p>
+<p>Phương pháp này phân tích các tệp email, trích xuất các trường tiêu đề (như Từ, Đến, CC, Chủ đề và Ngày), nội dung thân thư và tệp đính kèm.</p>`,
+      knowledgeCompiler: `<p>Pipeline này phân tích và chia nhỏ tệp thành các khối, sau đó biên dịch các khối thành các đơn vị tri thức có cấu trúc (đồ thị tri thức, wiki, RAPTOR, sơ đồ tư duy hoặc điều hướng tập dữ liệu) thông qua thành phần Knowledge Compiler.</p>
+<p>Các đơn vị tri thức đã biên dịch được xuất dưới dạng khối hợp nhất vào luồng khối, rất lý tưởng để xây dựng lớp tri thức có thể truy xuất trên các tài liệu đã chia nhỏ.</p>`,
+      book: `<p>Các định dạng tệp được hỗ trợ là <b>DOCX</b>, <b>PDF</b>, <b>TXT</b>.</p><p>
+      Với mỗi sách định dạng PDF, vui lòng đặt <i>phạm vi trang</i> để loại bỏ thông tin không mong muốn và giảm thời gian phân tích.</p>`,
+      laws: `<p>Các định dạng tệp được hỗ trợ là <b>DOCX</b>, <b>PDF</b>, <b>TXT</b>.</p><p>
+      Tài liệu pháp lý thường tuân theo định dạng viết nghiêm ngặt. Chúng tôi dùng đặc điểm văn bản để xác định điểm chia.
+      </p><p>
+      Khối có mức chi tiết đồng nhất theo 'ARTICLE' (Điều), đảm bảo toàn bộ văn bản cấp trên được đưa vào khối.
+      </p>`,
+      manual: `<p>Chỉ hỗ trợ <b>PDF</b>.</p><p>
+      Chúng tôi giả định tài liệu hướng dẫn có cấu trúc phân cấp theo mục, dùng tiêu đề mục thấp nhất làm đơn vị cơ bản để phân khối. Vì vậy, hình ảnh và bảng trong cùng một mục sẽ không bị tách rời, điều này có thể dẫn đến kích thước khối lớn hơn.
+      </p>`,
+      naive: `<p>Các định dạng tệp được hỗ trợ là <b>MD, MDX, DOCX, XLSX, XLS (Excel 97-2003), PPTX, PDF, TXT, JPEG, JPG, PNG, TIF, GIF, CSV, JSON, EML, HTML</b>.</p>
+      <p>Phương pháp này phân khối tệp theo kiểu 'ngây thơ': </p>
+      <p>
+      <ul>
+      <li>Dùng mô hình phát hiện thị giác để chia văn bản thành các đoạn nhỏ hơn.</li>
+      <li>Sau đó, kết hợp các đoạn liền kề cho đến khi số token vượt ngưỡng được chỉ định bởi 'Số token khối cho văn bản', lúc đó một khối được tạo ra.</li></ul></p>`,
+      paper: `<p>Chỉ hỗ trợ tệp <b>PDF</b>.</p><p>
+      Bài báo sẽ được chia theo từng phần, ví dụ <i>tóm tắt, 1.1, 1.2</i>. </p><p>
+      Cách tiếp cận này giúp LLM tóm tắt bài báo hiệu quả hơn và cung cấp phản hồi toàn diện, dễ hiểu hơn.
+      Tuy nhiên, nó cũng làm tăng ngữ cảnh cho hội thoại AI và tăng chi phí tính toán cho LLM. Vì vậy trong hội thoại, hãy cân nhắc giảm giá trị '<b>topN</b>'.</p>`,
+      presentation: `<p>Các định dạng tệp được hỗ trợ là <b>PDF</b>, <b>PPTX</b>.</p><p>
+      Mỗi trang slide được coi là một khối, kèm ảnh thu nhỏ được lưu trữ.</p><p>
+      <i>Phương thức phân khối này được tự động áp dụng cho mọi tệp PPT được tải lên, nên bạn không cần chỉ định thủ công.</i></p>`,
+      qa: `
+      <p>
+      Phương thức phân khối này hỗ trợ định dạng tệp <b>XLSX</b> và <b>CSV/TXT</b>.
+    </p>
+    <ul>
+    <li>
+      Nếu tệp ở định dạng <b>XLSX</b> hoặc <b>XLS (Excel 97-2003)</b>, tệp phải chứa hai cột không có tiêu đề: một cột cho câu hỏi và một cột cho câu trả lời, cột câu hỏi đứng trước cột câu trả lời. Có thể chấp nhận nhiều trang tính, miễn là các cột được cấu trúc đúng cách.
+    </li>
+    <li>
+      Nếu tệp ở định dạng <b>CSV/TXT</b>, tệp phải được mã hóa UTF-8 với TAB làm dấu phân cách để tách câu hỏi và câu trả lời.
+    </li>
+    </ul>
+    <p>
+      <i>
+        Những dòng văn bản không tuân theo quy tắc trên sẽ bị bỏ qua, và
+        mỗi cặp Hỏi & Đáp được coi là một khối riêng biệt.
+      </i>
+    </p>
+      `,
+      resume: `<p>Các định dạng tệp được hỗ trợ là <b>DOCX</b>, <b>PDF</b>, <b>TXT</b>.
+      </p><p>
+      Các sơ yếu lý lịch đa dạng được phân tích cú pháp và tổ chức thành dữ liệu có cấu trúc để giúp nhà tuyển dụng tìm kiếm ứng viên.
+      </p>
+      `,
+      table: `<p>Các định dạng tệp được hỗ trợ là <b>XLSX</b> và <b>CSV/TXT</b>.</p><p>
+      Dưới đây là một số điều kiện tiên quyết và mẹo:
+      <ul>
+    <li>Với tệp CSV hoặc TXT, dấu phân cách giữa các cột phải là <em><b>TAB</b></em>.</li>
+    <li>Dòng đầu tiên phải là tiêu đề cột.</li>
+    <li>Tiêu đề cột phải là các thuật ngữ có nghĩa để hỗ trợ LLM của bạn hiểu.
+    Cách tốt là đặt các từ đồng nghĩa cạnh nhau, phân cách bằng dấu gạch chéo <i>'/'</i>, và liệt kê giá trị trong ngoặc, ví dụ: <i>'Giới tính (nam, nữ)'</i>.<p>
+    Một số ví dụ về tiêu đề:<ol>
+        <li>nhà cung cấp<b>'TAB'</b>Màu sắc (Vàng, Xanh lam, Nâu)<b>'TAB'</b>Giới tính (nam, nữ)<b>'TAB'</b>kích cỡ (M, L, XL, XXL)</li>
+        </ol>
+        </p>
+    </li>
+    <li>Mỗi hàng trong bảng sẽ được coi là một khối.</li>
+    </ul>`,
+      picture: `
+    <p>Hỗ trợ tệp hình ảnh, hỗ trợ video sắp ra mắt.</p><p>
+    Phương pháp này dùng mô hình OCR để trích xuất văn bản từ hình ảnh.
+    </p><p>
+    Nếu văn bản do mô hình OCR trích xuất được coi là chưa đủ, một LLM thị giác được chỉ định sẽ được dùng để mô tả hình ảnh.
+    </p>`,
+      one: `
+    <p>Các định dạng tệp được hỗ trợ là <b>DOCX, XLSX, XLS (Excel 97-2003), PDF, TXT</b>.
+    </p><p>
+    Phương pháp này coi toàn bộ mỗi tài liệu là một khối.
+    </p><p>
+    Áp dụng khi bạn cần LLM tóm tắt toàn bộ tài liệu, với điều kiện nó xử lý được độ dài ngữ cảnh đó.
+    </p>`,
+      knowledgeGraph: `<p>Các định dạng tệp được hỗ trợ là <b>DOCX, EXCEL, PPT, IMAGE, PDF, TXT, MD, JSON, EML</b>
+
+<p>Cách tiếp cận này phân khối tệp theo phương pháp 'ngây thơ'/'Tổng hợp'. Nó chia tài liệu thành các đoạn rồi kết hợp các đoạn liền kề cho đến khi số token vượt ngưỡng được chỉ định bởi 'Số token khối cho văn bản', lúc đó một khối được tạo ra.</p>
+<p>Các khối sau đó được đưa vào LLM để trích xuất thực thể và quan hệ cho đồ thị tri thức và sơ đồ tư duy.</p>
+<p>Đảm bảo rằng bạn đã đặt <b>Loại thực thể</b>.</p>`,
+      tag: `<p>Tập dữ liệu dùng phương thức phân khối 'Tag' hoạt động như một bộ thẻ. Các tập dữ liệu khác dùng nó để gắn thẻ cho khối của mình, và các truy vấn tới những tập dữ liệu này cũng được gắn thẻ bằng bộ thẻ này.</p>
+<p>Bộ thẻ sẽ <b>KHÔNG</b> trực tiếp tham gia vào quá trình Tạo sinh tăng cường truy hồi (RAG).</p>
+<p>Mỗi khối trong tập dữ liệu này là một cặp mô tả-thẻ độc lập.</p>
+<p>Các định dạng tệp được hỗ trợ gồm <b>XLSX</b> và <b>CSV/TXT</b>:</p>
+<p>Nếu tệp ở định dạng <b>XLSX</b>, tệp phải chứa hai cột không có tiêu đề: một cột cho mô tả thẻ và một cột cho tên thẻ, cột Mô tả đứng trước cột Thẻ. Có thể chấp nhận nhiều trang tính, miễn là các cột được cấu trúc đúng cách.</p>
+<p>Nếu tệp ở định dạng <b>CSV/TXT</b>, tệp phải được mã hóa UTF-8 với TAB làm dấu phân cách để tách mô tả và thẻ.</p>
+<p>Trong cột Thẻ, <b>dấu phẩy</b> được dùng để phân tách các thẻ.</p>
+<i>Những dòng văn bản không tuân theo quy tắc trên sẽ bị bỏ qua.</i>
+`,
+      useRaptor: 'RAPTOR',
+      useRaptorTip:
+        'RAPTOR có thể dùng cho các tác vụ hỏi đáp đa bước. Truy cập trang Tệp, nhấn Tạo > RAPTOR để bật. Xem https://ragflow.io/docs/dev/enable_raptor để biết chi tiết.',
+      prompt: 'Lời nhắc',
+      promptTip:
+        'Dùng lời nhắc hệ thống để mô tả tác vụ cho LLM, chỉ định cách nó phản hồi và nêu các yêu cầu khác. Lời nhắc hệ thống thường dùng cùng với các khóa (biến), đóng vai trò đầu vào dữ liệu cho LLM. Dùng dấu gạch chéo `/` hoặc nút (x) để hiển thị các khóa cần dùng.',
+      promptMessage: 'Lời nhắc là bắt buộc',
+      promptText: `Tóm tắt các đoạn văn sau mà không bịa ra sự thật hay thay đổi số liệu.
+Xuất ra đúng hai phần bằng cùng ngôn ngữ với nguồn:
+1. Dòng đầu tiên: chỉ gồm tiêu đề ngắn gọn.
+2. Các dòng tiếp theo: bản tóm tắt ngắn gọn của nội dung.
+Không xuất nhãn, tiêu đề Markdown, gạch đầu dòng hay bất kỳ chú thích nào khác.
+
+Các đoạn văn:
+{cluster_content}`,
+      maxToken: 'Token tối đa',
+      maxTokenTip: 'Số token tối đa cho mỗi khối tóm tắt được tạo ra.',
+      maxTokenMessage: 'Token tối đa là bắt buộc',
+      threshold: 'Ngưỡng',
+      thresholdTip:
+        'Trong RAPTOR, các khối được phân cụm theo độ tương đồng ngữ nghĩa. Tham số Ngưỡng đặt mức tương đồng tối thiểu để các khối được gộp nhóm. Ngưỡng càng cao thì mỗi cụm càng ít khối, ngưỡng càng thấp thì càng nhiều.',
+      thresholdMessage: 'Ngưỡng là bắt buộc',
+      clusteringMethod: 'Phương pháp phân cụm',
+      clusteringMethodTip:
+        'Chọn phương pháp phân cụm RAPTOR. AHC có thể dùng giá trị cụm tối đa lớn hơn nhưng có thể cần nhiều bộ nhớ hơn với đầu vào lớn.',
+      clusteringMethodGmm: 'GMM',
+      clusteringMethodAhc: 'AHC',
+      maxCluster: 'Cụm tối đa',
+      maxClusterTip: 'Số cụm tối đa được tạo ra.',
+      maxClusterMessage: 'Cụm tối đa là bắt buộc',
+      randomSeed: 'Hạt giống ngẫu nhiên',
+      randomSeedMessage: 'Hạt giống ngẫu nhiên là bắt buộc',
+      entityTypes: 'Loại thực thể',
+      compilationTemplate: 'Toán tử',
+      compilationTemplateRequired: 'Vui lòng chọn một toán tử',
+      createTemplate: 'Tạo mẫu',
+      scopeFile: 'Tệp',
+      vietnamese: 'Tiếng Việt',
+      pageRank: 'Xếp hạng trang',
+      pageRankTip: `Bạn có thể gán điểm PageRank cao hơn cho các tập dữ liệu cụ thể trong quá trình truy hồi. Điểm tương ứng được cộng vào điểm tương đồng lai của các khối được truy hồi từ những tập dữ liệu này, làm tăng thứ hạng của chúng. Xem https://ragflow.io/docs/dev/set_page_rank để biết chi tiết.`,
+      tagName: 'Thẻ',
+      frequency: 'Tần suất',
+      searchTags: 'Tìm kiếm thẻ',
+      tagCloud: 'Đám mây',
+      tagTable: 'Bảng',
+      tagSet: 'Bộ thẻ',
+      tagSetTip: `
+     <p> Chọn một hoặc nhiều bộ thẻ để tự động gắn thẻ các khối trong tập dữ liệu của bạn. Xem https://ragflow.io/docs/dev/use_tag_sets để biết chi tiết.</p>
+<p>Truy vấn của người dùng cũng sẽ được tự động gắn thẻ.</p>
+Tính năng tự động gắn thẻ này cải thiện việc truy hồi bằng cách thêm một lớp kiến thức chuyên ngành vào tập dữ liệu hiện có.
+<p>Khác biệt giữa tự động gắn thẻ và tự động từ khóa:</p>
+<ul>
+  <li>Bộ thẻ là tập đóng do người dùng định nghĩa, còn từ khóa do LLM trích xuất có thể xem là tập mở.</li>
+  <li>Bạn phải tải lên các bộ thẻ theo định dạng quy định trước khi chạy tính năng tự động gắn thẻ.</li>
+  <li>Tính năng tự động từ khóa phụ thuộc vào LLM và tiêu thụ lượng token đáng kể.</li>
+</ul>
+      `,
+      topnTags: 'Thẻ Top-N',
+      tags: 'Thẻ',
+      addTag: 'Thêm thẻ',
+      useGraphRag: 'Đồ thị tri thức',
+      useGraphRagTip:
+        'Xây dựng đồ thị tri thức trên các khối tệp của tập dữ liệu hiện tại để tăng cường hỏi đáp đa bước liên quan đến logic lồng nhau. Xem https://ragflow.io/docs/dev/construct_knowledge_graph để biết chi tiết.',
+      graphRagMethod: 'Phương pháp',
+      graphRagMethodTip: `
+      Light: (Mặc định) Dùng lời nhắc do github.com/HKUDS/LightRAG cung cấp để trích xuất thực thể và quan hệ. Tùy chọn này tiêu thụ ít token, ít bộ nhớ và ít tài nguyên tính toán hơn.</br>
+      General: Dùng lời nhắc do github.com/microsoft/graphrag cung cấp để trích xuất thực thể và quan hệ.</br>
+      NER: Dùng spaCy NER và trích xuất từ khóa dựa trên quy tắc để trích xuất thực thể và quan hệ. Bản thân việc trích xuất không cần LLM, giúp nhanh chóng và tiết kiệm tài nguyên.`,
+      graphRagBatchChunkTokenSize: 'Kích thước token khối theo lô',
+      graphRagBatchChunkTokenSizeTip:
+        'Giới hạn token cho mỗi lô khối gửi đến LLM nhằm trích xuất thực thể và quan hệ của đồ thị tri thức. Không áp dụng cho NER.',
+      resolution: 'Hợp nhất thực thể',
+      resolutionTip: `Công tắc khử trùng lặp thực thể. Khi bật, LLM sẽ gộp các thực thể tương tự - ví dụ '2025' và 'năm 2025', hay 'IT' và 'Công nghệ thông tin' - để xây dựng đồ thị chính xác hơn`,
+      community: 'Báo cáo cộng đồng',
+      communityTip:
+        'Trong đồ thị tri thức, cộng đồng là một cụm thực thể liên kết bởi các quan hệ. Bạn có thể yêu cầu LLM tạo bản tóm tắt cho mỗi cộng đồng, gọi là báo cáo cộng đồng. Xem thêm tại đây: https://www.microsoft.com/en-us/research/blog/graphrag-improving-global-search-via-dynamic-community-selection/',
+      theDocumentBeingParsedCannotBeDeleted:
+        'Không thể xóa tài liệu đang được phân tích cú pháp',
+      lastWeek: 'so với tuần trước',
+      top: 'Top',
     },
     chunk: {
       chunk: 'Khối',
@@ -750,11 +1086,17 @@ export default {
       logout: 'Đăng xuất',
       logged: 'Đã đăng nhập!',
       pleaseSelectChunk: 'Vui lòng chọn khối!',
+      registerDisabled: 'Đăng ký người dùng đã bị tắt',
       modified: 'Đã sửa đổi',
       created: 'Đã tạo',
       deleted: 'Đã xóa',
+      noLangfuseConfigToDelete: 'Không có cấu hình Langfuse để xóa',
       renamed: 'Đã đổi tên',
       operated: 'Đã thao tác',
+      compileAutoGenerated:
+        'Việc biên dịch chạy tự động khi tài liệu được phân tích cú pháp; không cần kích hoạt thủ công.',
+      compileNotSupported:
+        'Biên dịch thủ công không được hỗ trợ tại đây; nó tự động chạy khi tài liệu được phân tích cú pháp.',
       updated: 'Đã cập nhật',
       uploaded: 'Đã tải lên',
       200: 'Máy chủ trả về dữ liệu được yêu cầu thành công.',
@@ -762,7 +1104,7 @@ export default {
       202: 'Một yêu cầu đã được xếp hàng trong nền (tác vụ không đồng bộ).',
       204: 'Dữ liệu đã bị xóa thành công.',
       400: 'Có lỗi trong yêu cầu được đưa ra và máy chủ không tạo hoặc sửa đổi dữ liệu.',
-      401: 'Người dùng không có quyền (token, tên người dùng, mật khẩu sai).',
+      401: 'Vui lòng đăng nhập lại.',
       403: 'Người dùng được ủy quyền nhưng bị cấm truy cập.',
       404: 'Yêu cầu được thực hiện cho một bản ghi không tồn tại và máy chủ không thực hiện thao tác.',
       406: 'Định dạng được yêu cầu không khả dụng.',
@@ -780,19 +1122,23 @@ export default {
       hint: 'Gợi ý',
     },
     fileManager: {
+      uploadFolderTitle: 'Tải thư mục lên',
+      folder: 'Thư mục',
+      files: 'Các tệp',
       name: 'Tên',
       uploadDate: 'Ngày tải lên',
-      knowledgeBase: 'Cơ sở kiến thức',
+      knowledgeBase: 'Tập dữ liệu',
       size: 'Kích thước',
       action: 'Hành động',
-      addToKnowledge: 'Liên kết đến Cơ sở kiến thức',
+      addToKnowledge: 'Liên kết đến tập dữ liệu',
       pleaseSelect: 'Vui lòng chọn',
       newFolder: 'Thư mục mới',
       file: 'Tệp',
       uploadFile: 'Tải tệp lên',
-      parseOnCreation: 'Phân tích khi tạo',
+      parseOnCreation: 'Phân tích cú pháp khi tạo',
+      dropFilesHere: 'Kéo và thả tệp của bạn vào đây',
       directory: 'Thư mục',
-      uploadTitle: 'Nhấp hoặc kéo thả tệp vào khu vực này để tải lên',
+      uploadTitle: 'Kéo và thả tệp của bạn vào đây để tải lên',
       uploadDescription:
         'RAGFlow hỗ trợ tải lên tệp một lần hoặc theo lô. Đối với RAGFlow triển khai cục bộ: giới hạn tổng kích thước tệp cho mỗi lần tải lên là 1GB, với giới hạn tải lên theo lô là 32 tệp. Không có giới hạn về tổng số tệp trên mỗi tài khoản. Đối với cloud.ragflow.io: giới hạn tổng kích thước tệp cho mỗi lần tải lên là 10MB, với mỗi tệp không vượt quá 10MB và tối đa là 128 tệp trên mỗi tài khoản.',
       local: 'Tải lên cục bộ',
@@ -802,6 +1148,7 @@ export default {
       uploadLimit:
         'Kích thước tệp không được vượt quá 10M và tổng số tệp không được vượt quá 128',
       destinationFolder: 'Thư mục đích',
+      pleaseUploadAtLeastOneFile: 'Vui lòng tải lên ít nhất một tệp',
     },
     flow: {
       cite: 'Dẫn nguồn',
@@ -1262,13 +1609,42 @@ export default {
       id: 'ID',
       logTitle: 'Tiêu đề',
     },
-    footer: {
-      profile: 'All rights reserved @ React',
+    modal: {
+      okText: 'Xác nhận',
+      cancelText: 'Hủy',
     },
-    layout: {
-      file: 'tệp',
-      knowledge: 'kiến thức',
-      chat: 'trò chuyện',
+    pagination: {
+      total: 'Tổng {{total}}',
+      page: '{{page}} / Trang',
+    },
+
+    deleteModal: {
+      delAgent: 'Xóa agent',
+      delDataset: 'Xóa tập dữ liệu',
+      delSearch: 'Xóa tìm kiếm',
+      delFile: 'Xóa tệp',
+      delFiles: 'Xóa các tệp',
+      delFilesContent: 'Đã chọn {{count}} tệp',
+      delChat: 'Xóa chat',
+      delMember: 'Xóa thành viên',
+      delMemory: 'Xóa bộ nhớ',
+    },
+
+    empty: {
+      noMCP: 'Không có máy chủ MCP nào khả dụng',
+      agentTitle: 'Chưa tạo ứng dụng agent nào',
+      notFoundAgent: 'Không tìm thấy ứng dụng agent',
+      datasetTitle: 'Chưa tạo tập dữ liệu nào',
+      notFoundDataset: 'Không tìm thấy tập dữ liệu',
+      chatTitle: 'Chưa tạo ứng dụng chat nào',
+      notFoundChat: 'Không tìm thấy ứng dụng chat',
+      searchTitle: 'Chưa tạo ứng dụng tìm kiếm nào',
+      notFoundSearch: 'Không tìm thấy ứng dụng tìm kiếm',
+      memoryTitle: 'Chưa tạo bộ nhớ nào',
+      notFoundMemory: 'Không tìm thấy bộ nhớ',
+      skillsTitle: 'Chưa tạo không gian kỹ năng nào',
+      notFoundSkills: 'Không tìm thấy không gian kỹ năng',
+      addNow: 'Thêm ngay',
     },
     language: {
       english: 'Tiếng Anh',
