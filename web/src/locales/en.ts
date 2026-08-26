@@ -446,6 +446,8 @@ Example: A 1 KB message with 1024-dim embedding uses ~9 KB. The 5 MB default lim
       },
       redoAll: 'Clear existing chunks',
       applyAutoMetadataSettings: 'Apply global auto-metadata settings',
+      pleaseSelectNonEmptyFileList:
+        'Please select a non-empty file list',
       parseFileTip: 'Are you sure to parse?',
       parseFile: 'Parse file',
       emptyMetadata: 'No metadata',
@@ -659,6 +661,8 @@ Example: A 1 KB message with 1024-dim embedding uses ~9 KB. The 5 MB default lim
         'Enable formula recognition. Note: This may not work correctly for Cyrillic documents.',
       mineruTableEnable: 'Table recognition',
       mineruTableEnableTip: 'Enable table recognition and extraction.',
+      mineruLanguage: 'Language',
+      mineruLanguageTip: 'Preferred OCR language for MinerU.',
       paddleocrOptions: 'PaddleOCR Options',
       paddleocrApiUrl: 'PaddleOCR API URL',
       paddleocrApiUrlTip: 'The API endpoint URL for PaddleOCR service',
@@ -1113,6 +1117,7 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       maxTokensInvalidMessage: 'Please enter a valid number for Max tokens.',
       maxTokensMinMessage: 'Max tokens cannot be less than 0.',
       thinking: 'Thinking',
+      thinkingMode: 'Thinking',
       thought: 'Thought',
       thinkingDefault: 'System default',
       thinkingEnabled: 'Enabled',
@@ -1150,6 +1155,9 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       created: 'Created',
       action: 'Action',
       embedModalTitle: 'Embed into webpage',
+      embedUserIdPlaceholder: 'e.g. user-001',
+      embedUserIdTooltip:
+        'A plain-text identifier (up to 255 characters) for the end user of the embedded page. It is appended to the embed URL as the userId parameter.',
       published: 'Published',
       publishedTooltip:
         'Use the published version for this embed. When enabled, the generated URL includes release=true.',
@@ -1315,6 +1323,10 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       dataSourceFieldDiscordBotToken: 'Discord Bot Token',
       dataSourceFieldServerIds: 'Server IDs',
       dataSourceFieldChannels: 'Channels',
+      dataSourceFieldXquikApiKey: 'Xquik API key',
+      dataSourceFieldXquikQuery: 'X search query',
+      dataSourceFieldXquikQueryType: 'Result order',
+      dataSourceFieldXquikPageSize: 'Posts per page',
       dataSourceFieldPrimaryAdminEmail: 'Primary Admin Email',
       dataSourceFieldOauthTokenJson: 'OAuth Token JSON',
       dataSourceFieldMyDriveEmails: 'My Drive Emails',
@@ -1750,6 +1762,18 @@ Example: Virtual Hosted Style`,
         'Optional per-query job timeout in milliseconds.',
       rest_apiDescription:
         'Connect any REST API endpoint as a data source using a flexible, configuration-driven connector.',
+      xquikDescription:
+        'Search X posts with Xquik and sync matching posts into a knowledge base.',
+      xquikApiKeyTip:
+        'Create an Xquik API key and store it only in this password field.',
+      xquikQueryTip:
+        'Use keywords, hashtags, or X search operators such as from:username.',
+      xquikPageSizeTip:
+        'Maximum posts requested per API page. Each returned post uses 1 Xquik credit.',
+      xquikMaxPagesTip:
+        'Stop each sync after this many pages to bound API usage.',
+      xquikPageSizeValidation: 'Posts Per Page must be from 1 to 10000.',
+      xquikMaxPagesValidation: 'Max Pages must be from 1 to 1000.',
       onedriveDescription:
         'Connect OneDrive or OneDrive for Business to index files and folders via Microsoft Graph delta queries.',
       onedriveTenantIdTip:
@@ -2459,6 +2483,7 @@ Example: Virtual Hosted Style`,
       file: 'File',
       uploadFile: 'Upload file',
       parseOnCreation: 'Parse on creation',
+      dropFilesHere: 'Drop the files here',
       directory: 'Directory',
       uploadTitle: 'Drag and drop your file here to upload',
       uploadDescription:
