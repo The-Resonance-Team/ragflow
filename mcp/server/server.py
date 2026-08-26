@@ -14,9 +14,11 @@
 #  limitations under the License.
 #
 
+import base64
 import json
 import logging
 import random
+import re
 import time
 from collections import OrderedDict
 from collections.abc import AsyncIterator
@@ -53,6 +55,11 @@ MODE = ""
 TRANSPORT_SSE_ENABLED = True
 TRANSPORT_STREAMABLE_HTTP_ENABLED = True
 JSON_RESPONSE = True
+
+# Read-only knowledge-plane tools must not flood agent contexts: cap raw binary
+# payloads accepted for base64 transport and cap serialized JSON tool results.
+_MAX_BASE64_SOURCE_BYTES = 5 * 1024 * 1024
+_MAX_TEXT_RESULT_CHARS = 1_000_000
 
 
 class RAGFlowConnector:
@@ -437,6 +444,69 @@ class RAGFlowConnector:
 
         return mapped
 
+    @staticmethod
+    def _backend_error_message(res) -> str | None:
+        if res is None:
+            return None
+        try:
+            return res.json().get("message")
+        except Exception:
+            return None
+
+    async def proxy_json(self, *, api_key: str, path: str, params: dict | None = None):
+        """GET an authenticated REST route and strip the response envelope."""
+        res = await self._get(path, params, api_key=api_key)
+        if not res or res.status_code != 200:
+            error_message = self._backend_error_message(res)
+            raise Exception([types.TextContent(type="text", text=error_message or "Cannot process this operation.")])
+
+        res_json = res.json()
+        if res_json.get("code") != 0:
+            raise Exception([types.TextContent(type="text", text=res_json.get("message", "Cannot process this operation."))])
+
+        return {key: value for key, value in res_json.items() if key not in ("code", "message")}
+
+    async def proxy_base64(self, *, api_key: str, path: str):
+        """GET a binary asset route and return it base64-encoded with metadata."""
+        res = await self._get(path, None, api_key=api_key)
+        if not res or res.status_code != 200:
+            error_message = self._backend_error_message(res)
+            raise Exception([types.TextContent(type="text", text=error_message or "Cannot process this operation.")])
+
+        content_type = (res.headers.get("content-type") or "").lower()
+        if "application/json" in content_type:
+            # Backend error envelopes arrive with HTTP 200; surface the message.
+            try:
+                payload = res.json()
+                message = payload.get("message")
+            except Exception:
+                message = None
+            raise Exception([types.TextContent(type="text", text=message or "Cannot process this operation.")])
+
+        blob = res.content or b""
+        if len(blob) > _MAX_BASE64_SOURCE_BYTES:
+            raise Exception(
+                [
+                    types.TextContent(
+                        type="text",
+                        text=f"Asset is {len(blob)} bytes, exceeding the {_MAX_BASE64_SOURCE_BYTES}-byte MCP limit. Use the RAGFlow REST API to download it directly.",
+                    )
+                ]
+            )
+
+        filename = None
+        disposition = res.headers.get("content-disposition") or ""
+        match = re.search(r"filename\*?=(?:UTF-8'')?\"?([^\";]+)", disposition)
+        if match:
+            filename = match.group(1)
+
+        return {
+            "filename": filename,
+            "content_type": res.headers.get("content-type"),
+            "size": len(blob),
+            "content_base64": base64.b64encode(blob).decode(),
+        }
+
 
 class RAGFlowCtx:
     def __init__(self, connector: RAGFlowConnector):
@@ -530,6 +600,276 @@ def with_api_key(required: bool = True):
         return wrapper
 
     return decorator
+
+
+def _input_schema(properties: dict, required: list[str] | None = None) -> dict:
+    return {"type": "object", "properties": properties, "required": required or []}
+
+
+# Read-only knowledge-plane tools. Each entry is a thin authenticated proxy to one
+# REST route; `{arg}` path placeholders are filled from tool arguments and the
+# remaining declared properties are forwarded as query parameters.
+_READ_TOOLS: list[dict] = [
+    {
+        "name": "ragflow_get_dataset",
+        "description": "Get full details of one dataset (knowledge base) by ID.",
+        "path": "/datasets/{dataset_id}",
+        "kind": "json",
+        "required": ["dataset_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+        },
+    },
+    {
+        "name": "ragflow_list_dataset_tags",
+        "description": "List tags attached to a dataset.",
+        "path": "/datasets/{dataset_id}/tags",
+        "kind": "json",
+        "required": ["dataset_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+        },
+    },
+    {
+        "name": "ragflow_aggregate_dataset_tags",
+        "description": "Aggregate tag usage counts across all accessible datasets.",
+        "path": "/datasets/tags/aggregation",
+        "kind": "json",
+        "required": [],
+        "schema": {},
+    },
+    {
+        "name": "ragflow_list_metadata_facets",
+        "description": "List flattened metadata keys/values available across accessible datasets.",
+        "path": "/datasets/metadata/flattened",
+        "kind": "json",
+        "required": [],
+        "schema": {},
+    },
+    {
+        "name": "ragflow_get_metadata_summary",
+        "description": "Get the metadata summary of a dataset.",
+        "path": "/datasets/{dataset_id}/metadata/summary",
+        "kind": "json",
+        "required": ["dataset_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+        },
+    },
+    {
+        "name": "ragflow_list_documents",
+        "description": "List documents inside a dataset. Use it to discover document IDs for targeted retrieval or chunk browsing.",
+        "path": "/datasets/{dataset_id}/documents",
+        "kind": "json",
+        "required": ["dataset_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+            "page": {"type": "integer", "description": "Page number.", "default": 1, "minimum": 1},
+            "page_size": {"type": "integer", "description": "Results per page.", "default": 30, "minimum": 1},
+            "orderby": {"type": "string", "description": "Field to order by.", "default": "create_time"},
+            "desc": {"type": "boolean", "description": "Order in descending.", "default": True},
+            "keywords": {"type": "string", "description": "Keyword filter on document names."},
+            "create_time_from": {"type": "integer", "description": "Unix timestamp lower bound on creation time."},
+            "create_time_to": {"type": "integer", "description": "Unix timestamp upper bound on creation time."},
+            "suffix": {"type": "array", "items": {"type": "string"}, "description": 'Filter by file suffix, e.g. ["pdf", "txt"].'},
+        },
+    },
+    {
+        "name": "ragflow_list_chunks",
+        "description": "List stored chunks of a document in insertion order (no similarity ranking).",
+        "path": "/datasets/{dataset_id}/documents/{document_id}/chunks",
+        "kind": "json",
+        "required": ["dataset_id", "document_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+            "document_id": {"type": "string", "description": "Document ID."},
+            "page": {"type": "integer", "description": "Page number.", "default": 1, "minimum": 1},
+            "page_size": {"type": "integer", "description": "Results per page.", "default": 30, "minimum": 1},
+        },
+    },
+    {
+        "name": "ragflow_get_knowledge_graph",
+        "description": "Get the knowledge graph of a dataset (nodes and edges). Response can be large.",
+        "path": "/datasets/{dataset_id}/graph",
+        "kind": "json",
+        "required": ["dataset_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+        },
+    },
+    {
+        "name": "ragflow_get_structure_graph",
+        "description": "Get per-template structure graphs for a document.",
+        "path": "/datasets/{dataset_id}/documents/{document_id}/structure/graph",
+        "kind": "json",
+        "required": ["dataset_id", "document_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+            "document_id": {"type": "string", "description": "Document ID."},
+        },
+    },
+    {
+        "name": "ragflow_get_ingestion_summary",
+        "description": "Get a parse-status rollup for all documents in a dataset.",
+        "path": "/datasets/{dataset_id}/ingestions/summary",
+        "kind": "json",
+        "required": ["dataset_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+        },
+    },
+    {
+        "name": "ragflow_list_ingestions",
+        "description": "List ingestion (parsing) runs of a dataset.",
+        "path": "/datasets/{dataset_id}/ingestions",
+        "kind": "json",
+        "required": ["dataset_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+        },
+    },
+    {
+        "name": "ragflow_get_ingestion_log",
+        "description": "Get one ingestion log by ID.",
+        "path": "/datasets/{dataset_id}/ingestions/{log_id}",
+        "kind": "json",
+        "required": ["dataset_id", "log_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+            "log_id": {"type": "string", "description": "Ingestion log ID."},
+        },
+    },
+    {
+        "name": "ragflow_list_commits",
+        "description": "List snapshot commits of a dataset workspace.",
+        "path": "/datasets/{dataset_id}/commits",
+        "kind": "json",
+        "required": ["dataset_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+        },
+    },
+    {
+        "name": "ragflow_get_commit",
+        "description": "Get one commit of a dataset workspace.",
+        "path": "/datasets/{dataset_id}/commits/{commit_id}",
+        "kind": "json",
+        "required": ["dataset_id", "commit_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+            "commit_id": {"type": "string", "description": "Commit ID."},
+        },
+    },
+    {
+        "name": "ragflow_list_commit_files",
+        "description": "List files captured in a commit.",
+        "path": "/datasets/{dataset_id}/commits/{commit_id}/files",
+        "kind": "json",
+        "required": ["dataset_id", "commit_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+            "commit_id": {"type": "string", "description": "Commit ID."},
+        },
+    },
+    {
+        "name": "ragflow_diff_commits",
+        "description": "Diff two commits of a dataset workspace.",
+        "path": "/datasets/{dataset_id}/commits/diff",
+        "kind": "json",
+        "required": ["dataset_id", "from", "to"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+            "from": {"type": "string", "description": "Base commit ID."},
+            "to": {"type": "string", "description": "Target commit ID."},
+        },
+    },
+    {
+        "name": "ragflow_get_commit_file_content",
+        "description": "Get the text content of a file captured in a commit.",
+        "path": "/datasets/{dataset_id}/commits/{commit_id}/files/{file_id}/content",
+        "kind": "json",
+        "required": ["dataset_id", "commit_id", "file_id"],
+        "schema": {
+            "dataset_id": {"type": "string", "description": "Dataset ID."},
+            "commit_id": {"type": "string", "description": "Commit ID."},
+            "file_id": {"type": "string", "description": "File ID within the commit."},
+        },
+    },
+    {
+        "name": "ragflow_list_files",
+        "description": "List files under a folder in the file system area.",
+        "path": "/files",
+        "kind": "json",
+        "required": [],
+        "schema": {
+            "parent_id": {"type": "string", "description": "Folder ID to list files from."},
+            "keywords": {"type": "string", "description": "Search keyword filter."},
+            "page": {"type": "integer", "description": "Page number.", "default": 1, "minimum": 1},
+            "page_size": {"type": "integer", "description": "Results per page.", "default": 15, "minimum": 1},
+            "orderby": {"type": "string", "description": "Field to order by.", "default": "create_time"},
+            "desc": {"type": "boolean", "description": "Order in descending.", "default": True},
+        },
+    },
+    {
+        "name": "ragflow_get_document_thumbnails",
+        "description": "Get thumbnails for a set of documents.",
+        "path": "/thumbnails",
+        "kind": "json",
+        "required": ["doc_ids"],
+        "schema": {
+            "doc_ids": {"type": "array", "items": {"type": "string"}, "description": "Document IDs to fetch thumbnails for."},
+        },
+    },
+    {
+        "name": "ragflow_download_file",
+        "description": "Download a file's raw bytes, returned base64-encoded. Fails for assets above the MCP size limit.",
+        "path": "/files/{file_id}",
+        "kind": "base64",
+        "required": ["file_id"],
+        "schema": {
+            "file_id": {"type": "string", "description": "File ID to download."},
+        },
+    },
+    {
+        "name": "ragflow_get_chunk_image",
+        "description": "Fetch an image extracted from a document (referenced by chunk image IDs), returned base64-encoded.",
+        "path": "/documents/images/{image_id}",
+        "kind": "base64",
+        "required": ["image_id"],
+        "schema": {
+            "image_id": {"type": "string", "description": "Composite image ID ``{dataset_id}-{thumbnail_object_key}``."},
+        },
+    },
+]
+
+
+def resolve_read_tool_request(name: str, arguments: dict | None):
+    """Resolve a read-tool invocation into (kind, path, params).
+
+    Returns None when `name` is not a registered read tool; raises ValueError on
+    missing path arguments.
+    """
+    tool = next((entry for entry in _READ_TOOLS if entry["name"] == name), None)
+    if tool is None:
+        return None
+
+    args = dict(arguments or {})
+    path = tool["path"]
+    for key in re.findall(r"{(\w+)}", path):
+        value = args.pop(key, None)
+        if value is None or value == "":
+            raise ValueError(f"Missing required argument: {key}")
+        path = path.replace("{" + key + "}", str(value))
+
+    params = {}
+    for key, value in args.items():
+        if key not in tool["schema"]:
+            continue
+        if value is None or value == "":
+            continue
+        params[key] = json.dumps(value).lower() if isinstance(value, bool) else value
+
+    return tool["kind"], path, params
 
 
 @app.list_tools()
@@ -647,6 +987,13 @@ async def list_tools(*, connector: RAGFlowConnector, api_key: str) -> list[types
                 },
             },
         ),
+    ] + [
+        types.Tool(
+            name=entry["name"],
+            description=entry["description"],
+            inputSchema=_input_schema(entry["schema"], entry.get("required")),
+        )
+        for entry in _READ_TOOLS
     ]
 
 
@@ -698,6 +1045,19 @@ async def call_tool(
         page_size = arguments.get("page_size", 30)
         result = await connector.list_chats(api_key=api_key, page=page, page_size=page_size)
         return [types.TextContent(type="text", text=result)]
+
+    resolved = resolve_read_tool_request(name, arguments)
+    if resolved is not None:
+        kind, path, params = resolved
+        if kind == "base64":
+            payload = await connector.proxy_base64(api_key=api_key, path=path)
+        else:
+            payload = await connector.proxy_json(api_key=api_key, path=path, params=params)
+
+        text = payload if isinstance(payload, str) else json.dumps(payload, ensure_ascii=False)
+        if len(text) > _MAX_TEXT_RESULT_CHARS:
+            text = text[:_MAX_TEXT_RESULT_CHARS] + "\n...[truncated by RAGFlow MCP server]"
+        return [types.TextContent(type="text", text=text)]
 
     raise ValueError(f"Tool not found: {name}")
 

@@ -101,7 +101,7 @@ Vietnamese: keep **prompt** (loanword).
 _Avoid_: lời nhắc, nhắc nhở
 
 **Retrieval**:
-Fetching chunks relevant to a query from a dataset.
+Fetching chunks relevant to a query from a dataset — ranked search where each chunk carries content plus a similarity score, always scoped to what the calling tenant may access.
 Vietnamese: _truy hồi_
 _Avoid_: truy xuất, thu hồi
 
@@ -126,6 +126,26 @@ Vietnamese: keep **token** (loanword).
 **MCP**:
 Model Context Protocol integration surface.
 Vietnamese: keep **MCP**.
+
+### MCP serving
+
+**Serving side** (MCP):
+RAGFlow acting as an MCP server: external agents connect to it and invoke read-only tools. The standalone Python MCP server (`mcp/server/server.py`) is this serving side.
+_Avoid_: server mode (ambiguous with self-host/host)
+
+**Client side** (MCP):
+RAGFlow consuming external MCP servers from inside its own agents and chats.
+_Avoid_: consumer mode
+
+**Self-host mode** (MCP):
+Single-tenant serving: one credential fixed at launch, callers are not individually authenticated.
+
+**Host mode** (MCP):
+Multi-tenant serving: every caller must present their own credential and sees only what it can access.
+
+**API token** (MCP):
+A caller credential issued by RAGFlow, presented as a Bearer header, identifying exactly one tenant. Forwarded per-request to the backing REST API so permission scoping is inherited.
+_Avoid_: API key, host key
 
 ### Translation process
 
