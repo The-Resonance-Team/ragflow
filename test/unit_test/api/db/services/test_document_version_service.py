@@ -181,6 +181,24 @@ def test_replace_records_new_version_and_repoints_location(version_store):
 
 
 @pytest.mark.p2
+def test_replace_preserves_old_blob_in_storage(version_store):
+    """Spec requirement: previous version blob still present in storage."""
+    doc = _make_doc(location="report.pdf")
+    version_store.rows.append(_VersionRow(id="v1", document_id="doc-1", version_number=1, location="report.pdf"))
+    old_blob = b"original-content"
+    new_blob = b"replacement-content"
+    # Pre-populate storage with the old blob at the old location
+    version_store.storage.written[("kb-1", "report.pdf")] = old_blob
+
+    _call_replace(_kb(), doc, new_blob, "user-1")
+
+    # Old blob must still be retrievable at its original location
+    assert version_store.storage.written[("kb-1", "report.pdf")] == old_blob
+    # New blob is stored at the versioned key
+    assert version_store.storage.written[("kb-1", "versions/doc-1/v2/report.pdf")] == new_blob
+
+
+@pytest.mark.p2
 def test_replace_with_identical_bytes_is_a_noop(version_store):
     import xxhash
 

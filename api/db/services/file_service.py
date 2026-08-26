@@ -591,14 +591,14 @@ class FileService(CommonService):
 
     @classmethod
     @DB.connection_context()
-    def upload_document(self, kb, file_objs, user_id, src="local", parent_path: str | None = None, parser_config_override: dict | None = None, on_conflict: str | None = "rename"):
+    def upload_document(self, kb, file_objs, user_id, src="local", parent_path: str | None = None, parser_config_override: dict | None = None, on_conflict: str | None = None):
         """Upload files into a dataset.
 
         ``on_conflict`` decides what happens when a filename already exists in
-        the dataset: ``"rename"`` auto-renames the incoming file, ``"replace"``
-        stores it as a new immutable version of the existing document, and
-        ``None`` reports the conflict back to the caller without storing
-        anything.
+        the dataset: ``None`` (default) reports the conflict back to the caller
+        without storing anything, ``"rename"`` auto-renames the incoming file,
+        and ``"replace"`` stores it as a new immutable version of the existing
+        document.
         """
         root_folder = self.get_root_folder(user_id)
         pf_id = root_folder["id"]

@@ -140,7 +140,7 @@ export const useHandleUploadDocument = () => {
       }
       const { files, conflicts, parserConfig } = pendingConflicts;
 
-      const groups: Record<Exclude<ConflictDirective, undefined>, string[]> = {
+      const groups: Record<ConflictDirective, string[]> = {
         replace: [],
         rename: [],
       };

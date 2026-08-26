@@ -706,11 +706,11 @@ async def _upload_local_documents(kb, tenant_id):
     # Replaced documents re-parse immediately on their new content.
     rerun_errors = []
     if replaced:
-        await thread_pool_exec(_reset_and_parse_documents, tenant_id, [doc["id"] for doc in replaced], rerun_errors)
+        _success_count, queued_ids = await thread_pool_exec(_reset_and_parse_documents, tenant_id, [doc["id"] for doc in replaced], rerun_errors)
         err = err + rerun_errors
-        queued_ids = set(doc["id"] for doc in replaced) - {e.split(":")[0] for e in rerun_errors}
+        queued_id_set = set(queued_ids)
         for doc in replaced:
-            if doc["id"] in queued_ids:
+            if doc["id"] in queued_id_set:
                 doc["run"] = str(TaskStatus.RUNNING.value)
 
     uploaded_docs = [f[0] for f in files]  # remove the blob
@@ -734,19 +734,6 @@ async def _upload_local_documents(kb, tenant_id):
         logging.warning(f"Partial upload success: {len(uploaded_docs) + len(replaced)} succeeded, {len(err)} failed - {msg}")
         return construct_json_result(code=RetCode.SERVER_ERROR, message=msg, data=data)
 
-    if err and not uploaded_docs and not replaced:
-        if conflicts:
-            names = ", ".join(sorted({c["name"] for c in conflicts}))
-            logging.warning(f"Upload conflicts for existing documents: {names}")
-            return construct_json_result(
-                code=RetCode.CONFLICT,
-                message=f"These documents already exist in this dataset: {names}.",
-                data=data,
-            )
-        msg = "\n".join(err)
-        logging.error(msg)
-        return get_error_data_result(message=msg, code=RetCode.SERVER_ERROR)
-
     if not uploaded_docs and not replaced:
         if conflicts:
             names = ", ".join(sorted({c["name"] for c in conflicts}))
@@ -756,6 +743,10 @@ async def _upload_local_documents(kb, tenant_id):
                 message=f"These documents already exist in this dataset: {names}.",
                 data=data,
             )
+        if err:
+            msg = "\n".join(err)
+            logging.error(msg)
+            return get_error_data_result(message=msg, code=RetCode.SERVER_ERROR)
         msg = "There seems to be an issue with your file format. please verify it is correct and not corrupted."
         logging.error(msg)
         return get_error_data_result(message=msg, code=RetCode.DATA_ERROR)
@@ -1588,17 +1579,18 @@ def _reset_and_parse_documents(tenant_id, doc_ids, errors):
 
     Shared by the re-parse endpoint and replacement uploads: cancels pending
     tasks, wipes existing chunks from the doc engine, zeroes counters and
-    queues a new parse per document. Returns the number of documents queued;
+    queues a new parse per document. Returns a tuple of (success_count, success_ids);
     failures are appended to ``errors``.
     """
     kb_table_num_map = {}
     success_count = 0
+    success_ids = []
     from rag.advanced_rag.knowlege_compile.dataset_nav import remove_dataset_nav_doc_sync
 
     for doc_id in doc_ids:
         e, doc = DocumentService.get_by_id(doc_id)
         if not e:
-            errors.append(f"Document not found: {doc_id}")
+            errors.append(f"{doc_id}: Document not found")
             continue
 
         info = {"run": str(TaskStatus.RUNNING.value), "progress": 0}
@@ -1618,7 +1610,8 @@ def _reset_and_parse_documents(tenant_id, doc_ids, errors):
         doc_dict = doc.to_dict()
         DocumentService.run(tenant_id, doc_dict, kb_table_num_map)
         success_count += 1
-    return success_count
+        success_ids.append(doc_id)
+    return success_count, success_ids
 
 
 @manager.route("/datasets/<dataset_id>/documents/parse", methods=["POST"])  # noqa: F821
@@ -1695,7 +1688,7 @@ async def parse_documents(tenant_id, dataset_id):
     try:
 
         def _run_sync():
-            success_count = _reset_and_parse_documents(tenant_id, valid_doc_ids, errors)
+            success_count, _success_ids = _reset_and_parse_documents(tenant_id, valid_doc_ids, errors)
             result = {"success_count": success_count}
             if errors:
                 result["errors"] = errors

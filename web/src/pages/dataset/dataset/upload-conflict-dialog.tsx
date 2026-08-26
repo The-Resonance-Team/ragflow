@@ -1,4 +1,4 @@
-import { IUploadConflict } from '@/hooks/use-document-request';
+import { IUploadConflict, ConflictDirective } from '@/hooks/use-document-request';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,10 +14,8 @@ import { X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export type ConflictDecision = 'replace' | 'rename';
-
 export interface ConflictResolution {
-  decisions: Record<string, ConflictDecision>;
+  decisions: Record<string, ConflictDirective>;
   removed: string[];
 }
 
@@ -37,7 +35,7 @@ export function UploadConflictDialog({
   onResolve,
 }: IUploadConflictDialogProps) {
   const { t } = useTranslation();
-  const [decisions, setDecisions] = useState<Record<string, ConflictDecision>>({});
+  const [decisions, setDecisions] = useState<Record<string, ConflictDirective>>({});
   const [removed, setRemoved] = useState<string[]>([]);
 
   useEffect(() => {
@@ -99,7 +97,7 @@ export function UploadConflictDialog({
                     onValueChange={(value) =>
                       setDecisions((prev) => ({
                         ...prev,
-                        [conflict.id]: value as ConflictDecision,
+                        [conflict.id]: value as ConflictDirective,
                       }))
                     }
                   >

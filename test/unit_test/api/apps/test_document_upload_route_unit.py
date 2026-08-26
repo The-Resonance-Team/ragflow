@@ -213,7 +213,7 @@ def upload_env(document_api, monkeypatch):
         return state.upload_result
 
     monkeypatch.setattr(document_api.FileService, "upload_document", classmethod(lambda cls, *args, **kwargs: fake_upload(*args, **kwargs)))
-    monkeypatch.setattr(document_api, "_reset_and_parse_documents", lambda tenant_id, doc_ids, errors: state.rerun_ids.extend(doc_ids) or len(doc_ids))
+    monkeypatch.setattr(document_api, "_reset_and_parse_documents", lambda tenant_id, doc_ids, errors: (state.rerun_ids.extend(doc_ids) or len(doc_ids), list(doc_ids)))
     return state
 
 
