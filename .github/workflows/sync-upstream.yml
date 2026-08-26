@@ -1,0 +1,61 @@
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: [ "self-hosted", "linux" ]
+    env:
+      BRANCH: sync/upstream-main
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch upstream
+        run: |
+          git config user.name "sync-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/infiniflow/ragflow.git
+          git fetch upstream --tags
+
+      - name: Check for new commits
+        id: check
+        run: |
+          COUNT=$(git rev-list --count HEAD..upstream/main)
+          SHA=$(git rev-parse --short upstream/main)
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "skip=$([ "$COUNT" -eq 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Merge into sync branch
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          if git ls-remote --exit-code --heads origin "$BRANCH"; then
+            git fetch origin "$BRANCH"
+            git switch "$BRANCH"
+          else
+            git switch -c "$BRANCH"
+          fi
+          git merge upstream/main --no-edit
+          git push origin "$BRANCH"
+
+      - name: Open PR
+        if: steps.check.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(gh pr list --head "$BRANCH" --state open --json number --jq length)" -eq 0 ]; then
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "Sync upstream main" \
+              --body "Merge [infiniflow/ragflow@${{ steps.check.outputs.sha }}](https://github.com/infiniflow/ragflow/compare/main...${{ steps.check.outputs.sha }}) — ${{ steps.check.outputs.count }} new commits."
+          fi
