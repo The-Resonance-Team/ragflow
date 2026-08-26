@@ -168,13 +168,13 @@ export default {
       rerankTip: `Tùy chọn. Nếu để trống, RAGFlow sẽ sử dụng kết hợp giữa độ tương đồng từ khóa có trọng số và độ tương đồng cosine vector có trọng số; nếu chọn mô hình rerank, điểm rerank có trọng số sẽ thay thế độ tương đồng cosine vector có trọng số. Xin lưu ý rằng việc sử dụng mô hình rerank sẽ làm tăng đáng kể thời gian phản hồi của hệ thống. Nếu bạn muốn sử dụng mô hình rerank, hãy đảm bảo sử dụng SaaS reranker; nếu bạn muốn sử dụng mô hình rerank triển khai cục bộ, hãy khởi động RAGFlow bằng docker-compose-gpu.yml.`,
       topK: 'Top-K',
       topKTip: `Sử dụng cùng với Rerank model, thiết lập này xác định số lượng đoạn văn cần gửi đến mô hình reranking được chỉ định.`,
-      delimiter: 'Dấu phân cách cho phân đoạn văn bản',
+      delimiter: 'Dấu phân cách cho văn bản',
       html4excel: 'Excel sang HTML',
       html4excelTip: `Sử dụng cùng với phương pháp cắt khúc General. Khi chưa được bật, tệp bảng tính (XLSX, XLS (Excel 97-2003)) sẽ được phân tích theo dòng thành các cặp khóa-giá trị. Khi bật, tệp bảng tính sẽ được phân tích thành bảng HTML. Nếu bảng gốc vượt quá 12 dòng, hệ thống sẽ tự động chia thành nhiều bảng HTML mỗi 12 dòng. Để biết thêm thông tin, vui lòng xem https://ragflow.io/docs/dev/enable_excel2html.`,
       autoKeywords: 'Từ khóa tự động',
       autoKeywordsTip: `Tự động trích xuất N từ khóa cho mỗi khối để tăng thứ hạng của chúng trong các truy vấn chứa các từ khóa đó. Lưu ý rằng các token bổ sung sẽ được tiêu thụ bởi mô hình trò chuyện được chỉ định trong "Cài đặt mô hình hệ thống". Bạn có thể kiểm tra hoặc cập nhật các từ khóa đã thêm cho một khối từ danh sách khối. Để biết chi tiết, vui lòng xem https://ragflow.io/docs/dev/autokeyword_autoquestion.`,
       autoQuestions: 'Câu hỏi tự động',
-      autoQuestionsTip: `Để tăng điểm xếp hạng, hãy trích xuất N câu hỏi cho mỗi đoạn kiến thức bằng mô hình trò chuyện được xác định trong "Cài đặt mô hình hệ thống". Lưu ý rằng việc này sẽ tiêu tốn thêm token. Kết quả có thể được xem và chỉnh sửa trong danh sách các đoạn. Lỗi trích xuất câu hỏi sẽ không chặn quá trình phân đoạn; kết quả trống sẽ được thêm vào đoạn gốc. Để biết chi tiết, vui lòng xem https://ragflow.io/docs/dev/autokeyword_autoquestion.`,
+      autoQuestionsTip: `Trích xuất tự động N câu hỏi cho mỗi khối để tăng thứ hạng của chúng đối với các truy vấn chứa những câu hỏi đó. Bạn có thể kiểm tra hoặc cập nhật các câu hỏi đã thêm cho một khối trong danh sách khối. Tính năng này không làm gián đoạn quá trình chia khối nếu xảy ra lỗi, ngoại trừ việc có thể thêm một kết quả rỗng vào khối gốc. Lưu ý rằng việc này sẽ tiêu tốn thêm token của mô hình lập chỉ mục được chỉ định trong 'Cấu hình'. Để biết chi tiết, xem https://ragflow.io/docs/dev/autokeyword_autoquestion.`,
       delimiterTip: `Hỗ trợ nhiều ký tự phân cách, và các ký tự phân cách nhiều ký tự được bao bọc bởi dấu . Ví dụ: nếu được cấu hình như thế này: "##"; thì văn bản sẽ được phân tách bởi dấu xuống dòng, hai dấu # và dấu chấm phẩy, sau đó được lắp ráp theo kích thước của "số token". Thiết lập các dấu phân cách chỉ sau khi hiểu cơ chế phân đoạn và phân khối văn bản.`,
       redo: `Bạn có muốn xóa các đoạn {{chunkNum}} hiện có không?`,
       knowledgeGraph: 'Đồ thị tri thức',
@@ -204,7 +204,7 @@ export default {
       embeddingModelTip:
         'Mô hình nhúng mặc định của cơ sở tri thức. Khi cơ sở tri thức đã có các đoạn (chunk), lúc thay đổi mô hình nhúng, hệ thống sẽ lấy ngẫu nhiên một số chunk để kiểm tra tương thích, mã hóa lại bằng mô hình nhúng mới và tính độ tương đồng cosine giữa vector mới và vector cũ. Chỉ cho phép chuyển khi độ tương đồng trung bình của mẫu ≥ 0.9. Nếu không, bạn phải xóa tất cả các chunk trong cơ sở tri thức trước khi có thể thay đổi.',
       permissionsTip:
-        'Nếu được đặt thành "Đội", tất cả các thành viên trong nhóm sẽ có thể quản lý cơ sở kiến thức.',
+        'Nếu được đặt thành "Nhóm", tất cả các thành viên trong nhóm sẽ có thể quản lý cơ sở kiến thức.',
       chunkTokenNumberTip:
         'Nó đặt ngưỡng token cho một khối. Một đoạn văn có ít token hơn ngưỡng này sẽ được kết hợp với đoạn văn tiếp theo cho đến khi số lượng token vượt quá ngưỡng, tại thời điểm đó, một khối được tạo. Không có khối mới nào được tạo ra trừ khi một dấu phân cách được gặp, ngay cả khi ngưỡng này bị vượt quá.',
       chunkMethod: 'Phương thức khối',
@@ -228,8 +228,8 @@ export default {
 <p>Phương pháp này phiên âm các tệp âm thanh thành văn bản bằng mô hình chuyển giọng nói thành văn bản.</p>`,
       email: `<p>Các định dạng tệp được hỗ trợ là <b>EML</b> và <b>MSG</b>.</p>
 <p>Phương pháp này phân tích các tệp email, trích xuất các trường tiêu đề (như Từ, Đến, CC, Chủ đề và Ngày), nội dung thân thư và tệp đính kèm.</p>`,
-      knowledgeCompiler: `<p>Pipeline này phân tích và chia nhỏ tệp thành các chunk, sau đó biên dịch các chunk thành các đơn vị tri thức có cấu trúc (đồ thị tri thức, wiki, RAPTOR, sơ đồ tư duy hoặc điều hướng tập dữ liệu) thông qua thành phần Knowledge Compiler.</p>
-<p>Các đơn vị tri thức đã biên dịch được xuất dưới dạng chunk hợp nhất vào luồng chunk, rất lý tưởng để xây dựng lớp tri thức có thể truy xuất trên các tài liệu đã chia nhỏ.</p>`,
+      knowledgeCompiler: `<p>Pipeline này phân tích và chia nhỏ tệp thành các khối, sau đó biên dịch các khối thành các đơn vị tri thức có cấu trúc (đồ thị tri thức, wiki, RAPTOR, sơ đồ tư duy hoặc điều hướng cơ sở kiến thức) thông qua thành phần Knowledge Compiler.</p>
+<p>Các đơn vị tri thức đã biên dịch được xuất dưới dạng các khối hợp nhất vào luồng khối, rất lý tưởng để xây dựng lớp tri thức có thể truy xuất trên các tài liệu đã chia nhỏ.</p>`,
       book: `<p>Các định dạng tệp được hỗ trợ là <b>DOCX</b>, <b>PDF</b>, <b>TXT</b>.</p><p>
       Đối với mỗi sách trong PDF, vui lòng đặt <i>phạm vi trang</i> để loại bỏ thông tin không mong muốn và giảm thời gian phân tích.</p>`,
       laws: `<p>Các định dạng tệp được hỗ trợ là <b>DOCX</b>, <b>PDF</b>, <b>TXT</b>.</p><p>
@@ -310,10 +310,10 @@ export default {
       useRaptor: 'Sử dụng RAPTOR để cải thiện truy xuất',
       useRaptorTip:
         'Kích hoạt RAPTOR cho các tác vụ hỏi đáp đa bước. Xem chi tiết tại https://ragflow.io/docs/dev/enable_raptor.',
-      prompt: 'Nhắc nhở',
+      prompt: 'Prompt',
       promptTip:
-        'Sử dụng lời nhắc hệ thống để mô tả nhiệm vụ cho LLM, chỉ định cách nó nên phản hồi và phác thảo các yêu cầu khác nhau. Lời nhắc hệ thống thường được sử dụng kết hợp với các khóa (biến), đóng vai trò là các đầu vào dữ liệu khác nhau cho LLM. Sử dụng dấu gạch chéo `/` hoặc nút (x) để hiển thị các khóa cần sử dụng.',
-      promptMessage: 'Nhắc nhở là bắt buộc',
+        'Sử dụng system prompt để mô tả nhiệm vụ cho LLM, chỉ định cách nó nên phản hồi và phác thảo các yêu cầu khác nhau. System prompt thường được sử dụng kết hợp với các khóa (biến), đóng vai trò là các đầu vào dữ liệu khác nhau cho LLM. Sử dụng dấu gạch chéo `/` hoặc nút (x) để hiển thị các khóa cần sử dụng.',
+      promptMessage: 'Prompt là bắt buộc',
       promptText: `Vui lòng tóm tắt các đoạn văn sau. Cẩn thận với các số, đừng bịa ra. Các đoạn văn như sau:
       {cluster_content}
       Nội dung ở trên là nội dung bạn cần tóm tắt.`,
@@ -322,7 +322,7 @@ export default {
       maxTokenMessage: 'Số token tối đa là bắt buộc',
       threshold: 'Ngưỡng',
       thresholdTip:
-        'Trong RAPTOR, các đoạn văn bản được nhóm lại dựa trên sự tương đồng ngữ nghĩa của chúng. Tham số Ngưỡng thiết lập mức độ tương đồng tối thiểu cần thiết để các đoạn được nhóm lại với nhau. Ngưỡng càng cao thì mỗi nhóm sẽ có ít đoạn hơn, còn ngưỡng càng thấp thì mỗi nhóm sẽ có nhiều đoạn hơn.',
+        'Trong RAPTOR, các khối được phân cụm theo mức độ tương đồng ngữ nghĩa của chúng. Tham số Ngưỡng thiết lập mức độ tương đồng tối thiểu cần thiết để các khối được nhóm lại với nhau. Ngưỡng càng cao thì mỗi cụm sẽ có ít khối hơn, ngưỡng càng thấp thì sẽ có nhiều khối hơn.',
       thresholdMessage: 'Ngưỡng là bắt buộc',
       maxCluster: 'Cụm tối đa',
       maxClusterTip: 'Số lượng cụm tối đa được tạo ra.',
@@ -387,7 +387,6 @@ export default {
       enabledSelected: 'Bật đã chọn',
       disabledSelected: 'Tắt đã chọn',
       deleteSelected: 'Xóa đã chọn',
-      search: 'Tìm kiếm',
       all: 'Tất cả',
       enabled: 'Đã bật',
       disabled: 'Đã tắt',
@@ -409,7 +408,7 @@ export default {
       newConversation: 'Cuộc trò chuyện mới',
       createAssistant: 'Tạo trợ lý',
       assistantSetting: 'Cài đặt trợ lý',
-      promptEngine: 'Công cụ nhắc nhở',
+      promptEngine: 'Công cụ prompt',
       modelSetting: 'Cài đặt mô hình',
       chat: 'Chat',
       newChat: 'Chat mới',
@@ -417,7 +416,7 @@ export default {
       sendPlaceholder: 'Nhắn tin cho Trợ lý...',
       chatConfiguration: 'Cấu hình Chat',
       chatConfigurationDescription:
-        'Thiết lập trợ lý trò chuyện cho các tập dữ liệu đã chọn (cơ sở tri thức) tại đây. 💕',
+        'Thiết lập trợ lý trò chuyện cho các cơ sở kiến thức đã chọn tại đây. 💕',
       assistantName: 'Tên trợ lý',
       assistantNameMessage: 'Tên trợ lý là bắt buộc',
       namePlaceholder: 'ví dụ: Resume Jarvis',
@@ -443,7 +442,7 @@ export default {
       topN: 'Top N',
       topNTip: `Không phải tất cả các khối có điểm tương đồng vượt quá 'ngưỡng tương đồng' sẽ được cung cấp cho LLMs. LLM chỉ có thể xem 'Top N' khối này.`,
       variable: 'Biến',
-      variableTip: `Sử dụng cùng với các API quản lý trợ lý trò chuyện của RAGFlow, các biến có thể giúp phát triển các chiến lược lời nhắc hệ thống linh hoạt hơn. Các biến được định nghĩa sẽ được sử dụng bởi 'Lời nhắc hệ thống' như một phần của lời nhắc cho LLM. {knowledge} là một biến đặc biệt được bảo lưu, đại diện cho các phần được truy xuất từ cơ sở tri thức được chỉ định, và tất cả các biến nên được đặt trong ngoặc nhọn {} trong 'Lời nhắc hệ thống'. Xem https://ragflow.io/docs/dev/set_chat_variables để biết thêm chi tiết.`,
+      variableTip: `Sử dụng cùng với các API quản lý trợ lý trò chuyện của RAGFlow, các biến giúp xây dựng chiến lược system prompt linh hoạt hơn. Các biến được định nghĩa sẽ được 'system prompt' sử dụng như một phần của prompt cho LLM. {knowledge} là biến đặc biệt được bảo lưu, đại diện cho các khối được truy xuất từ (các) cơ sở kiến thức được chỉ định, và tất cả các biến phải được đặt trong ngoặc nhọn {} trong 'system prompt'. Xem https://ragflow.io/docs/dev/set_chat_variables để biết chi tiết.`,
       add: 'Thêm',
       key: 'Khóa',
       optional: 'Tùy chọn',
@@ -534,7 +533,7 @@ export default {
         'Cho phép viết lại câu với ngôn ngữ được chỉ định, hoặc sử dụng câu hỏi mới nhất nếu không chọn ngôn ngữ nào.',
       showChunkMetadata: 'Hiển thị siêu dữ liệu đoạn',
       showChunkMetadataTip:
-        'Hiển thị siêu dữ liệu tài liệu (tiêu đề, số trang, ngày tải lên, v.v.) bên cạnh các đoạn văn bản được truy xuất',
+        'Hiển thị siêu dữ liệu tài liệu (ví dụ: tiêu đề, số trang, ngày tải lên) bên cạnh các khối văn bản được truy hồi',
       metadataFields: 'Trường siêu dữ liệu',
       metadataFieldsTip: 'Chọn các trường siêu dữ liệu hiển thị với mỗi đoạn',
     },
@@ -551,7 +550,6 @@ export default {
       passwordDescription:
         'Vui lòng nhập mật khẩu hiện tại của bạn để thay đổi mật khẩu.',
       model: 'Nhà cung cấp mô hình',
-      modelDescription: 'Đặt tham số mô hình và KHÓA API ở đây.',
       team: 'Nhóm',
       system: 'Hệ thống',
       logout: 'Đăng xuất',
@@ -613,7 +611,7 @@ export default {
       sequence2txtModelTip:
         'Mô hình ASR mặc định mà tất cả các cơ sở kiến thức mới tạo sẽ sử dụng. Sử dụng mô hình này để chuyển đổi giọng nói thành văn bản tương ứng. Nếu bạn không thể tìm thấy mô hình từ danh sách thả xuống, hãy kiểm tra https://ragflow.io/docs/dev/supported_models để xem nhà cung cấp mô hình của bạn có hỗ trợ mô hình này không.',
       rerankModel: 'Mô hình xếp hạng lại',
-      rerankModelTip: `Mô hình rerank mặc định để reranking các đoạn văn bản. Nếu bạn không tìm thấy mô hình nào từ danh sách thả xuống, hãy kiểm tra https://ragflow.io/docs/dev/supported_models để xem nhà cung cấp mô hình của bạn có hỗ trợ mô hình này không.`,
+      rerankModelTip: `Mô hình rerank mặc định để xếp hạng lại các khối. Nếu bạn không tìm thấy mô hình nào trong danh sách thả xuống, hãy kiểm tra https://ragflow.io/docs/dev/supported_models để xem nhà cung cấp mô hình của bạn có hỗ trợ mô hình này hay không.`,
       ttsModel: 'Mô hình TTS',
       ttsModelTip:
         'Mô hình text-to-speech mặc định. Nếu bạn không tìm thấy mô hình nào từ danh sách thả xuống, hãy kiểm tra https://ragflow.io/docs/dev/supported_models để xem nhà cung cấp mô hình của bạn có hỗ trợ mô hình này không.',
@@ -710,10 +708,7 @@ export default {
       FishAudioModelNameMessage:
         'Vui lòng đặt tên cho mô hình tổng hợp giọng nói của bạn',
       addFishAudioAK: 'Khóa API Fish Audio',
-      addFishAudioAKMessage: 'Vui lòng nhập KHÓA API của bạn',
       addFishAudioRefID: 'ID Tham chiếu Fish Audio',
-      addFishAudioRefIDMessage:
-        'Vui lòng nhập ID Tham chiếu (để trống để sử dụng mô hình mặc định).',
       GoogleModelIDMessage: 'Vui lòng nhập ID mô hình của bạn!',
       addGoogleProjectID: 'ID Dự án',
       GoogleProjectIDMessage: 'Vui lòng nhập ID Dự án của bạn',
@@ -817,8 +812,6 @@ export default {
       addField: 'Thêm trường',
       addMessage: 'Thêm tin nhắn',
       loop: 'Lặp',
-      loopTip:
-        'Lặp là giới hạn trên của số lần lặp của thành phần hiện tại, khi số lần lặp vượt quá giá trị của vòng lặp, có nghĩa là thành phần không thể hoàn thành tác vụ hiện tại, vui lòng tối ưu hóa lại tác nhân',
       yes: 'Có',
       no: 'Không',
       key: 'Khóa',
@@ -829,9 +822,9 @@ export default {
       save: 'Lưu',
       title: 'ID:',
       beginDescription: 'Đây là nơi bắt đầu luồng công việc.',
-      answerDescription: `Một thành phần đóng vai trò như giao diện giữa người và bot, nhận đầu vào của người dùng và hiển thị phản hồi của tác nhân.`,
+      answerDescription: `Một thành phần đóng vai trò là giao diện giữa người và bot, nhận đầu vào của người dùng và hiển thị phản hồi của Agent.`,
       retrievalDescription: `Một thành phần truy xuất thông tin từ một cơ sở kiến thức được chỉ định và trả về 'Phản hồi trống' nếu không tìm thấy thông tin. Đảm bảo chọn đúng cơ sở kiến thức.`,
-      generateDescription: `Một thành phần nhắc LLM tạo phản hồi. Đảm bảo lời nhắc được đặt chính xác.`,
+      generateDescription: `Một thành phần yêu cầu LLM tạo phản hồi. Đảm bảo prompt được thiết lập chính xác.`,
       categorizeDescription: `Một thành phần sử dụng LLM để phân loại đầu vào của người dùng thành các danh mục được xác định trước. Đảm bảo bạn chỉ định tên, mô tả và ví dụ cho mỗi danh mục, cùng với thành phần tiếp theo tương ứng.`,
       relevantDescription: `Một thành phần sử dụng LLM để đánh giá xem đầu ra phía thượng nguồn có liên quan đến truy vấn mới nhất của người dùng hay không. Đảm bảo bạn chỉ định thành phần tiếp theo cho mỗi kết quả đánh giá.`,
       rewriteQuestionDescription: `Một thành phần tinh chỉnh truy vấn của người dùng nếu không thể truy xuất thông tin liên quan từ cơ sở kiến thức. Nó lặp lại quá trình này cho đến khi đạt đến giới hạn lặp trên được xác định trước. Đảm bảo phía thượng nguồn của nó là 'Liên quan' và phía hạ nguồn là 'Truy xuất'.`,
@@ -843,19 +836,18 @@ export default {
       promptText: `Vui lòng tóm tắt các đoạn văn sau. Cẩn thận với các số, đừng bịa ra. Các đoạn văn như sau:
                {input}
         Nội dung ở trên là nội dung bạn cần tóm tắt.`,
-      createGraph: 'Tạo tác nhân',
+      createGraph: 'Tạo Agent',
       createFromTemplates: 'Tạo từ mẫu',
       retrieval: 'Truy xuất',
       generate: 'Sinh',
       answer: 'Trả lời',
       categorize: 'Phân loại',
-      relevant: 'Liên quan',
       rewriteQuestion: 'Viết lại câu hỏi',
       rewrite: 'Viết lại',
       begin: 'Bắt đầu',
       message: 'Tin nhắn',
       blank: 'Trống',
-      createFromNothing: 'Tạo tác nhân từ đầu',
+      createFromNothing: 'Tạo Agent của bạn từ đầu',
       addItem: 'Thêm mục',
       addSubItem: 'Thêm mục con',
       nameRequiredMsg: 'Cần có tên',
@@ -928,8 +920,6 @@ export default {
       sourceLang: 'Ngôn ngữ nguồn',
       targetLang: 'Ngôn ngữ đích',
       gitHub: 'GitHub',
-      githubDescription:
-        'Thành phần này được sử dụng để tìm kiếm kho lưu trữ từ https://github.com/. Top N xác định số lượng kết quả tìm kiếm cần điều chỉnh.',
       baiduFanyi: 'Baidu Fanyi',
       baiduFanyiDescription:
         'Thành phần này được sử dụng để dịch thuật từ https://fanyi.baidu.com/. Thông thường, nó cung cấp kết quả dịch thuật chuyên biệt hơn.',
@@ -1197,7 +1187,7 @@ export default {
       input: 'Đầu vào',
       output: 'Đầu ra',
       parameter: 'Tham số',
-      howUseId: 'Cách sử dụng ID tác nhân?',
+      howUseId: 'Cách sử dụng ID Agent?',
       content: 'Nội dung',
       operationResults: 'Kết quả hoạt động',
       autosaved: 'Tự động lưu',
@@ -1206,9 +1196,6 @@ export default {
       testRun: 'Chạy thử nghiệm',
       template: 'Mẫu',
       templateDescription: `Thành phần này được sử dụng để sắp chữ đầu ra của nhiều thành phần khác nhau.1. Hỗ trợ mẫu Jinja2, trước tiên chuyển đầu vào thành đối tượng và sau đó kết xuất mẫu. 2. Phương pháp ban đầu sử dụng thay thế chuỗi {parameter} cũng được giữ lại đồng thời`,
-      arXivTip: `Thành phần này được sử dụng để lấy kết quả tìm kiếm từ https://arxiv.org/. Thông thường, nó hoạt động như một phần bổ sung cho cơ sở tri thức. Top N chỉ định số lượng kết quả tìm kiếm bạn cần điều chỉnh.`,
-      googleTip: `Thành phần này được sử dụng để lấy kết quả tìm kiếm từ https://www.google.com/. Thông thường, nó hoạt động như một phần bổ sung cho cơ sở tri thức. Top N và khóa API SerpApi chỉ định số lượng kết quả tìm kiếm bạn cần điều chỉnh.`,
-      bingTip: `Thành phần này được sử dụng để lấy kết quả tìm kiếm từ https://www.bing.com/. Thông thường, nó hoạt động như một phần bổ sung cho cơ sở tri thức. Top N và khóa đăng ký Bing chỉ định số lượng kết quả tìm kiếm bạn cần điều chỉnh.`,
       gitHubDescription: `Thành phần này được sử dụng để tìm kiếm các kho lưu trữ từ https://github.com/. Top N chỉ định số lượng kết quả tìm kiếm cần điều chỉnh.`,
       flow: `Quy trình làm việc`,
       emailDescription: 'Gửi email đến địa chỉ đã chỉ định',
@@ -1241,7 +1228,7 @@ export default {
       ccEmailTip: 'cc_email: Email CC (Tùy chọn)',
       iteration: 'Khối lặp',
       iterationDescription: `Thành phần này trước tiên chia đầu vào thành mảng bằng "dấu phân cách". Thực hiện các bước thao tác tương tự trên các phần tử trong mảng theo trình tự cho đến khi tất cả các kết quả được xuất ra, có thể được hiểu là bộ xử lý hàng loạt tác vụ. Ví dụ: trong nút lặp lại bản dịch văn bản dài, nếu tất cả nội dung được nhập vào nút LLM, có thể đạt đến giới hạn hội thoại duy nhất. Trước tiên, nút ngược dòng có thể chia văn bản dài thành nhiều mảnh và hợp tác với nút lặp đi lặp lại để thực hiện dịch hàng loạt trên mỗi phân đoạn để tránh đạt đến giới hạn tin nhắn LLM cho một cuộc hội thoại.`,
-      delimiterTip: `Dấu phân cách này được sử dụng để chia văn bản đầu vào thành nhiều đoạn văn bản, tiếng vang sẽ được thực hiện dưới dạng mục đầu vào của mỗi lần lặp.`,
+      delimiterTip: `Dấu phân cách này được dùng để chia văn bản đầu vào thành nhiều phần văn bản, kết quả echo sẽ được thực hiện như mục đầu vào của mỗi lần lặp.`,
       delimiterOptions: {
         comma: 'Dấu phẩy',
         lineBreak: 'Ngắt dòng',
@@ -1251,24 +1238,15 @@ export default {
         minus: 'Dash',
         semicolon: 'Semicolon',
       },
-      prompt: 'Nhắc nhở',
+      prompt: 'Prompt',
       promptTip:
-        'Sử dụng lời nhắc hệ thống để mô tả nhiệm vụ cho LLM, chỉ định cách nó nên phản hồi và phác thảo các yêu cầu khác nhau. Lời nhắc hệ thống thường được sử dụng kết hợp với các khóa (biến), đóng vai trò là các đầu vào dữ liệu khác nhau cho LLM. Sử dụng dấu gạch chéo `/` hoặc nút (x) để hiển thị các khóa cần sử dụng.',
-      promptMessage: 'Nhắc nhở là bắt buộc',
+        'Sử dụng system prompt để mô tả nhiệm vụ cho LLM, chỉ định cách nó nên phản hồi và phác thảo các yêu cầu khác nhau. System prompt thường được sử dụng kết hợp với các khóa (biến), đóng vai trò là các đầu vào dữ liệu khác nhau cho LLM. Sử dụng dấu gạch chéo `/` hoặc nút (x) để hiển thị các khóa cần sử dụng.',
+      promptMessage: 'Prompt là bắt buộc',
       runningHintText: 'đang chạy...🕞',
       canvasCategory: 'Danh mục canvas',
       tags: 'Thẻ',
-      created: 'Đã tạo',
       id: 'ID',
       logTitle: 'Tiêu đề',
-    },
-    footer: {
-      profile: 'All rights reserved @ React',
-    },
-    layout: {
-      file: 'tệp',
-      knowledge: 'kiến thức',
-      chat: 'trò chuyện',
     },
     language: {
       english: 'Tiếng Anh',
