@@ -129,7 +129,23 @@ class DocumentService(CommonService):
 
     @classmethod
     @DB.connection_context()
-    def get_by_kb_id(cls, kb_id, page_number, items_per_page, orderby, desc, keywords, run_status, types, suffix, name=None, doc_ids=None, return_empty_metadata=False):
+    def get_by_kb_id(
+        cls,
+        kb_id,
+        page_number,
+        items_per_page,
+        orderby,
+        desc,
+        keywords,
+        run_status,
+        types,
+        suffix,
+        name=None,
+        doc_ids=None,
+        return_empty_metadata=False,
+        create_time_from: int = 0,
+        create_time_to: int = 0,
+    ):
         fields = cls.get_cls_model_fields()
         if keywords:
             docs = (
@@ -159,6 +175,11 @@ class DocumentService(CommonService):
             docs = docs.where(cls.model.suffix.in_(suffix))
         if name:
             docs = docs.where(cls.model.name == name)
+        # ponytail: push time filter to DB — was post-page Python filter (wrong total, extra scan)
+        if create_time_from:
+            docs = docs.where(cls.model.create_time >= create_time_from)
+        if create_time_to:
+            docs = docs.where(cls.model.create_time <= create_time_to)
 
         if return_empty_metadata:
             metadata_map = DocMetadataService.get_metadata_for_documents(None, kb_id)
@@ -231,15 +252,16 @@ class DocumentService(CommonService):
         if suffix:
             query = query.where(cls.model.suffix.in_(suffix))
 
-        rows = query.select(cls.model.run, cls.model.suffix, cls.model.id)
-        total = rows.count()
+        # ponytail: single pass — was 2× scan (count + doc_ids + loop = 3 queries)
+        rows_list = list(query.select(cls.model.run, cls.model.suffix, cls.model.id))
+        total = len(rows_list)
 
         suffix_counter = {}
         run_status_counter = {}
         metadata_counter = {}
         empty_metadata_count = 0
 
-        doc_ids = [row.id for row in rows]
+        doc_ids = [row.id for row in rows_list]
         metadata = {}
         if doc_ids:
             try:
@@ -247,7 +269,7 @@ class DocumentService(CommonService):
             except Exception as e:
                 logging.warning(f"Failed to fetch metadata from ES/Infinity: {e}")
 
-        for row in rows:
+        for row in rows_list:
             suffix_counter[row.suffix] = suffix_counter.get(row.suffix, 0) + 1
             run_status_counter[str(row.run)] = run_status_counter.get(str(row.run), 0) + 1
             meta_fields = metadata.get(row.id, {})

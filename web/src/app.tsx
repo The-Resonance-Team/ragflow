@@ -19,9 +19,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { configResponsive } from 'ahooks';
 import dayjs from 'dayjs';
-import 'dayjs/locale/ar';
-import 'dayjs/locale/tr';
-import 'dayjs/locale/zh-cn';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import localeData from 'dayjs/plugin/localeData';
@@ -34,8 +31,6 @@ import { ThemeProvider } from './components/theme-provider';
 import { TooltipProvider } from './components/ui/tooltip';
 import { ThemeEnum } from './constants/common';
 import { routers } from './routes';
-
-import 'react-photo-view/dist/react-photo-view.css';
 
 configResponsive({
   sm: 640,
@@ -54,7 +49,8 @@ dayjs.extend(localeData);
 dayjs.extend(weekOfYear);
 dayjs.extend(weekYear);
 
-if (process.env.NODE_ENV === 'development') {
+// ponytail: was process.env (Vite uses import.meta.env) — shipped why-did-you-render to prod
+if (import.meta.env.DEV) {
   import('@welldone-software/why-did-you-render').then(
     (whyDidYouRenderModule) => {
       const whyDidYouRender = whyDidYouRenderModule.default;
@@ -72,7 +68,10 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      retry: 2,
+      // ponytail: retry 2 → 1, add cache — was no cache for back-nav, frequent refetch
+      retry: 1,
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
     },
   },
 });

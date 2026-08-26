@@ -31,7 +31,12 @@ const listeners = new Set<Listener>();
 let backendLanguage: string | null = null;
 
 // Kick off the fetch at module load — app start, not component mount.
-const promise: Promise<string> = fetch('/api/v1/language')
+// ponytail: 2s timeout — was unbounded, blocked first paint on slow API
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 2000);
+const promise: Promise<string> = fetch('/api/v1/language', {
+  signal: controller.signal,
+})
   .then((r) => r.json())
   .then((body: { data?: { language?: string } }) => {
     backendLanguage = body.data?.language === 'go' ? 'go' : 'python';
@@ -42,7 +47,8 @@ const promise: Promise<string> = fetch('/api/v1/language')
     backendLanguage = 'python';
     listeners.forEach((fn) => fn());
     return 'python';
-  });
+  })
+  .finally(() => clearTimeout(timeoutId));
 
 export const fetchBackendLanguage = (): Promise<string> => promise;
 

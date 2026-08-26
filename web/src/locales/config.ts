@@ -5,7 +5,6 @@ import i18n from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { upperFirst } from 'lodash';
 import { initReactI18next } from 'react-i18next';
-import translation_en from './en';
 
 //The language is based on the .ng file stored in the client's local storage.
 // The language stored in the database is for agent template resources, as these resources reside on the server.
@@ -49,13 +48,25 @@ export const DEFAULT_LANGUAGE_CODE =
   import.meta.env.VITE_DEFAULT_LANGUAGE_CODE || LanguageAbbreviation.En;
 
 const resources = {
-  [LanguageAbbreviation.En]: translation_en,
-};
+  // ponytail: empty — was eager `translation_en` (200kB in main chunk), all langs lazy via loadLanguageAsync
+} as const;
 
-const updateDocumentLocale = (lng: string) => {
+const updateDocumentLocale = async (lng: string) => {
   document.documentElement.lang = lng;
   document.documentElement.dir = 'ltr';
-  dayjs.locale(lng === 'zh' ? 'zh-cn' : lng);
+  const dayjsLng = lng === 'zh' ? 'zh-cn' : lng;
+  // ponytail: was 3 static locale imports in app.tsx entry — now lazy per language
+  if (dayjsLng !== 'en') {
+    try {
+      if (dayjsLng === 'zh-cn') await import('dayjs/locale/zh-cn');
+      else if (dayjsLng === 'ar') await import('dayjs/locale/ar');
+      else if (dayjsLng === 'tr') await import('dayjs/locale/tr');
+      else await import(`dayjs/locale/${dayjsLng}.js`);
+    } catch {
+      // locale not available, fallback to en
+    }
+  }
+  dayjs.locale(dayjsLng);
 };
 
 i18n
@@ -104,10 +115,8 @@ export const changeLanguageAsync = async (
   const { persist = true } = options;
   const normalizedLng = lng;
 
-  if (
-    normalizedLng !== LanguageAbbreviation.En &&
-    !i18n.hasResourceBundle(normalizedLng, 'translation')
-  ) {
+  // ponytail: was `!== En` guard, so En stayed eager — now all langs lazy
+  if (!i18n.hasResourceBundle(normalizedLng, 'translation')) {
     await loadLanguageAsync(normalizedLng);
   }
 
@@ -115,7 +124,7 @@ export const changeLanguageAsync = async (
     storage.setLanguage(lng);
   }
 
-  updateDocumentLocale(lng);
+  await updateDocumentLocale(lng);
 
   await i18n.changeLanguage(normalizedLng);
 };

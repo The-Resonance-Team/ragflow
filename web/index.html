@@ -5,7 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RAGFlow</title>
-    <script src="/iconfont.js" defer></script>
+    <!-- ponytail: was sync 222kB sprite on every page — defer low priority; full fix is vite-svg-loader -->
+    <script src="/iconfont.js" defer fetchpriority="low"></script>
   </head>
   <body>
     <div id="root"></div>

@@ -58,13 +58,17 @@ export function ThemeProvider({
     setThemeState(nextTheme);
   }, []);
 
+  // ponytail: defer DOM write — was sync before paint, forces style recalc
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove(ThemeEnum.Light, ThemeEnum.Dark);
-    if (persistRef.current) {
-      localStorage.setItem(storageKey, theme);
-    }
-    root.classList.add(theme);
+    const id = requestAnimationFrame(() => {
+      const root = window.document.documentElement;
+      root.classList.remove(ThemeEnum.Light, ThemeEnum.Dark);
+      if (persistRef.current) {
+        localStorage.setItem(storageKey, theme);
+      }
+      root.classList.add(theme);
+    });
+    return () => cancelAnimationFrame(id);
   }, [storageKey, theme]);
 
   return (

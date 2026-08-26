@@ -17,7 +17,7 @@
 import { useIsDarkTheme } from '@/components/theme-provider';
 import { Badge } from '@/components/ui/badge';
 import React, { memo } from 'react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import SyntaxHighlighter from '@/components/syntax-highlighter-light';
 import {
   oneDark,
   oneLight,

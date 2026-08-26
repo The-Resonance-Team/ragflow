@@ -2,8 +2,10 @@ import { inspectorServer } from '@react-dev-inspector/vite-plugin';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
+import viteCompression from 'vite-plugin-compression';
 import { createHtmlPlugin } from 'vite-plugin-html';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import svgLoader from 'vite-svg-loader';
 import { appName } from './src/conf.json';
 
 // Inject code location data attributes for react-dev-inspector
@@ -29,7 +31,7 @@ const inspectorBabelPlugin = (): import('vite').Plugin => ({
 type MinifyValue = boolean | 'esbuild' | 'terser';
 
 function resolveMinify(value: string | undefined): MinifyValue {
-  if (value === undefined) return 'terser';
+  if (value === undefined) return 'esbuild';
   const lower = value.toLowerCase();
   if (lower === 'false') return false;
   if (lower === 'esbuild') return 'esbuild';
@@ -148,8 +150,12 @@ export default defineConfig(({ mode }) => {
       __API_PROXY_SCHEME__: JSON.stringify(proxyScheme),
     },
     plugins: [
-      inspectorBabelPlugin(),
+      // ponytail: inspector only in dev — was unconditional, bloated prod bundle
+      ...(mode !== 'production'
+        ? [inspectorBabelPlugin(), inspectorServer()]
+        : []),
       react(),
+      svgLoader({ defaultImport: 'url' }),
       viteStaticCopy({
         targets: [
           {
@@ -177,13 +183,21 @@ export default defineConfig(({ mode }) => {
           },
         },
       }),
-      inspectorServer(),
+      // ponytail: compress monaco/pdf worker (was 15-20MB raw, 1.1MB worker)
+      viteCompression({ algorithm: 'gzip', ext: '.gz', threshold: 10240 }),
+      viteCompression({
+        algorithm: 'brotliCompress',
+        ext: '.br',
+        threshold: 10240,
+      }),
     ],
     resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src'),
-        '@parent': path.resolve(__dirname, '../'),
-      },
+      alias: [
+        // ponytail: lodash CJS → lodash-es ESM for tree-shaking (183 barrel sites) — exact only, keep lodash/fp as CJS
+        { find: /^lodash$/, replacement: 'lodash-es' },
+        { find: '@', replacement: path.resolve(__dirname, './src') },
+        { find: '@parent', replacement: path.resolve(__dirname, '../') },
+      ],
     },
     css: {
       modules: {
@@ -222,7 +236,16 @@ export default defineConfig(({ mode }) => {
         'react-router',
         'axios',
         'lodash',
+        'lodash-es',
         'dayjs',
+        // ponytail: pre-bundle heavy deps — was missing, slow dev cold start
+        'mermaid',
+        'xlsx',
+        'jszip',
+        'recharts',
+        '@xyflow/react',
+        'lexical',
+        '@monaco-editor/react',
       ],
       exclude: [],
       force: false,
@@ -230,9 +253,8 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
-      assetsInlineLimit: 4096,
-      experimentalMinChunkSize: 30 * 1024,
-      chunkSizeWarningLimit: 1000,
+      assetsInlineLimit: 8192,
+      chunkSizeWarningLimit: 500,
       rollupOptions: {
         onwarn(warning, warn) {
           if (warning.code === 'EMPTY_BUNDLE') {
@@ -242,10 +264,6 @@ export default defineConfig(({ mode }) => {
         },
         output: {
           manualChunks(id) {
-            // if (id.includes('src/components')) {
-            //   return 'components';
-            // }
-
             if (id.includes('src/locales/') && id.endsWith('.ts')) {
               const match = id.match(/src\/locales\/([^/]+)\.ts$/);
               if (match) {
@@ -254,27 +272,62 @@ export default defineConfig(({ mode }) => {
             }
 
             if (id.includes('node_modules')) {
-              if (id.includes('node_modules/d3')) {
-                return 'd3';
-              }
-              if (id.includes('node_modules/ajv')) {
-                return 'ajv';
-              }
-              if (id.includes('node_modules/@antv')) {
-                return 'antv';
-              }
+              // ponytail: grouped chunks — was per-package (80+ tiny chunks, poor compression)
+              if (id.includes('monaco-editor')) return 'monaco';
+              if (id.includes('pdfjs-dist')) return 'pdf';
+              if (
+                id.includes('node_modules/mermaid') ||
+                id.includes('node_modules/react-syntax-highlighter') ||
+                id.includes('node_modules/katex') ||
+                id.includes('node_modules/react-markdown') ||
+                id.includes('node_modules/lexical') ||
+                id.includes('node_modules/@lexical')
+              )
+                return 'markdown';
+              if (
+                id.includes('node_modules/@antv') ||
+                id.includes('node_modules/@xyflow') ||
+                id.includes('node_modules/d3') ||
+                id.includes('node_modules/recharts') ||
+                id.includes('node_modules/react-force-graph')
+              )
+                return 'graph';
+              if (
+                id.includes('node_modules/xlsx') ||
+                id.includes('node_modules/jszip') ||
+                id.includes('node_modules/papaparse')
+              )
+                return 'excel';
               const name = id
                 .toString()
                 .split('node_modules/')[1]
                 .split('/')[0]
                 .toString();
-              if (['lodash', 'dayjs', 'date-fns', 'axios'].includes(name)) {
-                return 'utils';
-              }
-              if (['@xmldom', 'xmlbuilder '].includes(name)) {
-                return 'xml-js';
-              }
-              return name;
+              const pkg = id.includes('node_modules/@')
+                ? id.split('node_modules/')[1].split('/').slice(0, 2).join('/')
+                : name;
+              if (
+                [
+                  'lodash',
+                  'lodash-es',
+                  'dayjs',
+                  'date-fns',
+                  'axios',
+                  'ahooks',
+                  'zustand',
+                ].includes(name)
+              )
+                return 'vendor-utils';
+              if (
+                pkg.startsWith('@radix-ui') ||
+                pkg === 'lucide-react' ||
+                pkg === 'sonner' ||
+                pkg === 'cmdk'
+              )
+                return 'vendor-ui';
+              if (['@xmldom', 'xmlbuilder'].includes(name)) return 'xml-js';
+              if (name === 'ajv') return 'ajv';
+              return 'vendor';
             }
           },
           chunkFileNames: 'chunk/js/[name]-[hash].js',
@@ -301,9 +354,9 @@ export default defineConfig(({ mode }) => {
           comments: false, // Delete comments
         },
       },
-      sourcemap: env.VITE_BUILD_SOURCEMAP !== 'false',
+      sourcemap: env.VITE_BUILD_SOURCEMAP === 'true',
       cssCodeSplit: true,
-      target: 'es2015',
+      target: 'es2022',
     },
     esbuild: {
       tsconfigRaw: {
