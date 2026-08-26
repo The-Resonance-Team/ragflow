@@ -46,7 +46,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import Markdown from 'react-markdown';
 import reactStringReplace from 'react-string-replace';
-import SyntaxHighlighter from 'react-syntax-highlighter';
+import SyntaxHighlighter from '@/components/syntax-highlighter-light';
 import {
   oneDark,
   oneLight,

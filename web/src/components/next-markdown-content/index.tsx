@@ -25,7 +25,7 @@ import request from '@/utils/request';
 import DOMPurify from 'dompurify';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import Markdown, { defaultUrlTransform } from 'react-markdown';
-import SyntaxHighlighter from 'react-syntax-highlighter';
+import SyntaxHighlighter from '@/components/syntax-highlighter-light';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import { RehypeSanitizeAssistantMarkdown } from '@/constants/markdown-rehype-plugins';

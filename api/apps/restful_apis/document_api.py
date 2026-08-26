@@ -13,6 +13,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+import asyncio
 from io import BytesIO
 from datetime import datetime
 import logging
@@ -181,8 +182,9 @@ async def upload_info(tenant_id: str):
             data = await thread_pool_exec(FileService.upload_info, tenant_id, file_objs[0], None)
             return get_result(data=data)
 
-        results = [await thread_pool_exec(FileService.upload_info, tenant_id, f, None) for f in file_objs]
-        return get_result(data=results)
+        # ponytail: concurrent — was sequential await in loop (10 files = 10× RTT)
+        results = await asyncio.gather(*(thread_pool_exec(FileService.upload_info, tenant_id, f, None) for f in file_objs))
+        return get_result(data=list(results))
     except Exception as e:
         logging.exception("upload_info failed")
         return server_error_response(e)
@@ -944,15 +946,32 @@ def _get_docs_with_request(req, dataset_id: str):
     if len(doc_ids) > 0:
         doc_ids_filter = doc_ids
 
-    docs, total = DocumentService.get_by_kb_id(
-        dataset_id, page, page_size, orderby, desc, keywords, run_status_converted, types, suffix, name=doc_name, doc_ids=doc_ids_filter, return_empty_metadata=return_empty_metadata
-    )
+    # ponytail: push time filter to DB — was post-page Python filter (wrong total, wasted scan)
+    try:
+        create_time_from = int(q.get("create_time_from", 0) or 0)
+    except (ValueError, TypeError):
+        create_time_from = 0
+    try:
+        create_time_to = int(q.get("create_time_to", 0) or 0)
+    except (ValueError, TypeError):
+        create_time_to = 0
 
-    # time range filter (0 means no bound)
-    create_time_from = int(q.get("create_time_from", 0))
-    create_time_to = int(q.get("create_time_to", 0))
-    if create_time_from or create_time_to:
-        docs = [d for d in docs if (create_time_from == 0 or d.get("create_time", 0) >= create_time_from) and (create_time_to == 0 or d.get("create_time", 0) <= create_time_to)]
+    docs, total = DocumentService.get_by_kb_id(
+        dataset_id,
+        page,
+        page_size,
+        orderby,
+        desc,
+        keywords,
+        run_status_converted,
+        types,
+        suffix,
+        name=doc_name,
+        doc_ids=doc_ids_filter,
+        return_empty_metadata=return_empty_metadata,
+        create_time_from=create_time_from,
+        create_time_to=create_time_to,
+    )
 
     return RetCode.SUCCESS, "", docs, total
 
@@ -1197,10 +1216,12 @@ async def delete_documents(tenant_id, dataset_id):
 
         if len(doc_ids) > 0 and delete_all:
             return get_error_data_result(message=f"should not provide both doc ids and delete_all(true), dataset: {dataset_id}. ")
+        # ponytail: single scan — was 2× full table scans (query + set)
+        all_docs = list(DocumentService.query(kb_id=dataset_id))
+        dataset_doc_ids = {d.id for d in all_docs}
         if delete_all:
-            doc_ids = [doc.id for doc in DocumentService.query(kb_id=dataset_id)]
+            doc_ids = list(dataset_doc_ids)
 
-        dataset_doc_ids = {doc.id for doc in DocumentService.query(kb_id=dataset_id)}
         invalid_ids = [doc_id for doc_id in doc_ids if doc_id not in dataset_doc_ids]
         if invalid_ids:
             return get_error_data_result(message=f"These documents do not belong to dataset {dataset_id} or Document not found: {', '.join(invalid_ids)}")

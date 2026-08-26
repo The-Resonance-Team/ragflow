@@ -22,7 +22,7 @@ import { getExtension } from '@/utils/document-util';
 import DOMPurify from 'dompurify';
 import { memo, useCallback, useEffect, useMemo } from 'react';
 import Markdown from 'react-markdown';
-import SyntaxHighlighter from 'react-syntax-highlighter';
+import SyntaxHighlighter from '@/components/syntax-highlighter-light';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import { RehypeSanitizeAssistantMarkdown } from '@/constants/markdown-rehype-plugins';

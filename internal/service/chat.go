@@ -112,22 +112,10 @@ func (s *ChatService) ListChats(ctx context.Context, userID, status, keywords st
 			}, nil
 		}
 
-		chats, total, err = s.chatDAO.ListByOwnerIDs(ctx, dao.DB, filterOwnerIDs, userID, orderBy, desc, keywords)
+		// ponytail: DB pagination — was app-side slice after full scan
+		chats, total, err = s.chatDAO.ListByOwnerIDs(ctx, dao.DB, filterOwnerIDs, userID, orderBy, desc, keywords, page, pageSize)
 		if err != nil {
 			return nil, err
-		}
-
-		if page > 0 && pageSize > 0 {
-			start := (page - 1) * pageSize
-			end := start + pageSize
-			if start < int(total) {
-				if end > int(total) {
-					end = int(total)
-				}
-				chats = chats[start:end]
-			} else {
-				chats = []*entity.ChatListItem{}
-			}
 		}
 	}
 
@@ -391,12 +379,21 @@ func (s *ChatService) validateCreateDatasetIDs(ctx context.Context, value interf
 		normalizedIDs = append(normalizedIDs, datasetID)
 	}
 
+	// ponytail: bulk fetch — was N× GetByID
+	fetched, err := s.kbDAO.GetByIDs(ctx, dao.DB, normalizedIDs)
+	if err != nil {
+		return nil, fmt.Errorf("you don't own the dataset %v", normalizedIDs)
+	}
+	kbMap := make(map[string]*entity.Knowledgebase, len(fetched))
+	for _, kb := range fetched {
+		kbMap[kb.ID] = kb
+	}
 	for _, datasetID := range normalizedIDs {
 		if !s.kbDAO.Accessible(ctx, dao.DB, datasetID, tenantID) {
 			return nil, fmt.Errorf("you don't own the dataset %s", datasetID)
 		}
-		kb, err := s.kbDAO.GetByID(ctx, dao.DB, datasetID)
-		if err != nil {
+		kb, ok := kbMap[datasetID]
+		if !ok || kb == nil {
 			return nil, fmt.Errorf("you don't own the dataset %s", datasetID)
 		}
 		if kb.ChunkNum == 0 {
@@ -744,22 +741,36 @@ func isTruthy(value interface{}) bool {
 }
 
 // getDatasetNamesAndIDs gets knowledge base names by IDs
+// ponytail: bulk fetch — was N+1 GetByID per kb (30 chats × 3 = 90 RTT)
 func (s *ChatService) getDatasetNamesAndIDs(ctx context.Context, kbIDs entity.JSONSlice) ([]string, []string) {
-	var names = make([]string, 0, len(kbIDs))
-	var ids = make([]string, 0, len(kbIDs))
+	if len(kbIDs) == 0 {
+		return nil, nil
+	}
+	stringIDs := make([]string, 0, len(kbIDs))
 	for _, kbID := range kbIDs {
-		kbIDStr, ok := kbID.(string)
-		if !ok {
-			continue
+		if s, ok := kbID.(string); ok && s != "" {
+			stringIDs = append(stringIDs, s)
 		}
-		kb, err := s.kbDAO.GetByID(ctx, dao.DB, kbIDStr)
-		if err != nil || kb == nil {
-			continue
-		}
-		// Only include valid KBs
+	}
+	if len(stringIDs) == 0 {
+		return nil, nil
+	}
+	kbs, err := s.kbDAO.GetByIDs(ctx, dao.DB, stringIDs)
+	if err != nil || len(kbs) == 0 {
+		return nil, nil
+	}
+	kbMap := make(map[string]*entity.Knowledgebase, len(kbs))
+	for _, kb := range kbs {
 		if kb.Status != nil && *kb.Status == "1" {
+			kbMap[kb.ID] = kb
+		}
+	}
+	names := make([]string, 0, len(stringIDs))
+	ids := make([]string, 0, len(stringIDs))
+	for _, id := range stringIDs {
+		if kb, ok := kbMap[id]; ok {
 			names = append(names, kb.Name)
-			ids = append(ids, kbIDStr)
+			ids = append(ids, id)
 		}
 	}
 	return names, ids
@@ -1037,16 +1048,31 @@ func (s *ChatService) validateRESTDatasetIDs(ctx context.Context, value interfac
 
 	var kbs []*entity.Knowledgebase
 	kbIDs := make(entity.JSONSlice, 0, len(items))
+	normalized := make([]string, 0, len(items))
 	for _, item := range items {
 		if !isTruthy(item) {
 			continue
 		}
-		datasetID := fmt.Sprint(item)
+		normalized = append(normalized, fmt.Sprint(item))
+	}
+	// ponytail: bulk fetch — was N× GetByID
+	var kbMap map[string]*entity.Knowledgebase
+	if len(normalized) > 0 {
+		fetched, err := s.kbDAO.GetByIDs(ctx, dao.DB, normalized)
+		if err != nil {
+			return nil, fmt.Errorf("you don't own the dataset %v", normalized)
+		}
+		kbMap = make(map[string]*entity.Knowledgebase, len(fetched))
+		for _, kb := range fetched {
+			kbMap[kb.ID] = kb
+		}
+	}
+	for _, datasetID := range normalized {
 		if !s.kbDAO.Accessible(ctx, dao.DB, datasetID, userID) {
 			return nil, fmt.Errorf("you don't own the dataset %s", datasetID)
 		}
-		kb, err := s.kbDAO.GetByID(ctx, dao.DB, datasetID)
-		if err != nil || kb == nil {
+		kb, ok := kbMap[datasetID]
+		if !ok || kb == nil {
 			return nil, fmt.Errorf("you don't own the dataset %s", datasetID)
 		}
 		if kb.ChunkNum == 0 {

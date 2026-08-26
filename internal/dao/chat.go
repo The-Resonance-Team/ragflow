@@ -106,11 +106,12 @@ func (dao *ChatDAO) ListByTenantIDs(ctx context.Context, db *gorm.DB, tenantIDs 
 	return chats, total, nil
 }
 
-// ListByOwnerIDs list chats by owner IDs with filtering (manual pagination)
-func (dao *ChatDAO) ListByOwnerIDs(ctx context.Context, db *gorm.DB, ownerIDs []string, userID string, orderby string, desc bool, keywords string) ([]*entity.ChatListItem, int64, error) {
+// ListByOwnerIDs list chats by owner IDs with filtering
+// ponytail: DB pagination — was full scan + app slice (5k rows per req)
+func (dao *ChatDAO) ListByOwnerIDs(ctx context.Context, db *gorm.DB, ownerIDs []string, userID string, orderby string, desc bool, keywords string, page, pageSize int) ([]*entity.ChatListItem, int64, error) {
 	var chats []*entity.ChatListItem
+	var total int64
 
-	// Build query with join to user table
 	query := db.WithContext(ctx).Model(&entity.Chat{}).
 		Select(`
 			dialog.*,
@@ -120,28 +121,30 @@ func (dao *ChatDAO) ListByOwnerIDs(ctx context.Context, db *gorm.DB, ownerIDs []
 		Joins("LEFT JOIN user ON dialog.tenant_id = user.id").
 		Where("(dialog.tenant_id IN ? OR dialog.tenant_id = ?) AND dialog.status = ?", ownerIDs, userID, "1")
 
-	// Apply keyword filter
 	if keywords != "" {
 		query = query.Where("LOWER(dialog.name) LIKE ?", "%"+strings.ToLower(keywords)+"%")
 	}
-
-	// Filter by owner IDs (additional filter to ensure tenant_id is in ownerIDs)
 	query = query.Where("dialog.tenant_id IN ?", ownerIDs)
 
-	// Apply ordering
 	orderDirection := "ASC"
 	if desc {
 		orderDirection = "DESC"
 	}
 	query = query.Order(orderby + " " + orderDirection)
 
-	// Get all matching records
-	if err := query.Scan(&chats).Error; err != nil {
+	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-
-	total := int64(len(chats))
-
+	if page > 0 && pageSize > 0 {
+		offset := (page - 1) * pageSize
+		if err := query.Offset(offset).Limit(pageSize).Scan(&chats).Error; err != nil {
+			return nil, 0, err
+		}
+	} else {
+		if err := query.Scan(&chats).Error; err != nil {
+			return nil, 0, err
+		}
+	}
 	return chats, total, nil
 }
 

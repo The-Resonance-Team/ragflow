@@ -15,7 +15,6 @@
  */
 
 import React from 'react';
-import { Inspector } from 'react-dev-inspector';
 import ReactDOM from 'react-dom/client';
 import '../tailwind.css';
 import App from './app';
@@ -24,13 +23,21 @@ import { initLanguage } from './locales/config';
 // oxlint-disable-next-line no-restricted-imports -- bootstrap gate: resolve the backend variant before first render
 import { fetchBackendLanguage } from './utils/backend-runtime';
 
-// Gate first render on the backend-language probe so every variant dispatch
-// below sees a concrete value (no python-flash-then-switch).
-Promise.all([initLanguage(), fetchBackendLanguage()]).then(() => {
-  ReactDOM.createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-      <Inspector keys={['alt', 'c']} />
-      <App />
-    </React.StrictMode>,
-  );
-});
+const root = ReactDOM.createRoot(document.getElementById('root')!);
+
+// ponytail: paint fallback immediately — was blocked on Promise.all (white screen until /api/v1/language + i18n finished)
+root.render(
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+    <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+  </div>,
+);
+
+Promise.all([initLanguage(), fetchBackendLanguage()])
+  .catch(() => {})
+  .finally(() => {
+    root.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+    );
+  });

@@ -133,13 +133,17 @@ def _build_chat_response(chat):
 
 
 def _resolve_kb_names(kb_ids):
+    # ponytail: bulk fetch — was N+1 per-kb get_by_id (30 chats × 3 = 90 RTT)
+    if not kb_ids:
+        return [], []
+    kbs = list(KnowledgebaseService.get_by_ids(kb_ids))
+    kb_map = {kb.id: kb for kb in kbs if kb.status == StatusEnum.VALID.value}
     ids, names = [], []
-    for kb_id in kb_ids or []:
-        ok, kb = KnowledgebaseService.get_by_id(kb_id)
-        if not ok or kb.status != StatusEnum.VALID.value:
-            continue
-        ids.append(kb_id)
-        names.append(kb.name)
+    for kb_id in kb_ids:
+        kb = kb_map.get(kb_id)
+        if kb:
+            ids.append(kb_id)
+            names.append(kb.name)
     return ids, names
 
 

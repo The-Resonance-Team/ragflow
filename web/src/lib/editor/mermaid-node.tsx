@@ -139,11 +139,20 @@ export function $isMermaidNode(
 
 import { useTheme } from '@/components/theme-provider';
 import { $getNodeByKey } from 'lexical';
-import mermaid from 'mermaid';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+// ponytail: lazy mermaid — was static 900kB in markdown chunk, even for plain text
+let mermaidInstance: any = null;
+async function getMermaid() {
+  if (!mermaidInstance) {
+    mermaidInstance = (await import('mermaid')).default;
+  }
+  return mermaidInstance;
+}
+
 let mermaidInitialized = false;
-function ensureMermaidInit(themeName: string) {
+async function ensureMermaidInit(themeName: string) {
+  const mermaid = await getMermaid();
   const mermaidTheme = themeName === 'dark' ? 'dark' : 'default';
   if (!mermaidInitialized) {
     mermaid.initialize({
@@ -199,6 +208,7 @@ function MermaidComponent({ content, nodeKey, editor }: MermaidComponentProps) {
     async (source: string) => {
       if (!containerRef.current) return;
       try {
+        const mermaid = await getMermaid();
         const id = `mermaid_${nodeKey}_${Date.now()}`;
         const { svg } = await mermaid.render(id, source);
         if (containerRef.current) {
@@ -216,11 +226,11 @@ function MermaidComponent({ content, nodeKey, editor }: MermaidComponentProps) {
 
   useEffect(() => {
     let mounted = true;
-    ensureMermaidInit(theme);
 
     queueRender(async () => {
       if (!mounted) return;
       if (!containerRef.current) return;
+      await ensureMermaidInit(theme);
       await doRender(content);
     });
 
@@ -257,7 +267,7 @@ function MermaidComponent({ content, nodeKey, editor }: MermaidComponentProps) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       if (val.trim()) {
-        ensureMermaidInit(theme);
+        await ensureMermaidInit(theme);
         await doRender(val);
       }
     }, 350);

@@ -17,7 +17,7 @@
 import { MarkdownRemarkPlugins } from '@/constants/markdown-remark-plugins';
 import classNames from 'classnames';
 import Markdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import SyntaxHighlighter from '@/components/syntax-highlighter-light';
 import {
   oneDark,
   oneLight,

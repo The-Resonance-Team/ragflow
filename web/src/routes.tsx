@@ -121,7 +121,8 @@ const withLazyRoute = (
     LazyComponent.name ||
     'Component'
   })`;
-  return process.env.NODE_ENV === 'development' ? LazyComponent : memo(Wrapped);
+  // ponytail: was process.env (undefined in Vite) — always memo'd, dev Suspense never hit
+  return import.meta.env.DEV ? LazyComponent : memo(Wrapped);
 };
 
 const routeConfigOptions = [
