@@ -133,3 +133,17 @@ bash build.sh --all
 - Collapse duplicate implementations to one path.
 - Drop stale comments and documentation that describe a superseded design.
 - Keep exported APIs only when the current code actually needs them.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues for `infiniflow/ragflow`, operated via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-role vocabulary, labels equal to role names: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout: `CONTEXT.md` at the repo root plus `docs/adr/` for ADRs. See `docs/agents/domain.md`.
