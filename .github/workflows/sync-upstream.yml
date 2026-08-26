@@ -51,9 +51,11 @@ jobs:
       - name: Open PR
         if: steps.check.outputs.skip != 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.SYNC_PAT || github.token }}
         run: |
-          if [ "$(gh pr list --head "$BRANCH" --state open --json number --jq length)" -eq 0 ]; then
+          EXISTING=$(gh pr list --state open --json number,headRefName \
+            --jq "[.[] | select(.headRefName == \"$BRANCH\")] | length")
+          if [ "$EXISTING" -eq 0 ]; then
             gh pr create \
               --base main \
               --head "$BRANCH" \
