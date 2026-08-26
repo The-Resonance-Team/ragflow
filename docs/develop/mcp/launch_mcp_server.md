@@ -90,7 +90,7 @@ The MCP server is designed as an optional component that complements the RAGFlow
         - --mcp-mode=self-host
         - --mcp-host-api-key=ragflow-xxxxxxx
         # Optional transport flags for the RAGFlow MCP server.
-        # If you set `mcp-mode` to `host`, you must add the --no-transport-streamable-http-enabled flag, because the streamable-HTTP transport is not yet supported in host mode.
+        # If you set `mcp-mode` to `host`, each client request must carry a valid RAGFlow API key (Bearer header); requests without one are rejected with 401.
         # The legacy SSE transport and the streamable-HTTP transport with JSON responses are enabled by default.
         # To disable a specific transport or JSON responses for the streamable-HTTP transport, use the corresponding flag(s):
         #   - --no-transport-sse-enabled # Disables the legacy SSE endpoint (/sse)
@@ -110,7 +110,7 @@ Where:
 - `mcp-host-api_key`: Required in self-host mode to authenticate the MCP server with the RAGFlow server. See [here](../acquire_ragflow_api_key.md) for instructions on acquiring an API key.
 
 :::tip INFO
-If you set `mcp-mode` to `host`, you must add the `--no-transport-streamable-http-enabled` flag, because the streamable-HTTP transport is not yet supported in host mode.
+In `host` mode, every client request must include a valid RAGFlow API key (via the `Authorization: Bearer <api-key>` header); requests missing one are rejected with HTTP 401. Both transports work in host mode; each caller's key scopes tool calls to that caller's own datasets.
 :::
 
 #### 2. Launch a RAGFlow Server with an MCP Server
