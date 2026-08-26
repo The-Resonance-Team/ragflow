@@ -55,7 +55,7 @@ def test_documents_upload_and_list(rest_client, create_dataset, tmp_path):
     assert res.status_code == 200
     payload = res.json()
     assert payload["code"] == 0, payload
-    assert payload["data"][0]["dataset_id"] == dataset_id, payload
+    assert _uploaded(payload)[0]["dataset_id"] == dataset_id, payload
 
     list_res = rest_client.get(f"/datasets/{dataset_id}/documents")
     assert list_res.status_code == 200
@@ -74,6 +74,11 @@ def _upload_files(rest_client, dataset_id, file_paths, timeout=None):
         return rest_client.post(f"/datasets/{dataset_id}/documents", **kwargs)
 
 
+def _uploaded(payload):
+    """The uploaded-documents list from an upload response."""
+    return payload["data"]["uploaded"]
+
+
 def _seed_documents(rest_client, create_dataset, tmp_path, count=5, timeout=None):
     dataset_id = create_dataset("dataset_list_contract")
     file_paths = [create_txt_file(tmp_path / f"ragflow_test_upload_{i}.txt") for i in range(count)]
@@ -81,8 +86,8 @@ def _seed_documents(rest_client, create_dataset, tmp_path, count=5, timeout=None
     assert res.status_code == 200
     payload = res.json()
     assert payload["code"] == 0, payload
-    assert len(payload["data"]) == count, payload
-    return dataset_id, payload["data"]
+    assert len(_uploaded(payload)) == count, payload
+    return dataset_id, _uploaded(payload)
 
 
 def _seed_documents_for_update(rest_client, create_dataset, tmp_path):
@@ -95,7 +100,7 @@ def _seed_documents_for_update(rest_client, create_dataset, tmp_path):
     assert res.status_code == 200
     payload = res.json()
     assert payload["code"] == 0, payload
-    return dataset_id, payload["data"]
+    return dataset_id, _uploaded(payload)
 
 
 def _assert_docs_sorted(docs, key, reverse):
@@ -126,6 +131,74 @@ def _download_document_to_file(rest_client, dataset_id, document_id, save_path):
         if disposition and "attachment" in disposition.lower():
             save_path.write_bytes(res.content)
     return res
+
+
+@pytest.mark.p1
+def test_documents_replace_records_immutable_versions(rest_client, create_dataset, tmp_path):
+    dataset_id = create_dataset("dataset_replace_versions")
+    fp = tmp_path / "versioned.txt"
+    fp.write_text("original content")
+    with fp.open("rb") as file_obj:
+        res = rest_client.post(
+            f"/datasets/{dataset_id}/documents",
+            files=[("file", (fp.name, file_obj))],
+        )
+    payload = res.json()
+    assert payload["code"] == 0, payload
+    doc = _uploaded(payload)[0]
+    doc_id = doc["id"]
+
+    # Re-uploading the same name reports a conflict...
+    fp.write_text("replacement content")
+    with fp.open("rb") as file_obj:
+        conflict_res = rest_client.post(
+            f"/datasets/{dataset_id}/documents",
+            files=[("file", (fp.name, file_obj))],
+            data={"on_conflict": "replace"},
+        )
+    conflict_payload = conflict_res.json()
+
+    # ...and the replace directive stores the new bytes as a new version.
+    assert conflict_payload["code"] == 0, conflict_payload
+    replaced = conflict_payload["data"]["replaced"]
+    assert [d["id"] for d in replaced] == [doc_id], conflict_payload
+    assert conflict_payload["data"]["uploaded"] == [], conflict_payload
+    assert conflict_payload["data"]["conflicts"] == [], conflict_payload
+
+    # The version history is queryable, newest first.
+    versions_res = rest_client.get(f"/datasets/{dataset_id}/documents/{doc_id}/versions")
+    versions_payload = versions_res.json()
+    assert versions_payload["code"] == 0, versions_payload
+    versions = versions_payload["data"]
+    assert [v["version_number"] for v in versions] == [2, 1], versions_payload
+    assert versions[0]["content_hash"] != versions[1]["content_hash"], versions_payload
+    old_version_id = versions[1]["id"]
+
+    # Previous version bytes are still retrievable.
+    old_res = rest_client.get(
+        f"/datasets/{dataset_id}/documents/{doc_id}",
+        params={"version_id": old_version_id},
+    )
+    assert old_res.status_code == 200, old_res.text
+    assert old_res.content == b"original content"
+
+    # The current blob serves the new content.
+    current_res = rest_client.get(f"/datasets/{dataset_id}/documents/{doc_id}")
+    assert current_res.status_code == 200, current_res.text
+    assert current_res.content == b"replacement content"
+
+    # An unknown version id is rejected.
+    missing_res = rest_client.get(
+        f"/datasets/{dataset_id}/documents/{doc_id}",
+        params={"version_id": "nonexistent-version"},
+    )
+    missing_payload = missing_res.json()
+    assert missing_payload["code"] == 404, missing_payload
+
+    # Exactly one row keeps the name.
+    list_res = rest_client.get(f"/datasets/{dataset_id}/documents", params={"page_size": 10})
+    names = [d["name"] for d in list_res.json()["data"]["docs"]]
+    assert names.count(fp.name) == 1, names
 
 
 def _create_table_excel(path, rows):
@@ -386,8 +459,8 @@ def test_documents_upload_contract_matrix(rest_client, create_dataset, tmp_path)
     assert valid_res.status_code == 200
     valid_payload = valid_res.json()
     assert valid_payload["code"] == 0, valid_payload
-    assert valid_payload["data"][0]["dataset_id"] == dataset_id, valid_payload
-    assert valid_payload["data"][0]["name"] == "ragflow_test.txt", valid_payload
+    assert _uploaded(valid_payload)[0]["dataset_id"] == dataset_id, valid_payload
+    assert _uploaded(valid_payload)[0]["name"] == "ragflow_test.txt", valid_payload
 
     for ext in ("docx", "xlsx", "pptx", "jpg", "pdf", "txt", "md", "json", "eml", "html"):
         fp = create_txt_file(tmp_path / f"ragflow_test_file_type.{ext}")
@@ -395,7 +468,7 @@ def test_documents_upload_contract_matrix(rest_client, create_dataset, tmp_path)
         assert res.status_code == 200, (ext, res.text)
         payload = res.json()
         assert payload["code"] == 0, (ext, payload)
-        assert payload["data"][0]["name"] == fp.name, (ext, payload)
+        assert _uploaded(payload)[0]["name"] == fp.name, (ext, payload)
 
     empty_fp = tmp_path / "empty.txt"
     empty_fp.touch()
@@ -403,29 +476,53 @@ def test_documents_upload_contract_matrix(rest_client, create_dataset, tmp_path)
     assert empty_res.status_code == 200
     empty_payload = empty_res.json()
     assert empty_payload["code"] == 0, empty_payload
-    assert empty_payload["data"][0]["size"] == 0, empty_payload
+    assert _uploaded(empty_payload)[0]["size"] == 0, empty_payload
 
     duplicate_fp = create_txt_file(tmp_path / "duplicate.txt")
-    duplicate_res = _upload_files(rest_client, dataset_id, [duplicate_fp, duplicate_fp])
-    assert duplicate_res.status_code == 200
-    duplicate_payload = duplicate_res.json()
-    assert duplicate_payload["code"] == 0, duplicate_payload
-    assert [x["name"] for x in duplicate_payload["data"]] == ["duplicate.txt", "duplicate(1).txt"], duplicate_payload
+    first_res = _upload_files(rest_client, dataset_id, [duplicate_fp])
+    assert first_res.status_code == 200
+    first_payload = first_res.json()
+    assert first_payload["code"] == 0, first_payload
+    assert len(_uploaded(first_payload)) == 1, first_payload
 
-    for index in range(3):
-        repeat_res = _upload_files(rest_client, dataset_id, [duplicate_fp])
-        assert repeat_res.status_code == 200
-        repeat_payload = repeat_res.json()
-        assert repeat_payload["code"] == 0, (index, repeat_payload)
-        expected_name = f"duplicate({index + 2}).txt"
-        assert repeat_payload["data"][0]["name"] == expected_name, (index, repeat_payload)
+    # A same-name upload no longer creates a silent duplicate: it reports the conflict.
+    conflict_res = _upload_files(rest_client, dataset_id, [duplicate_fp])
+    assert conflict_res.status_code == 200
+    conflict_payload = conflict_res.json()
+    assert conflict_payload["code"] == 409, conflict_payload
+    conflicts = conflict_payload["data"]["conflicts"]
+    assert len(conflicts) == 1, conflict_payload
+    assert conflicts[0]["name"] == "duplicate.txt"
+    assert conflicts[0]["id"] == _uploaded(first_payload)[0]["id"]
+    assert "content_hash" in conflicts[0]
+    assert conflict_payload["data"]["uploaded"] == []
+    list_res = rest_client.get(f"/datasets/{dataset_id}/documents", params={"page_size": 100})
+    names = [doc["name"] for doc in list_res.json()["data"]["docs"]]
+    assert names.count("duplicate.txt") == 1, names
+
+    # The rename directive preserves the legacy keep-both behavior explicitly.
+    rename_res = rest_client.post(
+        f"/datasets/{dataset_id}/documents",
+        files=[("file", ("duplicate.txt", duplicate_fp.open("rb")))],
+        data={"on_conflict": "rename"},
+    )
+    rename_payload = rename_res.json()
+    assert rename_payload["code"] == 0, rename_payload
+    assert _uploaded(rename_payload)[0]["name"] == "duplicate(1).txt", rename_payload
+
+    # Mixed batch: one fresh file plus one conflicting file.
+    mixed_res = _upload_files(rest_client, dataset_id, [duplicate_fp, create_txt_file(tmp_path / "mixed_fresh.txt")])
+    mixed_payload = mixed_res.json()
+    assert mixed_payload["code"] == 0, mixed_payload
+    assert len(mixed_payload["data"]["conflicts"]) == 1, mixed_payload
+    assert [d["name"] for d in _uploaded(mixed_payload)] == ["mixed_fresh.txt"], mixed_payload
 
     max_name_fp = create_txt_file(tmp_path / f"{'a' * (DOCUMENT_NAME_LIMIT - 4)}.txt")
     max_name_res = _upload_files(rest_client, dataset_id, [max_name_fp])
     assert max_name_res.status_code == 200
     max_name_payload = max_name_res.json()
     assert max_name_payload["code"] == 0, max_name_payload
-    assert max_name_payload["data"][0]["name"] == max_name_fp.name, max_name_payload
+    assert _uploaded(max_name_payload)[0]["name"] == max_name_fp.name, max_name_payload
 
     illegal_chars = '<>:"/\\|?*'
     safe_filename = string.punctuation.translate(str.maketrans({char: "_" for char in illegal_chars}))
@@ -435,7 +532,7 @@ def test_documents_upload_contract_matrix(rest_client, create_dataset, tmp_path)
     assert special_res.status_code == 200
     special_payload = special_res.json()
     assert special_payload["code"] == 0, special_payload
-    assert special_payload["data"][0]["name"] == special_fp.name, special_payload
+    assert _uploaded(special_payload)[0]["name"] == special_fp.name, special_payload
 
     multi_paths = [create_txt_file(tmp_path / f"ragflow_test_multi_{i}.txt") for i in range(20)]
     multi_res = _upload_files(rest_client, dataset_id, multi_paths)
@@ -1096,7 +1193,7 @@ def test_documents_delete_requires_auth(rest_client, create_dataset, tmp_path):
     assert upload_res.status_code == 200
     upload_payload = upload_res.json()
     assert upload_payload["code"] == 0, upload_payload
-    document_id = upload_payload["data"][0]["id"]
+    document_id = _uploaded(upload_payload)[0]["id"]
 
     for scenario_name, client in (("missing token", RestClient(token=None)), ("invalid token", RestClient(token=INVALID_API_TOKEN))):
         res = client.delete(f"/datasets/{dataset_id}/documents", json={"ids": [document_id]})
@@ -1529,7 +1626,7 @@ def test_documents_download_filetype_repeat_and_concurrent_contract(rest_client,
         assert upload_res.status_code == 200, (ext, upload_res.text)
         upload_payload = upload_res.json()
         assert upload_payload["code"] == 0, (ext, upload_payload)
-        uploaded.append((source_path, upload_payload["data"][0]["id"]))
+        uploaded.append((source_path, _uploaded(upload_payload)[0]["id"]))
 
     for source_path, document_id in uploaded:
         target_path = tmp_path / f"download_once_{source_path.name}"

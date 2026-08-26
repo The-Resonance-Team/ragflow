@@ -135,11 +135,10 @@ class TestDocumentsUpload:
 
         documents = dataset.upload_documents([{"display_name": fp.name, "blob": blob}, {"display_name": fp.name, "blob": blob}])
 
-        assert len(documents) == 2, str(documents)
-        for i, document in enumerate(documents):
-            assert document.dataset_id == dataset.id, str(document)
-            expected_name = fp.name if i == 0 else f"{fp.stem}({i}){fp.suffix}"
-            assert document.name == expected_name, str(document)
+        # The duplicate upload reports a conflict instead of creating a second row.
+        assert len(documents) == 1, str(documents)
+        assert documents[0].dataset_id == dataset.id, str(documents)
+        assert documents[0].name == fp.name, str(documents)
 
     @pytest.mark.p2
     def test_same_file_repeat(self, add_dataset_func, tmp_path):
@@ -149,13 +148,14 @@ class TestDocumentsUpload:
         with fp.open("rb") as f:
             blob = f.read()
 
-        for i in range(3):
-            documents = dataset.upload_documents([{"display_name": fp.name, "blob": blob}])
-            assert len(documents) == 1, str(documents)
-            document = documents[0]
-            assert document.dataset_id == dataset.id, str(document)
-            expected_name = fp.name if i == 0 else f"{fp.stem}({i}){fp.suffix}"
-            assert document.name == expected_name, str(document)
+        documents = dataset.upload_documents([{"display_name": fp.name, "blob": blob}])
+        assert len(documents) == 1, str(documents)
+        assert documents[0].dataset_id == dataset.id, str(documents)
+        assert documents[0].name == fp.name, str(documents)
+
+        # Repeating the same upload hits the conflict contract.
+        with pytest.raises(Exception):
+            dataset.upload_documents([{"display_name": fp.name, "blob": blob}])
 
     @pytest.mark.p3
     def test_filename_special_characters(self, add_dataset_func, tmp_path):

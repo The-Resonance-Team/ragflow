@@ -268,7 +268,7 @@ def _upload_and_parse(rest_client, dataset_id, text, filename="doc.txt"):
         files = [("file", (filename, f))]
         upload_res = rest_client.post(f"/datasets/{dataset_id}/documents", files=files)
     assert upload_res.status_code == 200, f"Failed to upload {filename}: {upload_res.text}"
-    doc_id = upload_res.json()["data"][0]["id"]
+    doc_id = upload_res.json()["data"]["uploaded"][0]["id"]
 
     parse_res = rest_client.post(
         f"/datasets/{dataset_id}/documents/parse",

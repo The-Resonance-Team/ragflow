@@ -198,7 +198,7 @@ class TestTableParserDatasetChat:
             res = upload_documents(auth, dataset_id, excel_file_paths)
             assert res["code"] == 0, f"Failed to upload documents: {res}"
 
-            for doc in res["data"]:
+            for doc in res["data"]["uploaded"]:
                 document_ids.append(doc["id"])
 
             # Start parsing for all documents

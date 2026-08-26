@@ -58,7 +58,7 @@ class DataSet(Base):
         res = res.json()
         if res.get("code") == 0:
             doc_list = []
-            for doc in res["data"]:
+            for doc in res["data"]["uploaded"]:
                 document = Document(self.rag, doc)
                 doc_list.append(document)
             return doc_list

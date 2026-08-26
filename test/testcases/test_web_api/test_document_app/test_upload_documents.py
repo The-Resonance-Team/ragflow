@@ -48,8 +48,8 @@ class TestDocumentsUpload:
         res = upload_documents(WebApiAuth, {"kb_id": kb_id}, [fp])
         assert res["code"] == 0, res
         # New API returns "dataset_id" instead of "kb_id" due to key mapping
-        assert res["data"][0]["dataset_id"] == kb_id, res
-        assert res["data"][0]["name"] == fp.name, res
+        assert res["data"]["uploaded"][0]["dataset_id"] == kb_id, res
+        assert res["data"]["uploaded"][0]["name"] == fp.name, res
 
     @pytest.mark.p1
     @pytest.mark.parametrize(
@@ -74,8 +74,8 @@ class TestDocumentsUpload:
         res = upload_documents(WebApiAuth, {"kb_id": kb_id}, [fp])
         assert res["code"] == 0, res
         # New API returns "dataset_id" instead of "kb_id" due to key mapping
-        assert res["data"][0]["dataset_id"] == kb_id, res
-        assert res["data"][0]["name"] == fp.name, res
+        assert res["data"]["uploaded"][0]["dataset_id"] == kb_id, res
+        assert res["data"]["uploaded"][0]["name"] == fp.name, res
 
     @pytest.mark.p3
     @pytest.mark.parametrize(
@@ -105,7 +105,7 @@ class TestDocumentsUpload:
 
         res = upload_documents(WebApiAuth, {"kb_id": kb_id}, [fp])
         assert res["code"] == 0, res
-        assert res["data"][0]["size"] == 0, res
+        assert res["data"]["uploaded"][0]["size"] == 0, res
 
     @pytest.mark.p3
     def test_filename_empty(self, WebApiAuth, add_dataset_func, tmp_path):
@@ -122,7 +122,7 @@ class TestDocumentsUpload:
         fp = create_txt_file(tmp_path / f"{'a' * (DOCUMENT_NAME_LIMIT - 4)}.txt")
         res = upload_documents(WebApiAuth, {"kb_id": kb_id}, [fp])
         assert res["code"] == 0, res
-        assert res["data"][0]["name"] == fp.name, res
+        assert res["data"]["uploaded"][0]["name"] == fp.name, res
 
     @pytest.mark.p2
     def test_invalid_kb_id(self, WebApiAuth, tmp_path):
@@ -132,19 +132,24 @@ class TestDocumentsUpload:
         assert res["message"] == "Can't find the dataset with ID invalid_kb_id!", res
 
     @pytest.mark.p2
-    def test_duplicate_files(self, WebApiAuth, add_dataset_func, tmp_path):
+    def test_duplicate_files_conflict_and_rename_directive(self, WebApiAuth, add_dataset_func, tmp_path):
         kb_id = add_dataset_func
         fp = create_txt_file(tmp_path / "ragflow_test.txt")
+        # First file lands; the second same-name file reports a conflict.
         res = upload_documents(WebApiAuth, {"kb_id": kb_id}, [fp, fp])
-        assert res["code"] == 0, res
-        assert len(res["data"]) == 2, res
-        for i in range(len(res["data"])):
-            # New API returns "dataset_id" instead of "kb_id" due to key mapping
-            assert res["data"][i]["dataset_id"] == kb_id, res
-            expected_name = fp.name
-            if i != 0:
-                expected_name = f"{fp.stem}({i}){fp.suffix}"
-            assert res["data"][i]["name"] == expected_name, res
+        assert res["code"] == 409, res
+        assert len(res["data"]["uploaded"]) == 1, res
+        conflicts = res["data"]["conflicts"]
+        assert len(conflicts) == 1, res
+        assert conflicts[0]["name"] == fp.name, res
+        assert conflicts[0]["id"] == res["data"]["uploaded"][0]["id"], res
+
+        # The rename directive keeps both documents explicitly.
+        rename_res = upload_documents(WebApiAuth, {"kb_id": kb_id, "on_conflict": "rename"}, [fp])
+        assert rename_res["code"] == 0, rename_res
+        renamed = rename_res["data"]["uploaded"][0]
+        assert renamed["dataset_id"] == kb_id, rename_res
+        assert renamed["name"] == f"{fp.stem}(1){fp.suffix}", rename_res
 
     @pytest.mark.p3
     def test_filename_special_characters(self, WebApiAuth, add_dataset_func, tmp_path):
@@ -157,10 +162,10 @@ class TestDocumentsUpload:
 
         res = upload_documents(WebApiAuth, {"kb_id": kb_id}, [fp])
         assert res["code"] == 0, res
-        assert len(res["data"]) == 1, res
+        assert len(res["data"]["uploaded"]) == 1, res
         # New API returns "dataset_id" instead of "kb_id" due to key mapping
-        assert res["data"][0]["dataset_id"] == kb_id, res
-        assert res["data"][0]["name"] == fp.name, res
+        assert res["data"]["uploaded"][0]["dataset_id"] == kb_id, res
+        assert res["data"]["uploaded"][0]["name"] == fp.name, res
 
     @pytest.mark.p1
     def test_multiple_files(self, WebApiAuth, add_dataset_func, tmp_path):

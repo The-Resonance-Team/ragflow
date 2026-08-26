@@ -143,7 +143,7 @@ def test_upload_document_skips_cross_kb_document_id_collision(monkeypatch):
         classmethod(lambda cls, **_kwargs: SimpleNamespace(id="kb-other")),
     )
 
-    err, files = _unwrapped_upload_document()(
+    err, files, conflicts, replaced = _unwrapped_upload_document()(
         FileService,
         kb,
         [_DummyUploadFile(filename="collision.txt", doc_id="doc-1")],
@@ -151,6 +151,8 @@ def test_upload_document_skips_cross_kb_document_id_collision(monkeypatch):
     )
 
     assert files == []
+    assert conflicts == []
+    assert replaced == []
     assert len(err) == 1
     assert err[0].startswith("collision.txt: ")
     # The owning knowledge base is named so the conflict can actually be found.
@@ -176,6 +178,7 @@ def test_upload_document_reclaims_document_stranded_by_deleted_kb(monkeypatch):
     storage = _DummyStorage()
     discarded = []
     inserted = []
+    recorded_versions = []
     tasks_deleted = []
     files_deleted = []
     mappings_deleted = []
@@ -220,11 +223,16 @@ def test_upload_document_reclaims_document_stranded_by_deleted_kb(monkeypatch):
     monkeypatch.setattr(file_service_module.DocumentService, "check_doc_health", classmethod(lambda cls, _tid, _name: None))
     monkeypatch.setattr(file_service_module.DocumentService, "query", classmethod(lambda cls, **_kwargs: []))
     monkeypatch.setattr(file_service_module.DocumentService, "insert", classmethod(lambda cls, doc: inserted.append(doc)))
+    monkeypatch.setattr(
+        file_service_module.DocumentVersionService,
+        "record_version",
+        classmethod(lambda cls, **kwargs: recorded_versions.append(kwargs)),
+    )
     monkeypatch.setattr(FileService, "add_file_from_kb", classmethod(lambda cls, _doc, _folder_id, _tenant_id: None))
     monkeypatch.setattr(file_service_module, "thumbnail_img", lambda _name, _blob: None)
     monkeypatch.setattr(file_service_module.settings, "STORAGE_IMPL", storage)
 
-    err, files = _unwrapped_upload_document()(
+    err, files, conflicts, replaced = _unwrapped_upload_document()(
         FileService,
         kb,
         [_DummyUploadFile(filename="collision.txt", doc_id="doc-1", blob=b"payload")],
@@ -232,6 +240,8 @@ def test_upload_document_reclaims_document_stranded_by_deleted_kb(monkeypatch):
     )
 
     assert err == []
+    assert conflicts == []
+    assert replaced == []
     assert discarded == ["doc-1"]
     # The stranded row's debris goes with it, matching what delete_docs would
     # have removed had the dataset deletion reached this document.
@@ -244,7 +254,182 @@ def test_upload_document_reclaims_document_stranded_by_deleted_kb(monkeypatch):
     assert inserted[0]["kb_id"] == "kb-target"
     assert len(files) == 1
     assert files[0][1] == b"payload"
-    assert storage.written[("kb-target", "collision.txt")] == b"payload"
+    assert storage.written[("kb-target", "versions/doc-1/v1/collision.txt")] == b"payload"
+    assert recorded_versions[0]["location"] == "versions/doc-1/v1/collision.txt"
+
+
+# ---------------------------------------------------------------------------
+# Duplicate-name conflicts and immutable versions
+# ---------------------------------------------------------------------------
+
+
+class _ExistingDoc:
+    def __init__(self, **overrides):
+        self.id = "doc-existing"
+        self.kb_id = "kb-target"
+        self.name = "report.pdf"
+        self.location = "report.pdf"
+        self.size = 10
+        self.suffix = "pdf"
+        self.chunk_num = 3
+        self.token_num = 30
+        self.content_hash = "existinghash"
+        self.current_version_number = 1
+        self.create_time = 1720000000
+        self.run = "0"
+        self.__dict__.update(overrides)
+
+    def to_dict(self):
+        return dict(self.__dict__)
+
+
+def _stub_new_document_path(monkeypatch, storage, inserted=None, recorded_versions=None):
+    """Stub everything the fresh-document path needs except the name query."""
+    _stub_folder_lookups(monkeypatch)
+    monkeypatch.setattr(file_service_module.DocumentService, "get_by_id", lambda _doc_id: (False, None))
+    monkeypatch.setattr(file_service_module.DocumentService, "check_doc_health", classmethod(lambda cls, _tid, _name: None))
+    monkeypatch.setattr(file_service_module.DocumentService, "insert", classmethod(lambda cls, doc: inserted.append(doc) if inserted is not None else None))
+    monkeypatch.setattr(FileService, "add_file_from_kb", classmethod(lambda cls, _doc, _folder_id, _tenant_id: None))
+    monkeypatch.setattr(file_service_module, "thumbnail_img", lambda _name, _blob: None)
+    monkeypatch.setattr(file_service_module.settings, "STORAGE_IMPL", storage)
+    if recorded_versions is not None:
+        monkeypatch.setattr(
+            file_service_module.DocumentVersionService,
+            "record_version",
+            classmethod(lambda cls, **kwargs: recorded_versions.append(kwargs)),
+        )
+
+
+@pytest.mark.p2
+def test_duplicate_name_without_directive_reports_conflict(monkeypatch):
+    kb = _target_kb()
+    existing = _ExistingDoc()
+    storage = _DummyStorage()
+    inserted = []
+
+    _stub_new_document_path(monkeypatch, storage, inserted=inserted)
+    monkeypatch.setattr(file_service_module.DocumentService, "query", classmethod(lambda cls, **kwargs: [existing] if kwargs.get("name") == "report.pdf" else []))
+
+    err, files, conflicts, replaced = _unwrapped_upload_document()(
+        FileService,
+        kb,
+        [_DummyUploadFile(filename="report.pdf", doc_id="doc-new")],
+        "user-1",
+        on_conflict=None,
+    )
+
+    assert err == []
+    assert files == []
+    assert replaced == []
+    assert len(conflicts) == 1
+    conflict = conflicts[0]
+    assert conflict["id"] == "doc-existing"
+    assert conflict["name"] == "report.pdf"
+    assert conflict["size"] == 10
+    assert conflict["suffix"] == "pdf"
+    assert conflict["content_hash"] == "existinghash"
+    assert conflict["chunk_count"] == 3
+    assert conflict["create_time"] == 1720000000
+    # Nothing may be stored or created for a conflicted upload.
+    assert inserted == []
+    assert storage.written == {}
+
+
+@pytest.mark.p2
+def test_rename_directive_keeps_auto_rename_behavior(monkeypatch):
+    kb = _target_kb()
+    existing = _ExistingDoc()
+    storage = _DummyStorage()
+    inserted = []
+    recorded_versions = []
+
+    _stub_new_document_path(monkeypatch, storage, inserted=inserted, recorded_versions=recorded_versions)
+    monkeypatch.setattr(file_service_module.DocumentService, "query", classmethod(lambda cls, **_kwargs: [existing]))
+    monkeypatch.setattr(file_service_module, "duplicate_name", lambda _query, name, kb_id: "report(1).pdf")
+
+    err, files, conflicts, replaced = _unwrapped_upload_document()(
+        FileService,
+        kb,
+        [_DummyUploadFile(filename="report.pdf", doc_id="doc-new", blob=b"payload")],
+        "user-1",
+        on_conflict="rename",
+    )
+
+    assert err == []
+    assert conflicts == []
+    assert replaced == []
+    assert len(files) == 1
+    assert files[0][0]["name"] == "report(1).pdf"
+    assert len(inserted) == 1
+
+
+@pytest.mark.p2
+def test_fresh_upload_records_immutable_v1_version(monkeypatch):
+    kb = _target_kb()
+    storage = _DummyStorage()
+    inserted = []
+    recorded_versions = []
+
+    _stub_new_document_path(monkeypatch, storage, inserted=inserted, recorded_versions=recorded_versions)
+    monkeypatch.setattr(file_service_module.DocumentService, "query", classmethod(lambda cls, **_kwargs: []))
+
+    err, files, conflicts, replaced = _unwrapped_upload_document()(
+        FileService,
+        kb,
+        [_DummyUploadFile(filename="fresh.txt", doc_id="doc-fresh", blob=b"payload")],
+        "user-1",
+    )
+
+    assert err == []
+    assert conflicts == []
+    assert replaced == []
+    assert len(files) == 1
+    expected_location = "versions/doc-fresh/v1/fresh.txt"
+    assert files[0][0]["location"] == expected_location
+    assert files[0][0]["current_version_number"] == 1
+    assert storage.written[("kb-target", expected_location)] == b"payload"
+    assert len(recorded_versions) == 1
+    version = recorded_versions[0]
+    assert version["document_id"] == "doc-fresh"
+    assert version["version_number"] == 1
+    assert version["location"] == expected_location
+    assert version["size"] == len(b"payload")
+    assert version["created_by"] == "user-1"
+
+
+@pytest.mark.p2
+def test_replace_directive_delegates_to_version_replacement(monkeypatch):
+    kb = _target_kb()
+    existing = _ExistingDoc(content_hash="old-hash")
+    updated_doc = {"id": "doc-existing", "name": "report.pdf", "location": "versions/doc-existing/v2/report.pdf"}
+    replace_calls = []
+
+    storage = _DummyStorage()
+    _stub_new_document_path(monkeypatch, storage)
+    monkeypatch.setattr(file_service_module.DocumentService, "query", classmethod(lambda cls, **kwargs: [existing] if kwargs.get("name") == "report.pdf" else []))
+    monkeypatch.setattr(
+        file_service_module.DocumentVersionService,
+        "replace_document_version",
+        classmethod(lambda cls, *args, **kwargs: replace_calls.append((args, kwargs)) or (updated_doc, False)),
+    )
+
+    err, files, conflicts, replaced = _unwrapped_upload_document()(
+        FileService,
+        kb,
+        [_DummyUploadFile(filename="report.pdf", doc_id="doc-unused", blob=b"new-bytes")],
+        "user-1",
+        on_conflict="replace",
+    )
+
+    assert err == []
+    assert files == []
+    assert conflicts == []
+    assert replaced == [updated_doc]
+    assert len(replace_calls) == 1
+    args, _kwargs = replace_calls[0]
+    assert args[0] is kb
+    assert args[1] is existing
+    assert args[2] == b"new-bytes"
 
 
 # ---------------------------------------------------------------------------

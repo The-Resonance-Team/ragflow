@@ -537,7 +537,7 @@ class SyncLogsService(CommonService):
             for d in docs
         ]
         doc_ids = []
-        err, doc_blob_pairs = FileService.upload_document(kb, files, tenant_id, src)
+        err, doc_blob_pairs, _conflicts, _replaced = FileService.upload_document(kb, files, tenant_id, src, on_conflict="rename")
         errs.extend(err)
 
         # Create a mapping from filename to metadata for later use

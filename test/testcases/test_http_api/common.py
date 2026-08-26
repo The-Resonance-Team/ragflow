@@ -156,7 +156,7 @@ def bulk_upload_documents(auth, dataset_id, num, tmp_path):
         fps.append(fp)
     res = upload_documents(auth, dataset_id, fps)
     document_ids = []
-    for document in res["data"]:
+    for document in res["data"]["uploaded"]:
         document_ids.append(document["id"])
     return document_ids
 

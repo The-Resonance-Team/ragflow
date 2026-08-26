@@ -42,7 +42,7 @@ def _create_and_upload_in_batches(auth, dataset_id, num_docs, tmp_path, batch_si
             fp.write_text(f"Test document content {i}\n" * 10)
             fps.append(fp)
         res = upload_documents(auth, dataset_id, fps)
-        for doc in res["data"]:
+        for doc in res["data"]["uploaded"]:
             document_ids.append(doc["id"])
     return document_ids
 
@@ -62,7 +62,7 @@ def dataset_with_docs(request, HttpApiAuth, add_dataset, ragflow_tmp_dir):
     upload_res = upload_documents(HttpApiAuth, dataset_id, fps)
     assert upload_res["code"] == 0, f"Failed to upload documents: {upload_res}"
 
-    document_ids = [doc["id"] for doc in upload_res["data"]]
+    document_ids = [doc["id"] for doc in upload_res["data"]["uploaded"]]
 
     def cleanup():
         delete_documents(HttpApiAuth, dataset_id, {"ids": document_ids})

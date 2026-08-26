@@ -57,6 +57,32 @@ An extraction artifact over a Dataset's chunks: entities, relationships, communi
 Vietnamese: _Đồ thị tri thức_
 _Avoid_: Graph, mind map
 
+### Document versioning
+
+**Duplicate-name Upload**:
+An upload whose filename matches an existing document in the same dataset.
+_Avoid_: Silent duplicate (the old behavior this term replaces)
+
+**Conflict**:
+A duplicate-name upload for which the caller must choose an outcome before anything is stored.
+_Avoid_: Collision, clash
+
+**Keep Both**:
+Resolving a conflict by storing the incoming file as a new document under an auto-renamed name.
+_Avoid_: Rename, auto-rename
+
+**Replacement Upload**:
+Resolving a conflict by storing the incoming bytes as a new version of the existing document.
+_Avoid_: Overwrite, update-in-place
+
+**Document Version**:
+An immutable record of a document's content at one point in time; its bytes can never be modified after creation.
+_Avoid_: Revision, snapshot
+
+**Current Version**:
+The document version whose bytes are used for parsing, download, and display by default.
+_Avoid_: Head, live version
+
 ### Product surfaces
 
 **Knowledge Base**:

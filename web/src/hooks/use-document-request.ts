@@ -101,6 +101,25 @@ export const DocumentStructureKeys = {
     ] as const,
 };
 
+export interface IUploadConflict {
+  id: string;
+  name: string;
+  size: number;
+  suffix: string;
+  content_hash: string;
+  chunk_count: number;
+  current_version_number?: number | null;
+  create_time?: number;
+}
+
+export interface IUploadResponseData {
+  uploaded: IDocumentInfo[];
+  replaced: IDocumentInfo[];
+  conflicts: IUploadConflict[];
+}
+
+export type ConflictDirective = 'replace' | 'rename';
+
 export const useUploadDocument = () => {
   const queryClient = useQueryClient();
   const { id } = useParams();
@@ -110,14 +129,14 @@ export const useUploadDocument = () => {
     isPending: loading,
     mutateAsync,
   } = useMutation<
-    ResponseType<IDocumentInfo[]>,
+    ResponseType<IUploadResponseData>,
     Error,
-    { fileList: File[]; parserConfig?: Record<string, any> }
+    { fileList: File[]; parserConfig?: Record<string, any>; onConflict?: ConflictDirective }
   >({
     mutationKey: [DocumentApiAction.UploadDocument],
-    mutationFn: async ({ fileList, parserConfig }) => {
+    mutationFn: async ({ fileList, parserConfig, onConflict }) => {
       if (!id) {
-        return { code: 500, message: 'Dataset ID is required' };
+        return { code: 500, message: 'Dataset ID is required' } as ResponseType<IUploadResponseData>;
       }
       const formData = new FormData();
       fileList.forEach((file: any) => {
@@ -125,6 +144,9 @@ export const useUploadDocument = () => {
       });
       if (parserConfig) {
         formData.append('parser_config', JSON.stringify(parserConfig));
+      }
+      if (onConflict) {
+        formData.append('on_conflict', onConflict);
       }
 
       try {
@@ -146,14 +168,14 @@ export const useUploadDocument = () => {
         return {
           code: 500,
           message: error + '',
-        };
+        } as ResponseType<IUploadResponseData>;
       }
     },
   });
 
   const upload = useCallback(
-    (fileList: File[], parserConfig?: Record<string, any>) =>
-      mutateAsync({ fileList, parserConfig }),
+    (fileList: File[], parserConfig?: Record<string, any>, onConflict?: ConflictDirective) =>
+      mutateAsync({ fileList, parserConfig, onConflict }),
     [mutateAsync],
   );
 

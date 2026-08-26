@@ -68,7 +68,7 @@ def test_file_type_validation(HttpApiAuth, add_dataset, generate_test_files, req
     dataset_id = add_dataset
     fp = generate_test_files[request.node.callspec.params["generate_test_files"]]
     res = upload_documents(HttpApiAuth, dataset_id, [fp])
-    document_id = res["data"][0]["id"]
+    document_id = res["data"]["uploaded"][0]["id"]
 
     res = download_document(
         HttpApiAuth,

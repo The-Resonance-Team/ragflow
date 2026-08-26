@@ -29,6 +29,7 @@ import { ManageMetadataModal } from '../components/metedata/manage-modal';
 import { useKnowledgeBaseContext } from '../contexts/knowledge-base-context';
 import { DatasetTable } from './dataset-table';
 import { ReparseDialog } from './reparse-dialog';
+import { UploadConflictDialog } from './upload-conflict-dialog';
 import { useBulkOperateDataset } from './use-bulk-operate-dataset';
 import { useCreateEmptyDocument } from './use-create-empty-document';
 import { useSelectDatasetFilters } from './use-select-filters';
@@ -42,6 +43,11 @@ export default function Dataset() {
     showDocumentUploadModal,
     onDocumentUploadOk,
     documentUploadLoading,
+    conflictModalVisible,
+    conflictResolving,
+    pendingConflicts,
+    onConflictsResolved,
+    hideConflictModal,
   } = useHandleUploadDocument();
   const { knowledgeBase } = useKnowledgeBaseContext();
   const {
@@ -209,6 +215,20 @@ export default function Dataset() {
             showParseOnCreation
             isTableParser={knowledgeBase?.chunk_method === 'table'}
           ></FileUploadDialog>
+        )}
+        {conflictModalVisible && (
+          <UploadConflictDialog
+            open={conflictModalVisible}
+            loading={conflictResolving}
+            conflicts={pendingConflicts}
+            onOpenChange={(open) => {
+              if (!open) {
+                hideConflictModal();
+                hideDocumentUploadModal();
+              }
+            }}
+            onResolve={onConflictsResolved}
+          />
         )}
         {createVisible && (
           <RenameDialog

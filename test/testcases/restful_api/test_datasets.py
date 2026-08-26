@@ -2371,7 +2371,7 @@ def test_dataset_metadata_summary_contract(rest_client, create_dataset, tmp_path
         assert upload_res.status_code == 200
         upload_payload = upload_res.json()
         assert upload_payload["code"] == 0, upload_payload
-        document_ids.append(upload_payload["data"][0]["id"])
+        document_ids.append(upload_payload["data"]["uploaded"][0]["id"])
 
     payloads = [
         {"tags": ["foo", "bar"], "author": "alice"},

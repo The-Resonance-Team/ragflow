@@ -1340,9 +1340,24 @@ class Document(DataBaseModel):
 
     run = CharField(max_length=1, null=True, help_text="start to run processing or cancel.(1: run it; 2: cancel)", default="0", index=True)
     status = CharField(max_length=1, null=True, help_text="is it validate(0: wasted, 1: validate)", default="1", index=True)
+    current_version_number = IntegerField(default=1, help_text="version number of the current immutable blob version", index=True)
 
     class Meta:
         db_table = "document"
+
+
+class DocumentVersion(DataBaseModel):
+    id = CharField(max_length=32, primary_key=True)
+    document_id = CharField(max_length=32, null=False, help_text="the document this version belongs to", index=True)
+    version_number = IntegerField(null=False, default=1, help_text="monotonically increasing per document")
+    location = CharField(max_length=255, null=False, help_text="storage key of this version's immutable blob")
+    size = BigIntegerField(default=0)
+    content_hash = EmptyStringCharField(max_length=32, null=False, help_text="xxhash128 of this version's content", default="", index=True)
+    created_by = CharField(max_length=32, null=False, help_text="who uploaded this version")
+
+    class Meta:
+        db_table = "document_version"
+        indexes = ((("document_id", "version_number"), True),)
 
 
 class File(DataBaseModel):
@@ -2411,6 +2426,7 @@ def migrate_db():
     alter_db_rename_column(migrator, "task", "process_duation", "process_duration")
     alter_db_rename_column(migrator, "document", "process_duation", "process_duration")
     alter_db_add_column(migrator, "document", "suffix", EmptyStringCharField(max_length=32, null=False, default="", help_text="The real file extension suffix", index=True))
+    alter_db_add_column(migrator, "document", "current_version_number", IntegerField(default=1, help_text="version number of the current immutable blob version", index=True))
     alter_db_add_column(migrator, "api_4_conversation", "errors", TextField(null=True, help_text="errors"))
     alter_db_add_column(migrator, "dialog", "meta_data_filter", JSONField(null=True, default={}))
     alter_db_add_column(migrator, "dialog", "rerank_candidates_count", IntegerField(default=64))
