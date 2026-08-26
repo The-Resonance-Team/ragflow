@@ -111,8 +111,8 @@ class TestMetadataWithRetrieval:
         res = upload_documents(HttpApiAuth, dataset_id, [fp1, fp2])
         assert res["code"] == 0, f"Failed to upload documents: {res}"
 
-        doc1_id = res["data"][0]["id"]
-        doc2_id = res["data"][1]["id"]
+        doc1_id = res["data"]["uploaded"][0]["id"]
+        doc2_id = res["data"]["uploaded"][1]["id"]
 
         # Add different metadata to each document
         res = update_document(HttpApiAuth, dataset_id, doc1_id, {"meta_fields": {"character": "Zhuge Liang", "era": "Three Kingdoms"}})

@@ -34,6 +34,7 @@ from api.db.db_models import DB, Document, File, File2Document, Knowledgebase, T
 from api.db.services import duplicate_name
 from api.db.services.common_service import CommonService
 from api.db.services.document_service import DocumentService
+from api.db.services.document_version_service import DocumentVersionService, version_blob_key
 from api.db.services.file2document_service import File2DocumentService
 from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.db.services.task_service import TaskService
@@ -43,6 +44,20 @@ from common.constants import MAXIMUM_PAGE_NUMBER, FileSource, ParserType, TaskSt
 from common.misc_utils import get_uuid
 from common.ssrf_guard import assert_url_is_safe
 from rag.llm.cv_model import GptV4
+
+
+def _describe_conflict(doc):
+    """Snapshot of an existing document for a duplicate-name upload response."""
+    return {
+        "id": doc.id,
+        "name": doc.name,
+        "size": doc.size,
+        "suffix": doc.suffix,
+        "content_hash": doc.content_hash or "",
+        "chunk_count": getattr(doc, "chunk_num", 0) or 0,
+        "current_version_number": getattr(doc, "current_version_number", None),
+        "create_time": doc.create_time,
+    }
 
 
 class FileService(CommonService):
@@ -576,7 +591,15 @@ class FileService(CommonService):
 
     @classmethod
     @DB.connection_context()
-    def upload_document(self, kb, file_objs, user_id, src="local", parent_path: str | None = None, parser_config_override: dict | None = None):
+    def upload_document(self, kb, file_objs, user_id, src="local", parent_path: str | None = None, parser_config_override: dict | None = None, on_conflict: str | None = "rename"):
+        """Upload files into a dataset.
+
+        ``on_conflict`` decides what happens when a filename already exists in
+        the dataset: ``"rename"`` auto-renames the incoming file, ``"replace"``
+        stores it as a new immutable version of the existing document, and
+        ``None`` reports the conflict back to the caller without storing
+        anything.
+        """
         root_folder = self.get_root_folder(user_id)
         pf_id = root_folder["id"]
         self.init_knowledgebase_docs(pf_id, user_id)
@@ -592,7 +615,7 @@ class FileService(CommonService):
         else:
             merged_parser_config = base_parser_config
 
-        err, files = [], []
+        err, files, conflicts, replaced = [], [], [], []
         for file in file_objs:
             doc_id = file.id if hasattr(file, "id") else get_uuid()
             e, doc = DocumentService.get_by_id(doc_id)
@@ -632,14 +655,24 @@ class FileService(CommonService):
                 continue
             try:
                 DocumentService.check_doc_health(kb.tenant_id, file.filename)
+                existing_docs = DocumentService.query(name=file.filename, kb_id=kb.id)
+                if existing_docs and on_conflict is None:
+                    conflicts.append(_describe_conflict(existing_docs[0]))
+                    continue
+                if existing_docs and on_conflict == "replace":
+                    blob = file.read()
+                    if filename_type(file.filename) == FileType.PDF.value:
+                        blob = read_potential_broken_pdf(blob)
+                    updated_doc, _noop = DocumentVersionService.replace_document_version(kb, existing_docs[0], blob, user_id)
+                    replaced.append(updated_doc)
+                    continue
+                # "rename" (or an unclaimed name): store as a brand-new document.
                 filename = duplicate_name(DocumentService.query, name=file.filename, kb_id=kb.id)
                 filetype = filename_type(filename)
                 if filetype == FileType.OTHER.value:
                     raise RuntimeError("This type of file has not been supported yet!")
 
-                location = filename if not safe_parent_path else f"{safe_parent_path}/{filename}"
-                while settings.STORAGE_IMPL.obj_exist(kb.id, location):
-                    location += "_"
+                location = version_blob_key(doc_id, 1, filename) if not safe_parent_path else f"{safe_parent_path}/{version_blob_key(doc_id, 1, filename)}"
 
                 blob = file.read()
                 if filetype == FileType.PDF.value:
@@ -668,15 +701,25 @@ class FileService(CommonService):
                     "size": len(blob),
                     "thumbnail": thumbnail_location,
                     "content_hash": incoming_fp or xxhash.xxh128(blob).hexdigest(),
+                    "current_version_number": 1,
                 }
                 DocumentService.insert(doc)
+
+                DocumentVersionService.record_version(
+                    document_id=doc_id,
+                    version_number=1,
+                    location=location,
+                    size=len(blob),
+                    content_hash=doc["content_hash"],
+                    created_by=user_id,
+                )
 
                 FileService.add_file_from_kb(doc, kb_folder["id"], kb.tenant_id)
                 files.append((doc, blob))
             except Exception as e:  # noqa: BLE001 - collect per-file errors and keep processing the rest
                 err.append(file.filename + ": " + str(e))
 
-        return err, files
+        return err, files, conflicts, replaced
 
     @classmethod
     @DB.connection_context()

@@ -483,7 +483,7 @@ def bulk_upload_documents(auth, kb_id, num, tmp_path):
 
     res = upload_documents(auth, {"kb_id": kb_id}, fps)
     document_ids = []
-    for document in res["data"]:
+    for document in res["data"]["uploaded"]:
         document_ids.append(document["id"])
     return document_ids
 

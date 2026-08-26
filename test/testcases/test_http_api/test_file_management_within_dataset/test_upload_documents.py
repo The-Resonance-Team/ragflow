@@ -52,8 +52,8 @@ class TestDocumentsUpload:
         fp = create_txt_file(tmp_path / "ragflow_test.txt")
         res = upload_documents(HttpApiAuth, dataset_id, [fp])
         assert res["code"] == 0
-        assert res["data"][0]["dataset_id"] == dataset_id
-        assert res["data"][0]["name"] == fp.name
+        assert res["data"]["uploaded"][0]["dataset_id"] == dataset_id
+        assert res["data"]["uploaded"][0]["name"] == fp.name
 
     @pytest.mark.p1
     @pytest.mark.parametrize(
@@ -77,8 +77,8 @@ class TestDocumentsUpload:
         fp = generate_test_files[request.node.callspec.params["generate_test_files"]]
         res = upload_documents(HttpApiAuth, dataset_id, [fp])
         assert res["code"] == 0
-        assert res["data"][0]["dataset_id"] == dataset_id
-        assert res["data"][0]["name"] == fp.name
+        assert res["data"]["uploaded"][0]["dataset_id"] == dataset_id
+        assert res["data"]["uploaded"][0]["name"] == fp.name
 
     @pytest.mark.p3
     @pytest.mark.parametrize(
@@ -108,7 +108,7 @@ class TestDocumentsUpload:
 
         res = upload_documents(HttpApiAuth, dataset_id, [fp])
         assert res["code"] == 0
-        assert res["data"][0]["size"] == 0
+        assert res["data"]["uploaded"][0]["size"] == 0
 
     @pytest.mark.p3
     def test_filename_empty(self, HttpApiAuth, add_dataset_func, tmp_path):
@@ -133,7 +133,7 @@ class TestDocumentsUpload:
         fp = create_txt_file(tmp_path / f"{'a' * (DOCUMENT_NAME_LIMIT - 4)}.txt")
         res = upload_documents(HttpApiAuth, dataset_id, [fp])
         assert res["code"] == 0
-        assert res["data"][0]["name"] == fp.name
+        assert res["data"]["uploaded"][0]["name"] == fp.name
 
     @pytest.mark.p2
     def test_invalid_dataset_id(self, HttpApiAuth, tmp_path):
@@ -147,14 +147,12 @@ class TestDocumentsUpload:
         dataset_id = add_dataset_func
         fp = create_txt_file(tmp_path / "ragflow_test.txt")
         res = upload_documents(HttpApiAuth, dataset_id, [fp, fp])
-        assert res["code"] == 0
-        assert len(res["data"]) == 2
-        for i in range(len(res["data"])):
-            assert res["data"][i]["dataset_id"] == dataset_id
-            expected_name = fp.name
-            if i != 0:
-                expected_name = f"{fp.stem}({i}){fp.suffix}"
-            assert res["data"][i]["name"] == expected_name
+        assert res["code"] == 409
+        assert len(res["data"]["uploaded"]) == 1
+        conflicts = res["data"]["conflicts"]
+        assert len(conflicts) == 1
+        assert conflicts[0]["name"] == fp.name
+        assert conflicts[0]["id"] == res["data"]["uploaded"][0]["id"]
 
     @pytest.mark.p2
     def test_same_file_repeat(self, HttpApiAuth, add_dataset_func, tmp_path):
@@ -162,13 +160,11 @@ class TestDocumentsUpload:
         fp = create_txt_file(tmp_path / "ragflow_test.txt")
         for i in range(3):
             res = upload_documents(HttpApiAuth, dataset_id, [fp])
-            assert res["code"] == 0
-            assert len(res["data"]) == 1
-            assert res["data"][0]["dataset_id"] == dataset_id
-            expected_name = fp.name
-            if i != 0:
-                expected_name = f"{fp.stem}({i}){fp.suffix}"
-            assert res["data"][0]["name"] == expected_name
+            if i == 0:
+                assert res["code"] == 0
+                continue
+            assert res["code"] == 409
+            assert len(res["data"]["conflicts"]) == 1
 
     @pytest.mark.p3
     def test_filename_special_characters(self, HttpApiAuth, add_dataset_func, tmp_path):
@@ -181,9 +177,9 @@ class TestDocumentsUpload:
 
         res = upload_documents(HttpApiAuth, dataset_id, [fp])
         assert res["code"] == 0
-        assert len(res["data"]) == 1
-        assert res["data"][0]["dataset_id"] == dataset_id
-        assert res["data"][0]["name"] == fp.name
+        assert len(res["data"]["uploaded"]) == 1
+        assert res["data"]["uploaded"][0]["dataset_id"] == dataset_id
+        assert res["data"]["uploaded"][0]["name"] == fp.name
 
     @pytest.mark.p1
     def test_multiple_files(self, HttpApiAuth, add_dataset_func, tmp_path):

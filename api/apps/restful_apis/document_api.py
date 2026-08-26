@@ -43,6 +43,7 @@ from api.db.services.doc_metadata_service import DocMetadataService
 from api.db.services.document_counter_service import release_reparse_counters
 from api.db.db_models import Task
 from api.db.services.document_service import DocumentService
+from api.db.services.document_version_service import DocumentVersionService
 from api.db.services.file2document_service import File2DocumentService
 from api.db.services.file_service import FileService
 from api.db.services.knowledgebase_service import KnowledgebaseService
@@ -687,43 +688,79 @@ async def _upload_local_documents(kb, tenant_id):
         except (json.JSONDecodeError, TypeError):
             parser_config_override = None
 
-    err, files = await thread_pool_exec(
+    on_conflict_raw = form.get("on_conflict")
+    if on_conflict_raw not in (None, "", "replace", "rename"):
+        return get_error_data_result(message='`on_conflict` must be one of "replace" or "rename".', code=RetCode.ARGUMENT_ERROR)
+    on_conflict = on_conflict_raw or None
+
+    err, files, conflicts, replaced = await thread_pool_exec(
         FileService.upload_document,
         kb,
         file_objs,
         tenant_id,
         parent_path=form.get("parent_path"),
         parser_config_override=parser_config_override,
+        on_conflict=on_conflict,
     )
 
-    # Handle partial success: some files uploaded successfully, some had errors
-    is_partial_success = err and files
+    # Replaced documents re-parse immediately on their new content.
+    rerun_errors = []
+    if replaced:
+        await thread_pool_exec(_reset_and_parse_documents, tenant_id, [doc["id"] for doc in replaced], rerun_errors)
+        err = err + rerun_errors
+        queued_ids = set(doc["id"] for doc in replaced) - {e.split(":")[0] for e in rerun_errors}
+        for doc in replaced:
+            if doc["id"] in queued_ids:
+                doc["run"] = str(TaskStatus.RUNNING.value)
 
-    if err and not is_partial_success:
+    uploaded_docs = [f[0] for f in files]  # remove the blob
+    return_raw_files = request.args.get("return_raw_files", "false").lower() == "true"
+
+    if return_raw_files:
+        uploaded_data = uploaded_docs
+    else:
+        uploaded_data = [map_doc_keys_with_run_status(doc, run_status="0") for doc in uploaded_docs]
+
+    data = {
+        "uploaded": uploaded_data,
+        "replaced": [map_doc_keys(doc) for doc in replaced],
+        "conflicts": conflicts,
+    }
+
+    # Handle partial success: some files uploaded successfully, some had errors
+    is_partial_success = err and (uploaded_docs or replaced)
+    if is_partial_success:
+        msg = "\n".join(err)
+        logging.warning(f"Partial upload success: {len(uploaded_docs) + len(replaced)} succeeded, {len(err)} failed - {msg}")
+        return construct_json_result(code=RetCode.SERVER_ERROR, message=msg, data=data)
+
+    if err and not uploaded_docs and not replaced:
+        if conflicts:
+            names = ", ".join(sorted({c["name"] for c in conflicts}))
+            logging.warning(f"Upload conflicts for existing documents: {names}")
+            return construct_json_result(
+                code=RetCode.CONFLICT,
+                message=f"These documents already exist in this dataset: {names}.",
+                data=data,
+            )
         msg = "\n".join(err)
         logging.error(msg)
         return get_error_data_result(message=msg, code=RetCode.SERVER_ERROR)
 
-    if not files:
+    if not uploaded_docs and not replaced:
+        if conflicts:
+            names = ", ".join(sorted({c["name"] for c in conflicts}))
+            logging.warning(f"Upload conflicts for existing documents: {names}")
+            return construct_json_result(
+                code=RetCode.CONFLICT,
+                message=f"These documents already exist in this dataset: {names}.",
+                data=data,
+            )
         msg = "There seems to be an issue with your file format. please verify it is correct and not corrupted."
         logging.error(msg)
         return get_error_data_result(message=msg, code=RetCode.DATA_ERROR)
 
-    files = [f[0] for f in files]  # remove the blob
-    return_raw_files = request.args.get("return_raw_files", "false").lower() == "true"
-
-    if return_raw_files:
-        doc_data = files
-    else:
-        doc_data = [map_doc_keys_with_run_status(doc, run_status="0") for doc in files]
-
-    # For partial success, include error message along with successful uploads
-    if is_partial_success:
-        msg = "\n".join(err)
-        logging.warning(f"Partial upload success: {len(files)} succeeded, {len(err)} failed - {msg}")
-        return construct_json_result(code=RetCode.SERVER_ERROR, message=msg, data=doc_data)
-
-    return get_result(data=doc_data)
+    return get_result(data=data)
 
 
 @manager.route("/datasets/<dataset_id>/documents", methods=["GET"])  # noqa: F821
@@ -1546,6 +1583,44 @@ def _run_sync(user_id: str, req):
     return None, None
 
 
+def _reset_and_parse_documents(tenant_id, doc_ids, errors):
+    """Reset parse state and queue fresh parses for the given documents.
+
+    Shared by the re-parse endpoint and replacement uploads: cancels pending
+    tasks, wipes existing chunks from the doc engine, zeroes counters and
+    queues a new parse per document. Returns the number of documents queued;
+    failures are appended to ``errors``.
+    """
+    kb_table_num_map = {}
+    success_count = 0
+    from rag.advanced_rag.knowlege_compile.dataset_nav import remove_dataset_nav_doc_sync
+
+    for doc_id in doc_ids:
+        e, doc = DocumentService.get_by_id(doc_id)
+        if not e:
+            errors.append(f"Document not found: {doc_id}")
+            continue
+
+        info = {"run": str(TaskStatus.RUNNING.value), "progress": 0}
+        # If re-running a completed document, clear previous chunks
+        if str(doc.run) == TaskStatus.DONE.value:
+            DocumentService.clear_chunk_num_when_rerun(doc.id)
+            info["progress_msg"] = ""
+            info["chunk_num"] = 0
+            info["token_num"] = 0
+
+        DocumentService.update_by_id(doc_id, info)
+        TaskService.filter_delete([Task.doc_id == doc_id])
+        remove_dataset_nav_doc_sync(tenant_id, doc.kb_id, doc.id)
+        if settings.docStoreConn.index_exist(search.index_name(tenant_id), doc.kb_id):
+            settings.docStoreConn.delete({"doc_id": doc_id}, search.index_name(tenant_id), doc.kb_id)
+
+        doc_dict = doc.to_dict()
+        DocumentService.run(tenant_id, doc_dict, kb_table_num_map)
+        success_count += 1
+    return success_count
+
+
 @manager.route("/datasets/<dataset_id>/documents/parse", methods=["POST"])  # noqa: F821
 @login_required
 @add_tenant_id_to_kwargs
@@ -1620,34 +1695,7 @@ async def parse_documents(tenant_id, dataset_id):
     try:
 
         def _run_sync():
-            kb_table_num_map = {}
-            success_count = 0
-            for doc_id in valid_doc_ids:
-                e, doc = DocumentService.get_by_id(doc_id)
-                if not e:
-                    errors.append(f"Document not found: {doc_id}")
-                    continue
-
-                info = {"run": str(TaskStatus.RUNNING.value), "progress": 0}
-                # If re-running a completed document, clear previous chunks
-                if str(doc.run) == TaskStatus.DONE.value:
-                    DocumentService.clear_chunk_num_when_rerun(doc.id)
-                    info["progress_msg"] = ""
-                    info["chunk_num"] = 0
-                    info["token_num"] = 0
-
-                DocumentService.update_by_id(doc_id, info)
-                TaskService.filter_delete([Task.doc_id == doc_id])
-                from rag.advanced_rag.knowlege_compile.dataset_nav import remove_dataset_nav_doc_sync
-
-                remove_dataset_nav_doc_sync(tenant_id, doc.kb_id, doc.id)
-                if settings.docStoreConn.index_exist(search.index_name(tenant_id), doc.kb_id):
-                    settings.docStoreConn.delete({"doc_id": doc_id}, search.index_name(tenant_id), doc.kb_id)
-
-                doc_dict = doc.to_dict()
-                DocumentService.run(tenant_id, doc_dict, kb_table_num_map)
-                success_count += 1
-
+            success_count = _reset_and_parse_documents(tenant_id, valid_doc_ids, errors)
             result = {"success_count": success_count}
             if errors:
                 result["errors"] = errors
@@ -2139,6 +2187,76 @@ def _mimetype_for_document(doc) -> str:
     return CONTENT_TYPE_MAP.get(ext, f"{fallback_prefix}/{ext}")
 
 
+def _resolve_versioned_blob(kb_id, document_id, version_id):
+    """Resolve the storage address of a document version.
+
+    Returns ``(bucket, location, error)``. With no ``version_id`` (or an empty
+    one) the caller should fall back to the document's current blob and both
+    addresses come back ``None``.
+    """
+    if not version_id:
+        return None, None, None
+    version = DocumentVersionService.get_version(document_id, version_id)
+    if not version:
+        return None, None, f"Version {version_id} not found for document {document_id}."
+    return kb_id, version.location, None
+
+
+@manager.route("/datasets/<dataset_id>/documents/<document_id>/versions", methods=["GET"])  # noqa: F821
+@login_required
+async def list_document_versions(dataset_id, document_id):
+    """
+    List the immutable versions of a document.
+    ---
+    tags:
+      - Documents
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - in: path
+        name: dataset_id
+        type: string
+        required: true
+        description: ID of the dataset.
+      - in: path
+        name: document_id
+        type: string
+        required: true
+        description: ID of the document.
+      - in: header
+        name: Authorization
+        type: string
+        required: true
+        description: Bearer token for authentication.
+    responses:
+      200:
+        description: Version metadata ordered from newest to oldest.
+    """
+    if not document_id:
+        return get_error_data_result(message="Specify document_id please.")
+    if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=current_user.id):
+        return get_data_error_result(message="document not found")
+    if not DocumentService.accessible(document_id, current_user.id):
+        return get_data_error_result(message="document not found")
+    if not DocumentService.query(kb_id=dataset_id, id=document_id):
+        return get_error_data_result(message=f"The dataset not own the document {document_id}.")
+
+    versions = await thread_pool_exec(DocumentVersionService.list_versions, document_id)
+    data = [
+        {
+            "id": v["id"],
+            "version_number": v["version_number"],
+            "location": v["location"],
+            "size": v["size"],
+            "content_hash": v["content_hash"],
+            "created_by": v["created_by"],
+            "create_time": v["create_time"],
+        }
+        for v in versions
+    ]
+    return get_result(data=data)
+
+
 @manager.route("/datasets/<dataset_id>/documents/<document_id>", methods=["GET"])  # noqa: F821
 @login_required
 async def download(dataset_id, document_id):
@@ -2162,6 +2280,11 @@ async def download(dataset_id, document_id):
         type: string
         required: true
         description: ID of the document to download.
+      - in: query
+        name: version_id
+        type: string
+        required: false
+        description: Download a specific immutable version's bytes instead of the current blob.
       - in: header
         name: Authorization
         type: string
@@ -2187,8 +2310,13 @@ async def download(dataset_id, document_id):
     if not doc:
         return get_error_data_result(message=f"The dataset not own the document {document_id}.")
     # The process of downloading
-    doc_id, doc_location = File2DocumentService.get_storage_address(doc_id=document_id)  # minio address
-    file_stream = settings.STORAGE_IMPL.get(doc_id, doc_location)
+    version_id = request.args.get("version_id")
+    bucket, location, version_error = _resolve_versioned_blob(dataset_id, document_id, version_id)
+    if version_error:
+        return get_error_data_result(message=version_error, code=RetCode.NOT_FOUND)
+    if location is None:
+        bucket, location = File2DocumentService.get_storage_address(doc_id=document_id)  # minio address
+    file_stream = settings.STORAGE_IMPL.get(bucket, location)
     if not file_stream:
         return construct_json_result(message="This file is empty.", code=RetCode.DATA_ERROR)
     file = BytesIO(file_stream)
