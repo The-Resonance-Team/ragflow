@@ -56,9 +56,15 @@ jobs:
           EXISTING=$(gh pr list --state open --json number,headRefName \
             --jq "[.[] | select(.headRefName == \"$BRANCH\")] | length")
           if [ "$EXISTING" -eq 0 ]; then
-            gh pr create \
-              --base main \
-              --head "$BRANCH" \
-              --title "Sync upstream main" \
-              --body "Merge [infiniflow/ragflow@${{ steps.check.outputs.sha }}](https://github.com/infiniflow/ragflow/compare/main...${{ steps.check.outputs.sha }}) — ${{ steps.check.outputs.count }} new commits."
+            for i in 1 2 3; do
+              gh pr create \
+                --base main \
+                --head "$BRANCH" \
+                --title "Sync upstream main" \
+                --body "Merge [infiniflow/ragflow@${{ steps.check.outputs.sha }}](https://github.com/infiniflow/ragflow/compare/main...${{ steps.check.outputs.sha }}) — ${{ steps.check.outputs.count }} new commits." \
+              && exit 0
+              echo "attempt $i failed, retrying..."
+              sleep 15
+            done
+            exit 1
           fi
