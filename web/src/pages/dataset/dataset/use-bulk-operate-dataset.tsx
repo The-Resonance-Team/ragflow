@@ -61,7 +61,7 @@ export function useBulkOperateDataset({
       );
 
       if (nonVirtualKeys.length === 0) {
-        toast.error(t('Please select a non-empty file list'));
+        toast.error(t('knowledgeDetails.pleaseSelectNonEmptyFileList'));
         return;
       }
       await runDocumentByIds({
