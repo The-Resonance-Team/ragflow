@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   prepare:
-    runs-on: [ "self-hosted", "ragflow-release" ]
+    runs-on: [self-hosted]
     outputs:
       release_tag: ${{ steps.release.outputs.release_tag }}
       prerelease: ${{ steps.release.outputs.prerelease }}
@@ -93,10 +93,10 @@ jobs:
         include:
           - goos: linux
             goarch: amd64
-            runner: [ self-hosted, linux ]
+            runner: [self-hosted]
           - goos: linux
             goarch: arm64
-            runner: [ self-hosted, linux ]
+            runner: [self-hosted]
           - goos: darwin
             goarch: amd64
             runner: macos-15-intel
@@ -203,7 +203,7 @@ jobs:
     needs:
       - prepare
       - build_cli
-    runs-on: [ "self-hosted", "ragflow-release" ]
+    runs-on: [self-hosted]
 
     steps:
       - name: Ensure workspace ownership
@@ -256,7 +256,7 @@ jobs:
     needs:
       - prepare
       - publish_cli_assets
-    runs-on: [ "self-hosted", "ragflow-release" ]
+    runs-on: [self-hosted]
     env:
       RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
 

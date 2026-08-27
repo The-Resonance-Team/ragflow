@@ -36,7 +36,7 @@ permissions:
 jobs:
   serenedb_go_integration:
     name: serenedb_go_integration
-    runs-on: [ "self-hosted", "ragflow-test" ]
+    runs-on: [self-hosted]
     env:
       SERENEDB_IMAGE: ${{ github.event.inputs.serenedb_image || 'serenedb/serenedb:26.07.5' }}
       SERENEDB_CONTAINER: serenedb-ci-${{ github.run_id }}

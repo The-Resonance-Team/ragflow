@@ -34,7 +34,7 @@ jobs:
     # https://docs.github.com/en/actions/using-jobs/using-conditions-to-control-job-execution
     # https://github.com/orgs/community/discussions/26261
     if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci')) }}
-    runs-on: [ "self-hosted", "ragflow-test" ]
+    runs-on: [self-hosted]
     outputs:
       http_api_test_level: ${{ steps.test_level.outputs.http_api_test_level }}
     steps:
@@ -149,7 +149,7 @@ jobs:
     name: ragflow_tests_infinity
     needs: ragflow_preflight
     if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci')) }}
-    runs-on: [ "self-hosted", "ragflow-test" ]
+    runs-on: [self-hosted]
     env:
       DOC_ENGINE: infinity
       RAGFLOW_IMAGE: infiniflow/ragflow:${{ github.run_id }}-infinity
@@ -631,7 +631,7 @@ jobs:
     name: ragflow_tests_elasticsearch
     needs: ragflow_preflight
     if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci')) }}
-    runs-on: [ "self-hosted", "ragflow-test" ]
+    runs-on: [self-hosted]
     env:
       DOC_ENGINE: elasticsearch
       RAGFLOW_IMAGE: infiniflow/ragflow:${{ github.run_id }}-elasticsearch

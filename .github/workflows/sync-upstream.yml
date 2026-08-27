@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   sync:
-    runs-on: [ "self-hosted", "linux" ]
+    runs-on: [self-hosted]
     env:
       BRANCH: sync/upstream-main
     steps:
