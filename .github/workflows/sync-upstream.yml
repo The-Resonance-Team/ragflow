@@ -53,6 +53,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SYNC_PAT || github.token }}
         run: |
+          sleep 10
           EXISTING=$(gh pr list --state open --json number,headRefName \
             --jq "[.[] | select(.headRefName == \"$BRANCH\")] | length")
           if [ "$EXISTING" -eq 0 ]; then
@@ -64,7 +65,7 @@ jobs:
                 --body "Merge [infiniflow/ragflow@${{ steps.check.outputs.sha }}](https://github.com/infiniflow/ragflow/compare/main...${{ steps.check.outputs.sha }}) — ${{ steps.check.outputs.count }} new commits." \
               && exit 0
               echo "attempt $i failed, retrying..."
-              sleep 15
+              sleep 20
             done
             exit 1
           fi
