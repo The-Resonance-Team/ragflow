@@ -614,6 +614,26 @@ Esempio: un messaggio di 1 KB con embedding a 1024 dimensioni usa ~9 KB. Il limi
         "Il documento è associato al grafo della conoscenza. Dopo l'eliminazione, le informazioni sui nodi e le relazioni correlate saranno eliminate, ma il grafo non sarà aggiornato immediatamente. L'azione di aggiornamento del grafo viene eseguita durante il processo di analisi del nuovo documento che porta l'attività di estrazione del grafo della conoscenza.",
       plainText: 'Naive',
       reRankModelWaring: 'Il modello re-rank richiede molto tempo.',
+            document: {
+        versionHistory: 'Cronologia versioni',
+        restore: 'Ripristina',
+        download: 'Scarica',
+        restoreConfirmTitle: 'Ripristinare questa versione?',
+        restoreConfirmContent:
+          'Verrà creata una nuova versione dal contenuto selezionato e l’analisi verrà rieseguita. Continuare?',
+        alreadyCurrent: 'Già la versione corrente',
+        restoreSuccess: 'Ripristinato con successo, nuova analisi in corso',
+        currentBadge: 'Corrente',
+        originUpload: 'Caricamento',
+        originRestore: 'Ripristino',
+        version: 'Versione',
+        time: 'Ora',
+        actor: 'Attore',
+        size: 'Dimensione',
+        hash: 'Hash',
+        origin: 'Origine',
+        empty: 'Ancora nessuna versione',
+      },
     },
     knowledgeConfiguration: {
       randomSeedTip:

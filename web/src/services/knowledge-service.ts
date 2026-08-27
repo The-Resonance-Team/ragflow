@@ -368,6 +368,15 @@ export const changeDocumentParser = (
 export const deleteDocument = (datasetId: string, documentIds: string[]) =>
   request.delete(api.documentDelete(datasetId), { data: { ids: documentIds } });
 
+export const listDocumentVersions = (datasetId: string, documentId: string) =>
+  request.get(api.documentVersions(datasetId, documentId));
+
+export const restoreDocumentVersion = (
+  datasetId: string,
+  documentId: string,
+  versionId: string,
+) => request.post(api.documentRestore(datasetId, documentId, versionId));
+
 export const getMetaDataService = ({
   kb_id,
   doc_ids,

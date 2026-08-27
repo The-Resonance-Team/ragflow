@@ -607,6 +607,26 @@ Prosedürel Bellek: Öğrenilen beceriler, alışkanlıklar ve otomatik prosedü
         'Belge bilgi grafiği ile ilişkilendirilmiş. Silindikten sonra ilgili düğüm ve ilişki bilgileri silinecek.',
       plainText: 'Sade',
       reRankModelWaring: 'Yeniden sıralama modeli çok zaman alır.',
+            document: {
+        versionHistory: 'Sürüm geçmişi',
+        restore: 'Geri yükle',
+        download: 'İndir',
+        restoreConfirmTitle: 'Bu sürüm geri yüklensin mi?',
+        restoreConfirmContent:
+          'Bu, seçilen içerikten yeni bir sürüm oluşturacak ve ayrıştırmayı yeniden çalıştıracak. Devam edilsin mi?',
+        alreadyCurrent: 'Zaten mevcut sürüm',
+        restoreSuccess: 'Başarıyla geri yüklendi, yeniden ayrıştırılıyor',
+        currentBadge: 'Mevcut',
+        originUpload: 'Yükleme',
+        originRestore: 'Geri yükleme',
+        version: 'Sürüm',
+        time: 'Zaman',
+        actor: 'Kullanıcı',
+        size: 'Boyut',
+        hash: 'Hash',
+        origin: 'Kaynak',
+        empty: 'Henüz sürüm yok',
+      },
     },
     knowledgeConfiguration: {
       randomSeedTip:

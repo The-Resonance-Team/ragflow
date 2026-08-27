@@ -175,6 +175,26 @@ export default {
       html4excel: 'Excel para HTML',
       html4excelTip:
         'Use em conjunto com o método de fragmentação General. Quando desativado, arquivos de planilhas (XLSX, XLS (Excel 97-2003)) serão analisados linha por linha como pares chave-valor. Quando ativado, os arquivos de planilhas serão convertidos em tabelas HTML. Se a tabela original tiver mais de 12 linhas, o sistema dividirá automaticamente em várias tabelas HTML a cada 12 linhas. Para mais informações, consulte https://ragflow.io/docs/dev/enable_excel2html.',
+            document: {
+        versionHistory: 'Histórico de versões',
+        restore: 'Restaurar',
+        download: 'Baixar',
+        restoreConfirmTitle: 'Restaurar esta versão?',
+        restoreConfirmContent:
+          'Isso criará uma nova versão a partir do conteúdo selecionado e executará a análise novamente. Continuar?',
+        alreadyCurrent: 'Já é a versão atual',
+        restoreSuccess: 'Restaurado com sucesso, re-analisando',
+        currentBadge: 'Atual',
+        originUpload: 'Envio',
+        originRestore: 'Restauração',
+        version: 'Versão',
+        time: 'Hora',
+        actor: 'Autor',
+        size: 'Tamanho',
+        hash: 'Hash',
+        origin: 'Origem',
+        empty: 'Ainda não há versões',
+      },
       autoKeywords: 'Palavras-chave automáticas',
       autoKeywordsTip:
         'Extraia automaticamente N palavras-chave de cada bloco para aumentar sua classificação em consultas que contenham essas palavras-chave. Esteja ciente de que o modelo de chat especificado nas "Configurações do modelo do sistema" consumirá tokens adicionais. Você pode verificar ou atualizar as palavras-chave adicionadas a um bloco na lista de blocos. Para mais detalhes, consulte https://ragflow.io/docs/dev/autokeyword_autoquestion.',

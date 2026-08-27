@@ -27,6 +27,8 @@ export const enum DocumentApiAction {
   CreateDocument = 'createDocument',
   FetchDocumentThumbnails = 'fetchDocumentThumbnails',
   ParseDocument = 'parseDocument',
+  FetchDocumentVersions = 'fetchDocumentVersions',
+  RestoreDocumentVersion = 'restoreDocumentVersion',
 }
 
 export const DocumentKeys = {
@@ -40,4 +42,6 @@ export const DocumentKeys = {
     [DocumentApiAction.FetchDocumentThumbnails, ids] as const,
   byIds: (ids: string[]) =>
     [DocumentApiAction.FetchDocumentList, 'byIds', ids] as const,
+  versions: (datasetId: string, documentId: string) =>
+    [DocumentApiAction.FetchDocumentVersions, datasetId, documentId] as const,
 };

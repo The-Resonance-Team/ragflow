@@ -363,6 +363,26 @@ export default {
       dataFlowRequired: 'Cần chọn pipeline'
     },
     knowledgeDetails: {
+            document: {
+        versionHistory: 'Lịch sử phiên bản',
+        restore: 'Khôi phục',
+        download: 'Tải xuống',
+        restoreConfirmTitle: 'Khôi phục phiên bản này?',
+        restoreConfirmContent:
+          'Thao tác này sẽ tạo phiên bản mới từ nội dung đã chọn và chạy lại phân tích. Tiếp tục?',
+        alreadyCurrent: 'Đã là phiên bản hiện tại',
+        restoreSuccess: 'Khôi phục thành công, đang phân tích lại',
+        currentBadge: 'Hiện tại',
+        originUpload: 'Tải lên',
+        originRestore: 'Khôi phục',
+        version: 'Phiên bản',
+        time: 'Thời gian',
+        actor: 'Người thực hiện',
+        size: 'Kích thước',
+        hash: 'Mã băm',
+        origin: 'Nguồn',
+        empty: 'Chưa có phiên bản nào',
+      },
       metadata: {
         fields: 'trường',
         selectFiles: 'Đã chọn {{count}} tệp',

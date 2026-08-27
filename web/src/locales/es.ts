@@ -161,6 +161,26 @@ export default {
       delimiter: `Delimitadores para segmentación de texto`,
       html4excel: 'Excel a HTML',
       html4excelTip: `Usar junto con el método de fragmentación General. Cuando está desactivado, los archivos de hoja de cálculo (XLSX, XLS (Excel 97-2003)) se analizan línea por línea como pares clave-valor. Cuando está activado, los archivos de hoja de cálculo se convierten en tablas HTML. Si la tabla original tiene más de 12 filas, el sistema la dividirá automáticamente en varias tablas HTML cada 12 filas. Para más información, consulte https://ragflow.io/docs/dev/enable_excel2html.`,
+            document: {
+        versionHistory: 'Historial de versiones',
+        restore: 'Restaurar',
+        download: 'Descargar',
+        restoreConfirmTitle: '¿Restaurar esta versión?',
+        restoreConfirmContent:
+          'Esto creará una nueva versión a partir del contenido seleccionado y volverá a ejecutar el análisis. ¿Continuar?',
+        alreadyCurrent: 'Ya es la versión actual',
+        restoreSuccess: 'Restaurado con éxito, re-analizando',
+        currentBadge: 'Actual',
+        originUpload: 'Subida',
+        originRestore: 'Restauración',
+        version: 'Versión',
+        time: 'Hora',
+        actor: 'Actor',
+        size: 'Tamaño',
+        hash: 'Hash',
+        origin: 'Origen',
+        empty: 'Aún no hay versiones',
+      },
     },
 
     knowledgeConfiguration: {

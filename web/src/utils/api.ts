@@ -279,6 +279,18 @@ export default {
     `${restAPIv1}/datasets/${datasetId}/documents/${documentId}`,
   getDatasetDocumentFileDownload: (datasetId: string, documentId: string) =>
     `${restAPIv1}/datasets/${datasetId}/documents/${documentId}`,
+  documentPreview: (documentId: string) =>
+    `${restAPIv1}/documents/${documentId}/preview`,
+  documentVersions: (datasetId: string, documentId: string) =>
+    `${restAPIv1}/datasets/${datasetId}/documents/${documentId}/versions`,
+  documentRestore: (
+    datasetId: string,
+    documentId: string,
+    versionId: string,
+  ) =>
+    `${restAPIv1}/datasets/${datasetId}/documents/${documentId}/versions/${versionId}/restore`,
+  documentRestoreByBody: (datasetId: string, documentId: string) =>
+    `${restAPIv1}/datasets/${datasetId}/documents/${documentId}/restore`,
   documentThumbnails: `${restAPIv1}/thumbnails`,
   getDocumentFile: `${restAPIv1}/documents`,
   documentUpload: (datasetId: string) =>

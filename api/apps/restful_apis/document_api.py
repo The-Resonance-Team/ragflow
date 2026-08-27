@@ -48,6 +48,7 @@ from api.db.services.document_version_service import DocumentVersionService
 from api.db.services.file2document_service import File2DocumentService
 from api.db.services.file_service import FileService
 from api.db.services.knowledgebase_service import KnowledgebaseService
+from api.db.services.user_service import UserService
 from api.db.services.canvas_service import UserCanvasService
 from api.common.check_team_permission import check_kb_team_permission
 from api.db.services.task_service import TaskService, cancel_all_task_of
@@ -2174,8 +2175,16 @@ async def get(doc_id):
         if not e:
             return get_data_error_result(message="document not found")
 
-        b, n = File2DocumentService.get_storage_address(doc_id=doc_id)
-        data = await thread_pool_exec(settings.STORAGE_IMPL.get, b, n)
+        version_id = request.args.get("version_id")
+        if version_id:
+            version = await thread_pool_exec(DocumentVersionService.get_version, doc_id, version_id)
+            if not version:
+                return get_error_data_result(message=f"Version {version_id} not found for document {doc_id}.", code=RetCode.NOT_FOUND)
+            b, n = doc.kb_id, version.location
+            data = await thread_pool_exec(settings.STORAGE_IMPL.get, b, n)
+        else:
+            b, n = File2DocumentService.get_storage_address(doc_id=doc_id)
+            data = await thread_pool_exec(settings.STORAGE_IMPL.get, b, n)
         if not data:
             return get_data_error_result(message="This file is empty.")
         response = await make_response(data)
@@ -2252,10 +2261,30 @@ async def list_document_versions(dataset_id, document_id):
         return get_data_error_result(message="document not found")
     if not DocumentService.accessible(document_id, current_user.id):
         return get_data_error_result(message="document not found")
-    if not DocumentService.query(kb_id=dataset_id, id=document_id):
+    docs = DocumentService.query(kb_id=dataset_id, id=document_id)
+    if not docs:
         return get_error_data_result(message=f"The dataset not own the document {document_id}.")
+    doc = docs[0]
+    current_version_number = getattr(doc, "current_version_number", 1)
 
     versions = await thread_pool_exec(DocumentVersionService.list_versions, document_id)
+    # Legacy documents have no version rows; synthesize v1 on first history read.
+    if not versions and getattr(doc, "location", None):
+        await thread_pool_exec(DocumentVersionService.ensure_current_version_recorded, doc, current_user.id)
+        versions = await thread_pool_exec(DocumentVersionService.list_versions, document_id)
+        # keep pointer consistent for legacy docs without current_version_number
+        current_version_number = getattr(doc, "current_version_number", None) or (versions[0]["version_number"] if versions else 1)
+
+    # Enrich actor nickname (ponytail: extra query only for version list, not for every doc)
+    nickname_map: dict[str, str] = {}
+    try:
+        user_ids = {v.get("created_by") for v in versions if v.get("created_by")}
+        if user_ids:
+            users = await thread_pool_exec(UserService.query, id=list(user_ids))
+            nickname_map = {u.id: getattr(u, "nickname", "") for u in users}
+    except Exception:
+        nickname_map = {}
+
     data = [
         {
             "id": v["id"],
@@ -2264,11 +2293,126 @@ async def list_document_versions(dataset_id, document_id):
             "size": v["size"],
             "content_hash": v["content_hash"],
             "created_by": v["created_by"],
-            "create_time": v["create_time"],
+            "created_by_nickname": nickname_map.get(v.get("created_by"), ""),
+            "create_time": v.get("create_time"),
+            "origin": v.get("origin") or "upload",
+            "is_current": v["version_number"] == current_version_number,
         }
         for v in versions
     ]
     return get_result(data=data)
+
+
+async def _handle_restore(dataset_id, document_id, version_id):
+    if not document_id or not version_id:
+        return get_error_data_result(message="Specify document_id and version_id please.")
+    if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=current_user.id):
+        return get_data_error_result(message="document not found")
+    if not DocumentService.accessible(document_id, current_user.id):
+        return get_data_error_result(message="document not found")
+    docs = DocumentService.query(kb_id=dataset_id, id=document_id)
+    if not docs:
+        return get_error_data_result(message=f"The dataset not own the document {document_id}.")
+    e, kb = KnowledgebaseService.get_by_id(dataset_id)
+    if not e:
+        return get_error_data_result(message="Can't find this dataset!")
+    doc_model = docs[0]
+    # keep a peewee model instance for service (fetch fresh)
+    _, doc_obj = DocumentService.get_by_id(document_id)
+    if not doc_obj:
+        return get_error_data_result(message="Document not found")
+    updated, noop, error = await thread_pool_exec(DocumentVersionService.restore_document_version, kb, doc_obj, version_id, current_user.id)
+    if error:
+        return get_error_data_result(message=error, code=RetCode.NOT_FOUND if "not found" in error.lower() else RetCode.DATA_ERROR)
+    if noop:
+        return get_result(data={"document": map_doc_keys(updated), "noop": True, "message": "Already the current version"})
+
+    # Re-run parsing so chunks reflect restored bytes
+    rerun_errors: list[str] = []
+    tenant_id = kb.tenant_id or current_user.id
+    _success_count, queued_ids = await thread_pool_exec(_reset_and_parse_documents, tenant_id, [document_id], rerun_errors)
+    if rerun_errors:
+        logging.warning("Restore re-parse errors for %s: %s", document_id, rerun_errors)
+    if document_id in queued_ids:
+        updated["run"] = str(TaskStatus.RUNNING.value)
+    return get_result(data={"document": map_doc_keys(updated), "noop": False})
+
+
+@manager.route("/datasets/<dataset_id>/documents/<document_id>/versions/<version_id>/restore", methods=["POST"])  # noqa: F821
+@login_required
+async def restore_document_version(dataset_id, document_id, version_id):
+    """
+    Restore a document to a past version. Creates a new version entry that copies
+    the chosen version's bytes and re-runs parsing.
+    ---
+    tags:
+      - Documents
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - in: path
+        name: dataset_id
+        type: string
+        required: true
+        description: ID of the dataset.
+      - in: path
+        name: document_id
+        type: string
+        required: true
+        description: ID of the document.
+      - in: path
+        name: version_id
+        type: string
+        required: true
+        description: ID of the version to restore.
+      - in: header
+        name: Authorization
+        type: string
+        required: true
+        description: Bearer token for authentication.
+    responses:
+      200:
+        description: Restored document.
+    """
+    return await _handle_restore(dataset_id, document_id, version_id)
+
+
+@manager.route("/datasets/<dataset_id>/documents/<document_id>/restore", methods=["POST"])  # noqa: F821
+@login_required
+async def restore_document_version_by_body(dataset_id, document_id):
+    """
+    Restore a document to a past version (body variant).
+    ---
+    tags:
+      - Documents
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - in: path
+        name: dataset_id
+        type: string
+        required: true
+      - in: path
+        name: document_id
+        type: string
+        required: true
+      - in: body
+        name: body
+        schema:
+          type: object
+          properties:
+            version_id:
+              type: string
+          required: [version_id]
+    responses:
+      200:
+        description: Restored document.
+    """
+    req = await get_request_json() or {}
+    version_id = req.get("version_id") or request.args.get("version_id")
+    if not version_id:
+        return get_error_data_result(message="`version_id` is required")
+    return await _handle_restore(dataset_id, document_id, version_id)
 
 
 @manager.route("/datasets/<dataset_id>/documents/<document_id>", methods=["GET"])  # noqa: F821
@@ -2388,9 +2532,17 @@ async def download_document(document_id):
     doc = DocumentService.query(id=document_id)
     if not doc:
         return get_error_data_result(message=f"The dataset not own the document {document_id}.")
-    # The process of downloading
-    doc_id, doc_location = File2DocumentService.get_storage_address(doc_id=document_id)  # minio address
-    file_stream = settings.STORAGE_IMPL.get(doc_id, doc_location)
+    # The process of downloading — supports version_id for history download
+    version_id = request.args.get("version_id")
+    if version_id:
+        version = DocumentVersionService.get_version(document_id, version_id)
+        if not version:
+            return get_error_data_result(message=f"Version {version_id} not found for document {document_id}.", code=RetCode.NOT_FOUND)
+        bucket, location = doc[0].kb_id, version.location
+        file_stream = settings.STORAGE_IMPL.get(bucket, location)
+    else:
+        doc_id, doc_location = File2DocumentService.get_storage_address(doc_id=document_id)  # minio address
+        file_stream = settings.STORAGE_IMPL.get(doc_id, doc_location)
     if not file_stream:
         return construct_json_result(message="This file is empty.", code=RetCode.DATA_ERROR)
     file = BytesIO(file_stream)

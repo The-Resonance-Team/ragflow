@@ -110,6 +110,20 @@ class DataSet(Base):
         if res.get("code") != 0:
             raise Exception(res["message"])
 
+    def list_document_versions(self, document_id: str):
+        res = self.get(f"/datasets/{self.id}/documents/{document_id}/versions")
+        res = res.json()
+        if res.get("code") == 0:
+            return res["data"]
+        raise Exception(res["message"])
+
+    def restore_document_version(self, document_id: str, version_id: str):
+        res = self.post(f"/datasets/{self.id}/documents/{document_id}/versions/{version_id}/restore", json={})
+        res = res.json()
+        if res.get("code") == 0:
+            return res["data"]
+        raise Exception(res["message"])
+
     def _get_documents_status(self, document_ids):
         import time
 

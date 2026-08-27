@@ -62,8 +62,9 @@ class Document(Base):
         self._update_from_dict(self.rag, res.get("data", {}))
         return self
 
-    def download(self):
-        res = self.get(f"/datasets/{self.dataset_id}/documents/{self.id}")
+    def download(self, version_id: str | None = None):
+        params = {"version_id": version_id} if version_id else None
+        res = self.get(f"/datasets/{self.dataset_id}/documents/{self.id}", params=params)
         error_keys = set(["code", "message"])
         try:
             response = res.json()
@@ -74,6 +75,21 @@ class Document(Base):
                 return res.content
         except json.JSONDecodeError:
             return res.content
+
+    def list_versions(self):
+        res = self.get(f"/datasets/{self.dataset_id}/documents/{self.id}/versions")
+        res = res.json()
+        if res.get("code") == 0:
+            return res["data"]
+        raise Exception(res.get("message"))
+
+    def restore_version(self, version_id: str):
+        res = self.post(f"/datasets/{self.dataset_id}/documents/{self.id}/versions/{version_id}/restore", json={})
+        res = res.json()
+        if res.get("code") == 0:
+            self._update_from_dict(self.rag, res["data"].get("document", {}))
+            return res["data"]
+        raise Exception(res.get("message"))
 
     def list_chunks(self, page=1, page_size=30, keywords="", id=""):
         data = {"keywords": keywords, "page": page, "page_size": page_size, "id": id}

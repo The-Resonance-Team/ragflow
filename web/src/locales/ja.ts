@@ -386,6 +386,26 @@ export default {
         'このドキュメントはナレッジグラフに関連付けられています。削除すると、関連するノードおよび関係性の情報も削除されますが、グラフはすぐには更新されません。グラフの更新は、ナレッジグラフ抽出タスクを伴う新規ドキュメントのパース処理中に実行されます。',
       plainText: 'General',
       reRankModelWaring: '再ランクモデルの処理には非常に時間がかかります。',
+            document: {
+        versionHistory: 'バージョン履歴',
+        restore: '復元',
+        download: 'ダウンロード',
+        restoreConfirmTitle: 'このバージョンを復元しますか？',
+        restoreConfirmContent:
+          '選択した内容から新しいバージョンが作成され、解析が再実行されます。続行しますか？',
+        alreadyCurrent: 'すでに現在のバージョンです',
+        restoreSuccess: '正常に復元され、再解析中',
+        currentBadge: '現在',
+        originUpload: 'アップロード',
+        originRestore: '復元',
+        version: 'バージョン',
+        time: '時間',
+        actor: 'アクター',
+        size: 'サイズ',
+        hash: 'ハッシュ',
+        origin: '由来',
+        empty: 'まだバージョンがありません',
+      },
     },
 
     knowledgeConfiguration: {

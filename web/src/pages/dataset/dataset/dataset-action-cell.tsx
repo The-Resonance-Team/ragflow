@@ -13,11 +13,12 @@ import { downloadDatasetDocument } from '@/services/file-manager-service';
 import { formatFileSize } from '@/utils/common-util';
 import { formatDate } from '@/utils/date';
 import { downloadFileFromBlob } from '@/utils/file-util';
-import { Download, Eye, PenLine, Trash2 } from 'lucide-react';
+import { Download, Eye, History, PenLine, Trash2 } from 'lucide-react';
 import { omit } from 'lodash';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { UseRenameDocumentShowType } from './use-rename-document';
 import { isParserRunning } from './utils';
+import { DocumentVersionHistoryDrawer } from './document-version-history-drawer';
 
 const Fields = ['name', 'size', 'type', 'create_time', 'update_time'];
 
@@ -67,12 +68,27 @@ export function DatasetActionCell({
     showRenameModal(record);
   }, [record, showRenameModal]);
 
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const handleHistory = useCallback(() => {
+    setHistoryOpen(true);
+  }, []);
+
   return (
     <div
       className="
       flex gap-2 items-center opacity-0
       transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
     >
+      <Button
+        size="icon-xs"
+        variant="ghost"
+        onClick={handleHistory}
+        title="Version history"
+        aria-label="Version history"
+      >
+        <History className="size-[1em]" />
+      </Button>
       <Button
         size="icon-xs"
         variant="ghost"
@@ -128,6 +144,15 @@ export function DatasetActionCell({
           <Trash2 className="size-[1em]" />
         </Button>
       </ConfirmDeleteDialog>
+      {historyOpen && (
+        <DocumentVersionHistoryDrawer
+          datasetId={record.dataset_id}
+          documentId={id}
+          documentName={record.name}
+          open={historyOpen}
+          onOpenChange={setHistoryOpen}
+        />
+      )}
     </div>
   );
 }

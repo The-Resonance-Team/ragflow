@@ -141,6 +141,11 @@ def _call_replace(*args):
     return DocumentVersionService.replace_document_version.__func__.__wrapped__(DocumentVersionService, *args)
 
 
+def _call_restore(*args):
+    """Invoke restore_document_version bypassing @DB.connection_context()."""
+    return DocumentVersionService.restore_document_version.__func__.__wrapped__(DocumentVersionService, *args)
+
+
 @pytest.mark.p2
 def test_version_blob_key_layout():
     assert version_blob_key("doc-1", 2, "report.pdf") == "versions/doc-1/v2/report.pdf"
@@ -276,3 +281,75 @@ def test_get_version_scopes_to_document(version_store):
 
     assert DocumentVersionService.get_version("doc-1", "ver-a") is not None
     assert DocumentVersionService.get_version("other-doc", "ver-a") is None
+
+
+@pytest.mark.p2
+def test_restore_creates_new_version_copying_bytes(version_store):
+    import xxhash
+
+    # v1 exists, doc is at v2
+    v1_hash = xxhash.xxh128(b"v1bytes").hexdigest()
+    v2_hash = xxhash.xxh128(b"v2bytes").hexdigest()
+    version_store.rows.append(_VersionRow(id="v1", document_id="doc-1", version_number=1, location="versions/doc-1/v1/report.pdf", content_hash=v1_hash, size=7, created_by="user-1", origin="upload"))
+    version_store.rows.append(_VersionRow(id="v2", document_id="doc-1", version_number=2, location="versions/doc-1/v2/report.pdf", content_hash=v2_hash, size=7, created_by="user-1", origin="upload"))
+    version_store.storage.written[("kb-1", "versions/doc-1/v1/report.pdf")] = b"v1bytes"
+    version_store.storage.written[("kb-1", "versions/doc-1/v2/report.pdf")] = b"v2bytes"
+    doc = _make_doc(content_hash=v2_hash, current_version_number=2, location="versions/doc-1/v2/report.pdf")
+
+    updated, noop, err = _call_restore(_kb(), doc, "v1", "user-1")
+
+    assert noop is False
+    assert err is None
+    assert updated["current_version_number"] == 3
+    assert updated["location"] == "versions/doc-1/v3/report.pdf"
+    assert len(version_store.recorded) == 1
+    assert version_store.recorded[0].version_number == 3
+    assert version_store.recorded[0].origin == "restore"
+    assert version_store.recorded[0].content_hash == v1_hash
+    assert version_store.storage.written[("kb-1", "versions/doc-1/v3/report.pdf")] == b"v1bytes"
+    # old blob still there
+    assert version_store.storage.written[("kb-1", "versions/doc-1/v1/report.pdf")] == b"v1bytes"
+
+
+@pytest.mark.p2
+def test_restore_noop_when_already_current(version_store):
+    import xxhash
+
+    h = xxhash.xxh128(b"same").hexdigest()
+    version_store.rows.append(_VersionRow(id="v1", document_id="doc-1", version_number=1, location="versions/doc-1/v1/report.pdf", content_hash=h, size=4, created_by="user-1", origin="upload"))
+    version_store.storage.written[("kb-1", "versions/doc-1/v1/report.pdf")] = b"same"
+    doc = _make_doc(content_hash=h, current_version_number=1, location="versions/doc-1/v1/report.pdf")
+
+    updated, noop, err = _call_restore(_kb(), doc, "v1", "user-1")
+
+    assert noop is True
+    assert err is None
+    assert len(version_store.recorded) == 0
+    assert updated["id"] == "doc-1"
+
+
+@pytest.mark.p2
+def test_restore_missing_version_returns_error(version_store):
+    doc = _make_doc()
+
+    updated, noop, err = _call_restore(_kb(), doc, "missing", "user-1")
+
+    assert updated is None
+    assert err is not None
+    assert "not found" in err.lower()
+
+
+@pytest.mark.p2
+def test_restore_origin_is_restore(version_store):
+    import xxhash
+
+    v1_hash = xxhash.xxh128(b"old").hexdigest()
+    v2_hash = xxhash.xxh128(b"new").hexdigest()
+    version_store.rows.append(_VersionRow(id="v1", document_id="doc-1", version_number=1, location="versions/doc-1/v1/report.pdf", content_hash=v1_hash, size=3, created_by="user-1", origin="upload"))
+    version_store.storage.written[("kb-1", "versions/doc-1/v1/report.pdf")] = b"old"
+    doc = _make_doc(content_hash=v2_hash, current_version_number=1, location="versions/doc-1/v1/report.pdf")
+
+    _call_restore(_kb(), doc, "v1", "user-1")
+
+    # ensure the new row is marked as restore, not upload
+    assert version_store.recorded[-1].origin == "restore"
