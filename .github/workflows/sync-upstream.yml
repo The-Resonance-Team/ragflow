@@ -25,7 +25,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/infiniflow/ragflow.git 2>/dev/null \
             || git remote set-url upstream https://github.com/infiniflow/ragflow.git
-          git fetch upstream --tags
+          git fetch upstream --tags --force
 
       - name: Check for new commits
         id: check
