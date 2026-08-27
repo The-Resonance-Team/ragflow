@@ -1354,6 +1354,7 @@ class DocumentVersion(DataBaseModel):
     size = BigIntegerField(default=0)
     content_hash = EmptyStringCharField(max_length=32, null=False, help_text="xxhash128 of this version's content", default="", index=True)
     created_by = CharField(max_length=32, null=False, help_text="who uploaded this version")
+    origin = CharField(max_length=16, null=False, default="upload", help_text="upload|restore")
 
     class Meta:
         db_table = "document_version"
@@ -2427,6 +2428,7 @@ def migrate_db():
     alter_db_rename_column(migrator, "document", "process_duation", "process_duration")
     alter_db_add_column(migrator, "document", "suffix", EmptyStringCharField(max_length=32, null=False, default="", help_text="The real file extension suffix", index=True))
     alter_db_add_column(migrator, "document", "current_version_number", IntegerField(default=1, help_text="version number of the current immutable blob version", index=True))
+    alter_db_add_column(migrator, "document_version", "origin", CharField(max_length=16, null=False, default="upload", help_text="upload|restore"))
     alter_db_add_column(migrator, "api_4_conversation", "errors", TextField(null=True, help_text="errors"))
     alter_db_add_column(migrator, "dialog", "meta_data_filter", JSONField(null=True, default={}))
     alter_db_add_column(migrator, "dialog", "rerank_candidates_count", IntegerField(default=64))

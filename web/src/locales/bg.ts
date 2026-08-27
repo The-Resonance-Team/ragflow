@@ -423,6 +423,26 @@ export default {
         'Документът е свързан с графа на знанията. След изтриването свързаната информация за възли и връзки ще бъде изтрита, но графът няма да бъде актуализиран незабавно. Действието за актуализиране на графа се извършва по време на обработката на нов документ, който носи задача за извличане на граф на знанията.',
       plainText: 'Naive',
       reRankModelWaring: 'Моделът за преподреждане е много времеемък.',
+      document: {
+        versionHistory: 'Version history',
+        restore: 'Restore',
+        download: 'Download',
+        restoreConfirmTitle: 'Restore this version?',
+        restoreConfirmContent:
+          'This will create a new version from the selected content and re-run parsing. Continue?',
+        alreadyCurrent: 'Already the current version',
+        restoreSuccess: 'Restored successfully, re-parsing',
+        currentBadge: 'Current',
+        originUpload: 'Upload',
+        originRestore: 'Restore',
+        version: 'Version',
+        time: 'Time',
+        actor: 'Actor',
+        size: 'Size',
+        hash: 'Hash',
+        origin: 'Origin',
+        empty: 'No versions yet',
+      },
     },
     knowledgeConfiguration: {
       globalIndexModelTip:

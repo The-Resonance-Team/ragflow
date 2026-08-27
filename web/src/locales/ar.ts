@@ -418,6 +418,26 @@ export default {
         'الوثيقة مرتبطة بالرسم البياني المعرفي. بعد الحذف، سيتم حذف معلومات العقدة والعلاقة ذات الصلة، ولكن لن يتم تحديث الرسم البياني على الفور. يتم تنفيذ إجراء تحديث الرسم البياني أثناء عملية تحليل المستند الجديد الذي يحمل مهمة استخراج الرسم البياني المعرفي.',
       plainText: 'ساذج',
       reRankModelWaring: 'يستغرق نموذج إعادة التصنيف وقتًا طويلاً للغاية.',
+      document: {
+        versionHistory: 'Version history',
+        restore: 'Restore',
+        download: 'Download',
+        restoreConfirmTitle: 'Restore this version?',
+        restoreConfirmContent:
+          'This will create a new version from the selected content and re-run parsing. Continue?',
+        alreadyCurrent: 'Already the current version',
+        restoreSuccess: 'Restored successfully, re-parsing',
+        currentBadge: 'Current',
+        originUpload: 'Upload',
+        originRestore: 'Restore',
+        version: 'Version',
+        time: 'Time',
+        actor: 'Actor',
+        size: 'Size',
+        hash: 'Hash',
+        origin: 'Origin',
+        empty: 'No versions yet',
+      },
     },
     knowledgeConfiguration: {
       globalIndexModelTip:

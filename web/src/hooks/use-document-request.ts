@@ -40,7 +40,9 @@ import kbService, {
   deleteDocument,
   documentFilter,
   listDocument,
+  listDocumentVersions,
   renameDocument,
+  restoreDocumentVersion,
   uploadDocument,
 } from '@/services/knowledge-service';
 import { restAPIv1 } from '@/utils/api';
@@ -871,3 +873,70 @@ export function useDeleteDocumentStructureGraph() {
 
   return { deleteDocumentStructureGraph: mutateAsync, loading, data };
 }
+
+export interface IDocumentVersion {
+  id: string;
+  version_number: number;
+  size: number;
+  content_hash: string;
+  origin: 'upload' | 'restore';
+  created_by: string;
+  created_by_nickname?: string;
+  create_time: number;
+  create_date?: string;
+  is_current: boolean;
+  location?: string;
+}
+
+export const useFetchDocumentVersions = (
+  datasetId: string,
+  documentId: string,
+  enabled = true,
+) => {
+  const { data, isFetching: loading, refetch } = useQuery<IDocumentVersion[]>({
+    queryKey: DocumentKeys.versions(datasetId, documentId),
+    enabled: !!datasetId && !!documentId && enabled,
+    gcTime: 0,
+    queryFn: async () => {
+      const { data } = await listDocumentVersions(datasetId, documentId);
+      if (data.code === 0) {
+        return data.data as IDocumentVersion[];
+      }
+      return [];
+    },
+    initialData: [],
+  });
+  return { data, loading, refetch };
+};
+
+export const useRestoreDocumentVersion = (
+  datasetId: string,
+  documentId: string,
+) => {
+  const queryClient = useQueryClient();
+  const {
+    isPending: loading,
+    mutateAsync,
+  } = useMutation({
+    mutationKey: [DocumentApiAction.RestoreDocumentVersion, datasetId, documentId],
+    mutationFn: async (versionId: string) => {
+      const { data } = await restoreDocumentVersion(datasetId, documentId, versionId);
+      return data;
+    },
+    onSuccess: (ret) => {
+      if (ret?.code === 0) {
+        queryClient.invalidateQueries({ queryKey: DocumentKeys.all() });
+        queryClient.invalidateQueries({
+          queryKey: DocumentKeys.versions(datasetId, documentId),
+        });
+        if (ret.data?.noop) {
+          message.info(i18n.t('knowledgeDetails.document.alreadyCurrent'));
+        } else {
+          message.success(i18n.t('knowledgeDetails.document.restoreSuccess'));
+        }
+      }
+    },
+  });
+  const restore = (versionId: string) => mutateAsync(versionId);
+  return { restoreDocumentVersion: restore, loading };
+};

@@ -30,7 +30,7 @@ import xxhash
 from peewee import fn
 
 from api.db import KNOWLEDGEBASE_FOLDER_NAME, SKILLS_FOLDER_NAME, FileType
-from api.db.db_models import DB, Document, File, File2Document, Knowledgebase, Task
+from api.db.db_models import DB, Document, DocumentVersion, File, File2Document, Knowledgebase, Task
 from api.db.services import duplicate_name
 from api.db.services.common_service import CommonService
 from api.db.services.document_service import DocumentService
@@ -803,6 +803,23 @@ class FileService(CommonService):
                 b, n = File2DocumentService.get_storage_address(doc_id=doc_id)
 
                 TaskService.filter_delete([Task.doc_id == doc_id])
+                # ponytail: delete version history — extra SELECT cheap vs orphaned blobs leakage
+                try:
+                    versions = DocumentVersionService.query(document_id=doc_id)
+                    for v in versions:
+                        try:
+                            settings.STORAGE_IMPL.rm(doc.kb_id, v.location)
+                        except Exception:
+                            logger.warning("Failed to rm version blob %s for doc %s", v.location, doc_id)
+                    # thumbnail is stored at fixed key
+                    try:
+                        settings.STORAGE_IMPL.rm(doc.kb_id, f"thumbnail_{doc_id}.png")
+                    except Exception:
+                        pass
+                    DocumentVersionService.filter_delete([DocumentVersion.document_id == doc_id])
+                except Exception as ex:
+                    logger.warning("Failed to clean version history for %s: %s", doc_id, ex)
+
                 if not DocumentService.remove_document(doc, tenant_id):
                     raise RuntimeError("Database error (Document removal)!")
 

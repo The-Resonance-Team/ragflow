@@ -428,6 +428,26 @@ Beispiel: Eine 1 KB Nachricht mit 1024-dim Einbettung verwendet ~9 KB. Das Stand
         'Das Dokument ist mit dem Wissensgraphen verknüpft. Nach dem Löschen werden die zugehörigen Knoten- und Beziehungsinformationen gelöscht, aber der Graph wird nicht sofort aktualisiert. Die Aktualisierung des Graphen erfolgt während des Analyseprozesses des neuen Dokuments, das die Aufgabe zur Extraktion des Wissensgraphen enthält.',
       plainText: 'Einfach',
       reRankModelWaring: 'Das Rerank-Modell ist sehr zeitaufwendig.',
+      document: {
+        versionHistory: 'Version history',
+        restore: 'Restore',
+        download: 'Download',
+        restoreConfirmTitle: 'Restore this version?',
+        restoreConfirmContent:
+          'This will create a new version from the selected content and re-run parsing. Continue?',
+        alreadyCurrent: 'Already the current version',
+        restoreSuccess: 'Restored successfully, re-parsing',
+        currentBadge: 'Current',
+        originUpload: 'Upload',
+        originRestore: 'Restore',
+        version: 'Version',
+        time: 'Time',
+        actor: 'Actor',
+        size: 'Size',
+        hash: 'Hash',
+        origin: 'Origin',
+        empty: 'No versions yet',
+      },
     },
     knowledgeConfiguration: {
       globalIndexModelTip:

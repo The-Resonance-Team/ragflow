@@ -363,6 +363,26 @@ export default {
       dataFlowRequired: 'Cần chọn pipeline'
     },
     knowledgeDetails: {
+      document: {
+        versionHistory: 'Version history',
+        restore: 'Restore',
+        download: 'Download',
+        restoreConfirmTitle: 'Restore this version?',
+        restoreConfirmContent:
+          'This will create a new version from the selected content and re-run parsing. Continue?',
+        alreadyCurrent: 'Already the current version',
+        restoreSuccess: 'Restored successfully, re-parsing',
+        currentBadge: 'Current',
+        originUpload: 'Upload',
+        originRestore: 'Restore',
+        version: 'Version',
+        time: 'Time',
+        actor: 'Actor',
+        size: 'Size',
+        hash: 'Hash',
+        origin: 'Origin',
+        empty: 'No versions yet',
+      },
       metadata: {
         fields: 'trường',
         selectFiles: 'Đã chọn {{count}} tệp',

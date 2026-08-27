@@ -585,6 +585,26 @@ export default {
         'Un délimiteur peut être un ou plusieurs caractères spéciaux. Pour plusieurs caractères, encadrez-les de backticks (``). Ex : \\n`##`;',
       reRankModelWaring:
         'Le modèle de réordonnancement est très consommateur de temps.',
+      document: {
+        versionHistory: 'Version history',
+        restore: 'Restore',
+        download: 'Download',
+        restoreConfirmTitle: 'Restore this version?',
+        restoreConfirmContent:
+          'This will create a new version from the selected content and re-run parsing. Continue?',
+        alreadyCurrent: 'Already the current version',
+        restoreSuccess: 'Restored successfully, re-parsing',
+        currentBadge: 'Current',
+        originUpload: 'Upload',
+        originRestore: 'Restore',
+        version: 'Version',
+        time: 'Time',
+        actor: 'Actor',
+        size: 'Size',
+        hash: 'Hash',
+        origin: 'Origin',
+        empty: 'No versions yet',
+      },
     },
     knowledgeConfiguration: {
       titleDescription:

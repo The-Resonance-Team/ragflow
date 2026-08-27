@@ -83,6 +83,14 @@ _Avoid_: Revision, snapshot
 The document version whose bytes are used for parsing, download, and display by default.
 _Avoid_: Head, live version
 
+**Restore**:
+Making a past Document Version the Current Version again by recording it as a new immutable version (v(N+1)) that reuses its bytes and re-runs parsing. History retains both the original and the restore entry.
+_Avoid_: Rollback, revert, recover
+
+**Version Origin**:
+Whether a Document Version was created by an `upload` (initial or replacement) or by a `restore`. Stored per version so the timeline can show it without heuristics.
+_Avoid_: Source, type
+
 ### Product surfaces
 
 **Knowledge Base**:

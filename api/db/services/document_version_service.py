@@ -52,7 +52,7 @@ class DocumentVersionService(CommonService):
         return max((row.version_number for row in rows), default=0) + 1
 
     @classmethod
-    def record_version(cls, *, document_id, version_number, location, size, content_hash, created_by):
+    def record_version(cls, *, document_id, version_number, location, size, content_hash, created_by, origin="upload"):
         return cls.insert(
             document_id=document_id,
             version_number=version_number,
@@ -60,6 +60,7 @@ class DocumentVersionService(CommonService):
             size=size,
             content_hash=content_hash or "",
             created_by=created_by,
+            origin=origin,
         )
 
     @classmethod
@@ -89,6 +90,7 @@ class DocumentVersionService(CommonService):
             size=doc.size or 0,
             content_hash=doc.content_hash or "",
             created_by=user_id,
+            origin="upload",
         )
 
     @classmethod
@@ -139,9 +141,76 @@ class DocumentVersionService(CommonService):
             size=len(blob),
             content_hash=new_hash,
             created_by=user_id,
+            origin="upload",
         )
         DocumentService.update_by_id(doc.id, updates)
 
         updated = doc.to_dict()
         updated.update(updates)
         return updated, False
+
+    @classmethod
+    @DB.connection_context()
+    def restore_document_version(cls, kb, doc, version_id, user_id):
+        """Restore ``doc`` to ``version_id`` by copying bytes to a new version.
+
+        Returns ``(updated_doc_dict, noop, error)``. A noop means the target
+        version is already current — no new row, no re-parse. On error the
+        first element is ``None`` and ``error`` holds the message.
+        """
+        version = cls.get_version(doc.id, version_id)
+        if not version:
+            return None, False, f"Version {version_id} not found for document {doc.id}."
+
+        # Already-current content — do not create a redundant version.
+        if doc.content_hash and version.content_hash and doc.content_hash == version.content_hash:
+            cls.ensure_current_version_recorded(doc, user_id)
+            current = doc.to_dict()
+            # keep pointer consistent for callers that read it
+            current["current_version_number"] = getattr(doc, "current_version_number", None) or cls.next_version_number(doc.id) - 1
+            return current, True, None
+
+        if not cls.query(document_id=doc.id):
+            cls.ensure_current_version_recorded(doc, user_id)
+
+        # ponytail: copy bytes to a fresh immutable key — sharing would break GC invariant
+        blob = settings.STORAGE_IMPL.get(kb.id, version.location)
+        if blob is None:
+            return None, False, f"Blob for version {version_id} not found."
+
+        new_hash = xxhash.xxh128(blob).hexdigest()
+        next_n = cls.next_version_number(doc.id)
+        key = version_blob_key(doc.id, next_n, doc.name)
+        settings.STORAGE_IMPL.put(kb.id, key, blob, kb.tenant_id)
+
+        updates = {
+            "location": key,
+            "size": len(blob),
+            "content_hash": new_hash,
+            "current_version_number": next_n,
+            "progress": 0,
+            "progress_msg": "",
+            "process_begin_at": None,
+            "process_duration": 0,
+            "run": TaskStatus.UNSTART.value,
+        }
+        img = thumbnail_img(doc.name, blob)
+        if img is not None:
+            thumbnail_location = f"thumbnail_{doc.id}.png"
+            settings.STORAGE_IMPL.put(kb.id, thumbnail_location, img)
+            updates["thumbnail"] = thumbnail_location
+
+        cls.record_version(
+            document_id=doc.id,
+            version_number=next_n,
+            location=key,
+            size=len(blob),
+            content_hash=new_hash,
+            created_by=user_id,
+            origin="restore",
+        )
+        DocumentService.update_by_id(doc.id, updates)
+
+        updated = doc.to_dict()
+        updated.update(updates)
+        return updated, False, None

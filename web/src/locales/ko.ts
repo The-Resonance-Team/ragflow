@@ -602,6 +602,26 @@ export default {
         '이 문서는 지식 그래프와 연결되어 있습니다. 삭제 후 관련 노드 및 관계 정보가 삭제되지만, 그래프는 즉시 업데이트되지 않습니다. 그래프 업데이트는 지식 그래프 추출 작업이 포함된 새 문서를 파싱하는 과정에서 수행됩니다.',
       plainText: 'Naive',
       reRankModelWaring: 'Re-rank 모델은 처리 시간이 매우 오래 걸립니다.',
+      document: {
+        versionHistory: 'Version history',
+        restore: 'Restore',
+        download: 'Download',
+        restoreConfirmTitle: 'Restore this version?',
+        restoreConfirmContent:
+          'This will create a new version from the selected content and re-run parsing. Continue?',
+        alreadyCurrent: 'Already the current version',
+        restoreSuccess: 'Restored successfully, re-parsing',
+        currentBadge: 'Current',
+        originUpload: 'Upload',
+        originRestore: 'Restore',
+        version: 'Version',
+        time: 'Time',
+        actor: 'Actor',
+        size: 'Size',
+        hash: 'Hash',
+        origin: 'Origin',
+        empty: 'No versions yet',
+      },
     },
     knowledgeConfiguration: {
       randomSeedTip:
