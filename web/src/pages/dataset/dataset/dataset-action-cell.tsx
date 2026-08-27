@@ -13,12 +13,13 @@ import { downloadDatasetDocument } from '@/services/file-manager-service';
 import { formatFileSize } from '@/utils/common-util';
 import { formatDate } from '@/utils/date';
 import { downloadFileFromBlob } from '@/utils/file-util';
-import { Download, Eye, History, PenLine, Trash2 } from 'lucide-react';
+import { Copy, Download, Eye, History, PenLine, Trash2 } from 'lucide-react';
 import { omit } from 'lodash';
 import { useCallback, useState } from 'react';
 import { UseRenameDocumentShowType } from './use-rename-document';
 import { isParserRunning } from './utils';
 import { DocumentVersionHistoryDrawer } from './document-version-history-drawer';
+import { DuplicateScanDialog } from './duplicate-scan-dialog';
 
 const Fields = ['name', 'size', 'type', 'create_time', 'update_time'];
 
@@ -69,9 +70,14 @@ export function DatasetActionCell({
   }, [record, showRenameModal]);
 
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
 
   const handleHistory = useCallback(() => {
     setHistoryOpen(true);
+  }, []);
+
+  const handleScan = useCallback(() => {
+    setScanOpen(true);
   }, []);
 
   return (
@@ -88,6 +94,15 @@ export function DatasetActionCell({
         aria-label="Version history"
       >
         <History className="size-[1em]" />
+      </Button>
+      <Button
+        size="icon-xs"
+        variant="ghost"
+        onClick={handleScan}
+        title="Scan duplicates"
+        aria-label="Scan duplicates"
+      >
+        <Copy className="size-[1em]" />
       </Button>
       <Button
         size="icon-xs"
@@ -151,6 +166,13 @@ export function DatasetActionCell({
           documentName={record.name}
           open={historyOpen}
           onOpenChange={setHistoryOpen}
+        />
+      )}
+      {scanOpen && (
+        <DuplicateScanDialog
+          open={scanOpen}
+          onOpenChange={setScanOpen}
+          datasetId={record.dataset_id}
         />
       )}
     </div>

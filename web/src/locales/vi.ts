@@ -382,6 +382,17 @@ export default {
         hash: 'Mã băm',
         origin: 'Nguồn',
         empty: 'Chưa có phiên bản nào',
+        // ponytail: English fallback, proper vi pending (parity guard Q3 pattern)
+        duplicateScan: 'Duplicate scan',
+        duplicateScanDescription:
+          'Find exact and near-duplicate documents in this dataset (read-only, does not delete).',
+        scanDuplicates: 'Scan duplicates',
+        scanning: 'Scanning...',
+        exactGroups: 'Exact duplicates (by content hash)',
+        nearGroups: 'Near duplicates (embedding ≥ {{threshold}})',
+        noDuplicates: 'No duplicates found',
+        documents: 'Documents',
+        similarity: 'Similarity',
       },
       metadata: {
         fields: 'trường',
@@ -2015,7 +2026,17 @@ export default {
       fileError: 'Lỗi tệp',
       uploadLimit: 'Kích thước tệp không được vượt quá 10M và tổng số tệp không được vượt quá 128',
       destinationFolder: 'Thư mục đích',
-      pleaseUploadAtLeastOneFile: 'Vui lòng tải lên ít nhất một tệp'
+      pleaseUploadAtLeastOneFile: 'Vui lòng tải lên ít nhất một tệp',
+      // ponytail: English fallback, proper vi translation pending (parity guard Q3)
+      conflictDialogTitle: 'Documents already exist',
+      conflictDialogDescription:
+        'These files already exist in this dataset. Choose what to do with each one.',
+      conflictReplace: 'Replace',
+      conflictReplaceDescription: 'Store as a new version and re-parse',
+      conflictKeepBoth: 'Keep both',
+      conflictKeepBothDescription: 'Upload under an auto-renamed name',
+      conflictRemove: 'Remove',
+      conflictResolve: 'Confirm'
     },
     flow: {
       exportCurrentPage: 'Xuất trang hiện tại',

@@ -25,6 +25,7 @@ interface IUploadConflictDialogProps {
   conflicts: IUploadConflict[];
   onOpenChange: (open: boolean) => void;
   onResolve: (resolution: ConflictResolution) => void;
+  onScanDuplicates?: () => void;
 }
 
 export function UploadConflictDialog({
@@ -33,6 +34,7 @@ export function UploadConflictDialog({
   conflicts,
   onOpenChange,
   onResolve,
+  onScanDuplicates,
 }: IUploadConflictDialogProps) {
   const { t } = useTranslation();
   const [decisions, setDecisions] = useState<Record<string, ConflictDirective>>({});
@@ -125,7 +127,12 @@ export function UploadConflictDialog({
             );
           })}
         </div>
-        <DialogFooter>
+        <DialogFooter className="sm:justify-between">
+          {onScanDuplicates && (
+            <Button variant="outline" type="button" onClick={onScanDuplicates}>
+              {t('knowledgeDetails.document.scanDuplicates')}
+            </Button>
+          )}
           <Button loading={loading} onClick={handleResolve}>
             {t('fileManager.conflictResolve')}
           </Button>

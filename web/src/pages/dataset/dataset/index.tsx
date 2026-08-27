@@ -7,6 +7,7 @@ import ListFilterBar from '@/components/list-filter-bar';
 import { RenameDialog } from '@/components/rename-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useSetModalState } from '@/hooks/common-hooks';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,14 +21,17 @@ import {
   useSelectedIds,
 } from '@/hooks/logic-hooks/use-row-selection';
 import { useFetchDocumentList } from '@/hooks/use-document-request';
+import { Copy } from 'lucide-react';
 import { LucidePlus } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router';
 import { MetadataType } from '../components/metedata/constant';
 import { useManageMetadata } from '../components/metedata/hooks/use-manage-modal';
 import { ManageMetadataModal } from '../components/metedata/manage-modal';
 import { useKnowledgeBaseContext } from '../contexts/knowledge-base-context';
 import { DatasetTable } from './dataset-table';
+import { DuplicateScanDialog } from './duplicate-scan-dialog';
 import { ReparseDialog } from './reparse-dialog';
 import { UploadConflictDialog } from './upload-conflict-dialog';
 import { useBulkOperateDataset } from './use-bulk-operate-dataset';
@@ -37,6 +41,7 @@ import { useHandleUploadDocument } from './use-upload-document';
 
 export default function Dataset() {
   const { t } = useTranslation();
+  const { id: datasetId } = useParams();
   const {
     documentUploadVisible,
     hideDocumentUploadModal,
@@ -49,6 +54,11 @@ export default function Dataset() {
     onConflictsResolved,
     hideConflictModal,
   } = useHandleUploadDocument();
+  const {
+    visible: duplicateScanVisible,
+    showModal: showDuplicateScan,
+    hideModal: hideDuplicateScan,
+  } = useSetModalState();
   const { knowledgeBase } = useKnowledgeBaseContext();
   const {
     searchString,
@@ -167,23 +177,29 @@ export default function Dataset() {
             </div>
           }
         >
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="default">
-                <LucidePlus />
-                {t('knowledgeDetails.addFile')}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-auto min-w-40" align="end">
-              <DropdownMenuItem onClick={showDocumentUploadModal}>
-                {t('fileManager.uploadFile')}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={showCreateModal}>
-                {t('knowledgeDetails.emptyFiles')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={showDuplicateScan}>
+              <Copy className="size-4" />
+              {t('knowledgeDetails.document.scanDuplicates')}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="default">
+                  <LucidePlus />
+                  {t('knowledgeDetails.addFile')}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-auto min-w-40" align="end">
+                <DropdownMenuItem onClick={showDocumentUploadModal}>
+                  {t('fileManager.uploadFile')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={showCreateModal}>
+                  {t('knowledgeDetails.emptyFiles')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </ListFilterBar>
 
         {rowSelectionIsEmpty || (
@@ -228,6 +244,16 @@ export default function Dataset() {
               }
             }}
             onResolve={onConflictsResolved}
+            onScanDuplicates={showDuplicateScan}
+          />
+        )}
+        {duplicateScanVisible && datasetId && (
+          <DuplicateScanDialog
+            open={duplicateScanVisible}
+            onOpenChange={(open) => {
+              if (!open) hideDuplicateScan();
+            }}
+            datasetId={datasetId}
           />
         )}
         {createVisible && (
