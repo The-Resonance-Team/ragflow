@@ -382,17 +382,16 @@ export default {
         hash: 'Mã băm',
         origin: 'Nguồn',
         empty: 'Chưa có phiên bản nào',
-        // ponytail: English fallback, proper vi pending (parity guard Q3 pattern)
-        duplicateScan: 'Duplicate scan',
+        duplicateScan: 'Quét trùng lặp',
         duplicateScanDescription:
-          'Find exact and near-duplicate documents in this dataset (read-only, does not delete).',
-        scanDuplicates: 'Scan duplicates',
-        scanning: 'Scanning...',
-        exactGroups: 'Exact duplicates (by content hash)',
-        nearGroups: 'Near duplicates (embedding ≥ {{threshold}})',
-        noDuplicates: 'No duplicates found',
-        documents: 'Documents',
-        similarity: 'Similarity',
+          'Tìm tài liệu trùng lặp chính xác và gần đúng trong tập dữ liệu này (chỉ đọc, không xóa).',
+        scanDuplicates: 'Quét trùng lặp',
+        scanning: 'Đang quét...',
+        exactGroups: 'Trùng lặp chính xác (theo mã băm)',
+        nearGroups: 'Trùng lặp gần đúng (embedding ≥ {{threshold}})',
+        noDuplicates: 'Không tìm thấy trùng lặp',
+        documents: 'Tài liệu',
+        similarity: 'Độ tương đồng',
       },
       metadata: {
         fields: 'trường',
@@ -2027,16 +2026,15 @@ export default {
       uploadLimit: 'Kích thước tệp không được vượt quá 10M và tổng số tệp không được vượt quá 128',
       destinationFolder: 'Thư mục đích',
       pleaseUploadAtLeastOneFile: 'Vui lòng tải lên ít nhất một tệp',
-      // ponytail: English fallback, proper vi translation pending (parity guard Q3)
-      conflictDialogTitle: 'Documents already exist',
+      conflictDialogTitle: 'Tài liệu đã tồn tại',
       conflictDialogDescription:
-        'These files already exist in this dataset. Choose what to do with each one.',
-      conflictReplace: 'Replace',
-      conflictReplaceDescription: 'Store as a new version and re-parse',
-      conflictKeepBoth: 'Keep both',
-      conflictKeepBothDescription: 'Upload under an auto-renamed name',
-      conflictRemove: 'Remove',
-      conflictResolve: 'Confirm'
+        'Các tệp này đã tồn tại trong tập dữ liệu này. Hãy chọn hành động cho từng tệp.',
+      conflictReplace: 'Thay thế',
+      conflictReplaceDescription: 'Lưu thành phiên bản mới và phân tích lại',
+      conflictKeepBoth: 'Giữ cả hai',
+      conflictKeepBothDescription: 'Tải lên với tên tự động đổi',
+      conflictRemove: 'Gỡ bỏ',
+      conflictResolve: 'Xác nhận'
     },
     flow: {
       exportCurrentPage: 'Xuất trang hiện tại',
