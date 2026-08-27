@@ -22,7 +22,7 @@ An MCP server can start up in either self-host mode (default) or host mode:
 - **Host mode**:
   In host mode, each MCP client can access their own datasets on the RAGFlow server. However, each client request must include a valid API key to authenticate the client with the RAGFlow server.
 
-Once a connection is established, an MCP server communicates with its client in MCP HTTP+SSE (Server-Sent Events) mode, unidirectionally pushing responses from the RAGFlow server to its client in real time.
+Once a connection is established, an MCP server communicates with its client in MCP **streamable HTTP** (`POST /mcp`, JSON) mode; legacy SSE (`/sse`) remains for backward compatibility and is not required for the new `ragflow_chat_completion` tool.
 
 ## Prerequisites
 

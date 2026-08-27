@@ -15,7 +15,7 @@ Python and curl MCP client examples.
 
 ## Example MCP Python Client
 
-We provide a *prototype* MCP client example for testing [here](https://github.com/infiniflow/ragflow/blob/main/mcp/client/client.py).
+We provide a *prototype* MCP client example for testing [here](https://github.com/infiniflow/ragflow/blob/main/mcp/client/client.py). For streamable HTTP (current transport, `POST /mcp`) see [here](https://github.com/infiniflow/ragflow/blob/main/mcp/client/streamable_http_client.py) — it demonstrates `ragflow_retrieval`, `ragflow_list_chats`, and `ragflow_chat_completion` (including multi-turn via `session_id`).
 
 :::info IMPORTANT
 If your MCP server is running in host mode, include your acquired API key in your client's `headers` when connecting asynchronously to it:
@@ -33,9 +33,32 @@ async with sse_client("http://localhost:9382/sse", headers={"Authorization": "YO
 ```
 :::
 
-## Use Curl to Interact with the RAGFlow MCP Server
+## Streamable HTTP (current transport, `POST /mcp`)
 
-When interacting with the MCP server via HTTP requests, follow this initialization sequence:
+All tools — including `ragflow_chat_completion` — are served over **streamable HTTP** at `POST http://127.0.0.1:9382/mcp` with JSON responses (no SSE handshake required). Auth is per-request via `Authorization: Bearer <api-key>` (or `api_key` header). Minimal `tools/call` example:
+
+```bash
+curl -X POST http://127.0.0.1:9382/mcp \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{
+    "jsonrpc":"2.0","id":4,"method":"tools/call",
+    "params":{"name":"ragflow_chat_completion","arguments":{"chat_id":"CHAT_ID","question":"What does my dataset say about neovim?"}}
+  }'
+# Response JSON contains {"answer": "...", "session_id": "...", "reference": {"chunks": [...]}} as text content.
+# Follow-up in same Session — pass the returned session_id:
+curl -X POST http://127.0.0.1:9382/mcp \
+  -H "Authorization: Bearer YOUR_API_KEY" -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"ragflow_chat_completion","arguments":{"chat_id":"CHAT_ID","question":"Summarize it","session_id":"SESSION_ID"}}}'
+```
+
+For tool discovery use `tools/list` on the same endpoint. See the full catalog at [MCP Tools](./mcp_tools.md).
+
+## Use Curl to Interact with the RAGFlow MCP Server (legacy SSE, `POST /messages`)
+
+When interacting with the MCP server via legacy SSE, follow this initialization sequence:
 
 1. **The client sends an `initialize` request** with protocol version and capabilities.
 2. **The server replies with an `initialize` response**, including the supported protocol and capabilities.

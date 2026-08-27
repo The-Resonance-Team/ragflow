@@ -253,6 +253,32 @@ class RAGFlowConnector:
             result_list.append(json.dumps(d, ensure_ascii=False))
         return "\n".join(result_list)
 
+    async def chat_completion(
+        self,
+        *,
+        api_key: str,
+        chat_id: str,
+        question: str,
+        session_id: str | None = None,
+    ):
+        """Proxy an assistant chat completion (non-streaming) via the tenant-scoped REST API."""
+        # ponytail: non-streaming only, explicit session_id carries history; no hidden MCP-session state
+        if not chat_id or not question:
+            raise Exception([types.TextContent(type="text", text="chat_id and question are required.")])
+        payload: dict[str, object] = {"chat_id": chat_id, "question": question, "stream": False}
+        if session_id:
+            payload["session_id"] = session_id
+        logging.info("MCP chat completion chat_id=%s session_id=%s qlen=%s", chat_id, session_id or "<new>", len(question))
+        res = await self._post("/chat/completions", json=payload, api_key=api_key)
+        if not res or res.status_code != 200:
+            error_message = self._backend_error_message(res)
+            raise Exception([types.TextContent(type="text", text=error_message or "Cannot process this operation.")])
+        res_json = res.json()
+        if res_json.get("code") != 0:
+            raise Exception([types.TextContent(type="text", text=res_json.get("message", "Cannot process this operation."))])
+        data = res_json.get("data") or {}
+        return [types.TextContent(type="text", text=json.dumps(data, ensure_ascii=False))]
+
     async def resolve_dataset_ids(self, *, api_key: str):
         """Resolve all accessible dataset IDs for MCP retrieval fallback."""
         logging.info("Resolving accessible dataset IDs for MCP retrieval")
@@ -987,6 +1013,28 @@ async def list_tools(*, connector: RAGFlowConnector, api_key: str) -> list[types
                 },
             },
         ),
+        types.Tool(
+            name="ragflow_chat_completion",
+            description=(
+                "Ask a RAGFlow chat assistant (Assistant/Dialog) and get a grounded answer with citations. "
+                "Uses POST /api/v1/chat/completions under the caller's API token. "
+                "Pass chat_id and question; omit session_id to start a new Session, or pass the previous session_id to continue the same conversation (multi-turn via explicit session_id). "
+                "Returns {answer, reference, session_id, id} as JSON text — reference.chunks holds the cited chunks. "
+                "Non-streaming only; the server stores history so the next call with the same session_id sees prior turns."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "chat_id": {"type": "string", "description": "Assistant (Dialog) ID from ragflow_list_chats."},
+                    "question": {"type": "string", "description": "User question for the assistant."},
+                    "session_id": {
+                        "type": "string",
+                        "description": "Existing Session ID to continue; omit to create a new session. The tool returns the session_id to reuse.",
+                    },
+                },
+                "required": ["chat_id", "question"],
+            },
+        ),
     ] + [
         types.Tool(
             name=entry["name"],
@@ -1045,6 +1093,22 @@ async def call_tool(
         page_size = arguments.get("page_size", 30)
         result = await connector.list_chats(api_key=api_key, page=page, page_size=page_size)
         return [types.TextContent(type="text", text=result)]
+
+    if name == "ragflow_chat_completion":
+        chat_id = (arguments.get("chat_id") or "").strip() if isinstance(arguments.get("chat_id"), str) else ""
+        question = arguments.get("question") if isinstance(arguments.get("question"), str) else ""
+        session_id = arguments.get("session_id")
+        if not isinstance(session_id, str) or not session_id.strip():
+            session_id = None
+        else:
+            session_id = session_id.strip()
+        # ponytail: non-stream, explicit session_id carries history; no store_history knob yet
+        contents = await connector.chat_completion(api_key=api_key, chat_id=chat_id, question=question, session_id=session_id)
+        text = contents[0].text if contents else ""
+        if len(text) > _MAX_TEXT_RESULT_CHARS:
+            text = text[:_MAX_TEXT_RESULT_CHARS] + "\n...[truncated by RAGFlow MCP server]"
+            return [types.TextContent(type="text", text=text)]
+        return contents
 
     resolved = resolve_read_tool_request(name, arguments)
     if resolved is not None:

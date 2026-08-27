@@ -30,6 +30,15 @@ async def main():
                 print(f"{tools.tools=}")
                 response = await session.call_tool(name="ragflow_retrieval", arguments={"dataset_ids": ["bc4177924a7a11f09eff238aa5c10c94"], "document_ids": [], "question": "How to install neovim?"})
                 print(f"Tool response: {response.model_dump()}")
+                # Assistant chat (requires an existing chat assistant id — get one via ragflow_list_chats):
+                # chat_id = (await session.call_tool(name="ragflow_list_chats", arguments={})).content[0].text.splitlines()[0]  # parse id from first line
+                # ans = await session.call_tool(name="ragflow_chat_completion", arguments={"chat_id": "<assistant-id>", "question": "What does my dataset say about neovim?"})
+                # print(f"Chat answer: {ans.content[0].text}")
+                # Follow-up in same Session: pass the returned session_id
+                # import json
+                # sess = json.loads(ans.content[0].text).get("session_id")
+                # ans2 = await session.call_tool(name="ragflow_chat_completion", arguments={"chat_id": "<assistant-id>", "question": "Summarize it", "session_id": sess})
+                # print(f"Follow-up: {ans2.content[0].text}")
     except Exception as e:
         print(e)
 
