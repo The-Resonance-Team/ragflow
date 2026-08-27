@@ -50,6 +50,8 @@ from api.db.services.file_service import FileService
 from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.db.services.user_service import UserService
 from api.db.services.canvas_service import UserCanvasService
+from api.db.services.duplicate_scan_service import cosine_similarity as _cosine_similarity
+from api.db.services.duplicate_scan_service import exact_duplicate_groups as _duplicate_scan_exact_groups
 from api.common.check_team_permission import check_kb_team_permission
 from api.db.services.task_service import TaskService, cancel_all_task_of
 from api.utils.api_utils import (
@@ -888,6 +890,192 @@ def list_docs(dataset_id, tenant_id):
         if doc_item["parser_config"].get("metadata"):
             doc_item["parser_config"]["metadata"] = turn2jsonschema(doc_item["parser_config"]["metadata"])
     return get_json_result(data={"total": total, "docs": renamed_doc_list})
+
+
+def _duplicate_scan_collect_texts(docs, dataset_id):
+    texts = []
+    for d in docs:
+        txt = None
+        try:
+            bucket, loc = File2DocumentService.get_storage_address(doc_id=d.id)
+            # dataset docs store under kb_id; fallback uses returned bucket
+            b = bucket or dataset_id
+            blob = settings.STORAGE_IMPL.get(b, loc) if loc else None
+            if blob:
+                if isinstance(blob, (bytes, bytearray)):
+                    try:
+                        txt = blob[:8192].decode("utf-8", errors="ignore") if len(blob) > 8192 else blob.decode("utf-8", errors="ignore")
+                    except Exception:
+                        txt = None
+                elif isinstance(blob, str):
+                    txt = blob[:8192]
+        except Exception:
+            txt = None
+        if not txt or not str(txt).strip():
+            txt = getattr(d, "name", "") or d.id
+        # truncate to embedding window (ponytail: 8k chars ≈ 8k tokens for most models)
+        if len(txt) > 8192:
+            txt = txt[:8192]
+        texts.append(txt)
+    return texts
+
+
+@manager.route("/datasets/<dataset_id>/documents/duplicate-scan", methods=["GET"])  # noqa: F821
+@login_required
+@add_tenant_id_to_kwargs
+def duplicate_scan(dataset_id, tenant_id):
+    """
+    Scan a dataset for duplicate documents.
+    ---
+    tags:
+      - Documents
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - in: path
+        name: dataset_id
+        type: string
+        required: true
+        description: ID of the dataset.
+      - in: query
+        name: mode
+        type: string
+        required: false
+        default: both
+        description: Scan mode — exact, embedding, or both.
+      - in: query
+        name: threshold
+        type: number
+        required: false
+        default: 0.97
+        description: Cosine threshold for near duplicates (0.80-0.99).
+      - in: header
+        name: Authorization
+        type: string
+        required: true
+        description: Bearer token for authentication.
+    responses:
+      200:
+        description: Duplicate groups.
+    """
+    if not KnowledgebaseService.accessible(kb_id=dataset_id, user_id=tenant_id):
+        return get_error_data_result(message=f"You don't own the dataset {dataset_id}. ")
+    e, kb = KnowledgebaseService.get_by_id(dataset_id)
+    if not e:
+        return get_error_data_result(message="Can't find this dataset!")
+
+    mode = (request.args.get("mode") or "both").strip().lower()
+    if mode not in ("exact", "embedding", "both"):
+        return get_error_data_result(message="mode must be one of exact, embedding, both")
+    raw_thr = request.args.get("threshold", "0.97")
+    try:
+        threshold = float(raw_thr)
+    except Exception:
+        return get_error_data_result(message="threshold must be a number between 0.80 and 0.99")
+    if not (0.80 <= threshold <= 0.99):
+        return get_error_data_result(message="threshold must be between 0.80 and 0.99")
+    # ponytail: synchronous read-only scan, tenant-scoped, enabled Current Version only
+    try:
+        docs = DocumentService.query(kb_id=dataset_id) or []
+    except Exception as ex:
+        logging.exception("duplicate scan query failed")
+        return server_error_response(ex)
+    # only enabled documents' Current Version (status 1, non-empty hash considered for exact)
+    docs = [d for d in docs if (getattr(d, "status", "1") or "1") == "1"]
+
+    exact_groups = []
+    if mode in ("exact", "both"):
+        exact_groups = _duplicate_scan_exact_groups(docs)
+
+    near_groups = []
+    warning = None
+    if mode in ("embedding", "both"):
+        embd_id = getattr(kb, "embd_id", "") or ""
+        if not embd_id:
+            msg = "dataset has no embedding model, near-duplicate scan unavailable"
+            if mode == "embedding":
+                return get_error_data_result(message=msg)
+            warning = msg
+        else:
+            # collect texts and embed via dataset's model
+            try:
+                texts = _duplicate_scan_collect_texts(docs, dataset_id)
+                if len(texts) >= 2:
+                    from api.db.joint_services.tenant_model_service import resolve_model_config
+                    from api.db.services.llm_service import LLMBundle
+                    from common.constants import LLMType
+
+                    tenant_for_embd = getattr(kb, "tenant_id", tenant_id)
+                    cfg = resolve_model_config(tenant_for_embd, LLMType.EMBEDDING, embd_id)
+                    mdl = LLMBundle(tenant_for_embd, cfg)
+                    vectors, _ = mdl.encode(texts)
+                    # union-find clustering by threshold
+                    n = len(docs)
+                    parent = list(range(n))
+
+                    def find(x):
+                        while parent[x] != x:
+                            parent[x] = parent[parent[x]]
+                            x = parent[x]
+                        return x
+
+                    def union(a, b):
+                        ra, rb = find(a), find(b)
+                        if ra != rb:
+                            parent[rb] = ra
+
+                    for i in range(n):
+                        vi = vectors[i]
+                        for j in range(i + 1, n):
+                            if _cosine_similarity(vi, vectors[j]) >= threshold:
+                                union(i, j)
+                    buckets = {}
+                    for idx, d in enumerate(docs):
+                        r = find(idx)
+                        buckets.setdefault(r, []).append(idx)
+                    for idxs in buckets.values():
+                        if len(idxs) < 2:
+                            continue
+                        # keep first occurrence order
+                        idxs.sort()
+                        doc_ids = [docs[k].id for k in idxs]
+                        doc_names = [getattr(docs[k], "name", "") or "" for k in idxs]
+                        # max pairwise score inside group
+                        max_s = 0.0
+                        for a in range(len(idxs)):
+                            for b in range(a + 1, len(idxs)):
+                                s = _cosine_similarity(vectors[idxs[a]], vectors[idxs[b]])
+                                if s > max_s:
+                                    max_s = s
+                        near_groups.append(
+                            {
+                                "doc_ids": doc_ids,
+                                "doc_names": doc_names,
+                                "count": len(idxs),
+                                "max_similarity": round(float(max_s), 4),
+                                "threshold": threshold,
+                            }
+                        )
+                    near_groups.sort(key=lambda g: g["doc_ids"][0])
+                # else: not enough docs for near groups -> empty
+            except Exception as ex:
+                logging.warning("duplicate scan embedding failed: %s", ex)
+                if mode == "embedding":
+                    return server_error_response(ex)
+                warning = f"embedding scan unavailable: {ex}"
+                near_groups = []
+
+    data = {
+        "exact_groups": exact_groups,
+        "near_groups": near_groups,
+        "total_exact_groups": len(exact_groups),
+        "total_near_groups": len(near_groups),
+        "mode": mode,
+        "threshold": threshold,
+    }
+    if warning:
+        data["warning"] = warning
+    return get_json_result(data=data)
 
 
 def _get_docs_with_request(req, dataset_id: str):

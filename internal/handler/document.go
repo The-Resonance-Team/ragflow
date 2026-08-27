@@ -82,6 +82,7 @@ type documentServiceIface interface {
 	Ingest(ctx context.Context, userID string, req *document.IngestDocumentRequest) (common.ErrorCode, error)
 	RemoveIngestionTasks(ctx context.Context, tasks []string, userID string) ([]map[string]string, error)
 	BatchUpdateDocumentStatus(ctx context.Context, userID, datasetID, status string, DocumentIDs []string) (map[string]interface{}, common.ErrorCode, error)
+	DuplicateScan(ctx context.Context, datasetID, mode string, threshold float64) (*document.DuplicateScanResponse, common.ErrorCode, error)
 }
 
 // fileUploadIface defines the FileService upload methods used by DocumentHandler.
@@ -615,6 +616,41 @@ func (h *DocumentHandler) ListDocuments(c *gin.Context) {
 	}
 
 	common.SuccessWithData(c, gin.H{"total": total, "docs": docs}, "success")
+}
+
+// DuplicateScan scans a dataset for exact and near duplicate documents.
+// ponytail: synchronous, dataset-scoped, read-only; embedding is hash-bucket fallback when no model.
+func (h *DocumentHandler) DuplicateScan(c *gin.Context) {
+	datasetID := c.Param("dataset_id")
+	userID := c.GetString("user_id")
+	ctx := c.Request.Context()
+
+	if !h.datasetService.Accessible(ctx, datasetID, userID) {
+		common.ResponseWithCodeData(c, common.CodeDataError, nil, fmt.Sprintf("You don't own the dataset %s.", datasetID))
+		return
+	}
+
+	mode := strings.ToLower(strings.TrimSpace(c.DefaultQuery("mode", "both")))
+	if mode == "" {
+		mode = "both"
+	}
+	thresholdStr := strings.TrimSpace(c.DefaultQuery("threshold", "0.97"))
+	threshold, err := strconv.ParseFloat(thresholdStr, 64)
+	if err != nil {
+		common.ResponseWithCodeData(c, common.CodeDataError, nil, "threshold must be a number between 0.80 and 0.99")
+		return
+	}
+
+	resp, code, serr := h.documentService.DuplicateScan(ctx, datasetID, mode, threshold)
+	if serr != nil {
+		if code == common.CodeDataError {
+			common.ResponseWithCodeData(c, code, nil, serr.Error())
+		} else {
+			common.ResponseWithCodeData(c, code, nil, serr.Error())
+		}
+		return
+	}
+	common.SuccessWithData(c, resp, "success")
 }
 
 func parseDocumentListOptions(c *gin.Context, datasetID string) (dao.DocumentListOptions, string) {
