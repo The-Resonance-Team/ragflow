@@ -81,6 +81,9 @@ type fakeDocumentService struct {
 	filterTotal            int64
 	listIDs                []string
 	metadataByKBs          map[string]interface{}
+	duplicateScanResp      *document.DuplicateScanResponse
+	duplicateScanCode      common.ErrorCode
+	duplicateScanErr       error
 }
 
 func (f *fakeDocumentService) Ingest(ctx context.Context, userID string, req *document.IngestDocumentRequest) (common.ErrorCode, error) {
@@ -193,6 +196,19 @@ func (f *fakeDocumentService) GetMetadataByKBs(ctx context.Context, kbIDs []stri
 func (f *fakeDocumentService) BatchUpdateDocumentStatus(ctx context.Context, userID, datasetID, status string, documentIDs []string) (map[string]interface{}, common.ErrorCode, error) {
 	return map[string]interface{}{}, common.CodeSuccess, nil
 }
+
+func (f *fakeDocumentService) DuplicateScan(ctx context.Context, datasetID, mode string, threshold float64) (*document.DuplicateScanResponse, common.ErrorCode, error) {
+	if f.duplicateScanResp != nil || f.duplicateScanErr != nil {
+		return f.duplicateScanResp, f.duplicateScanCode, f.duplicateScanErr
+	}
+	return &document.DuplicateScanResponse{
+		ExactGroups: []*document.ExactDuplicateGroup{},
+		NearGroups:  []*document.NearDuplicateGroup{},
+		Mode:        mode,
+		Threshold:   threshold,
+	}, common.CodeSuccess, nil
+}
+
 func (f *fakeDocumentService) GetThumbnails(ctx context.Context, userID string, docIDs []string) (map[string]string, error) {
 	f.thumbnailUserID = userID
 	f.thumbnailDocIDs = append([]string(nil), docIDs...)

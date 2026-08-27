@@ -91,6 +91,23 @@ _Avoid_: Rollback, revert, recover
 Whether a Document Version was created by an `upload` (initial or replacement) or by a `restore`. Stored per version so the timeline can show it without heuristics.
 _Avoid_: Source, type
 
+### Duplicate detection
+
+**Exact Duplicate**:
+Two Documents in the same Dataset whose `content_hash` (`xxhash128` of Current Version bytes) is identical and non-empty. Byte-identical content regardless of filename.
+Vietnamese: _bản sao chính xác_
+_Avoid_: identical document, hash duplicate
+
+**Near Duplicate**:
+Two Documents in the same Dataset whose Current Version texts have cosine similarity ≥ threshold when embedded with the Dataset's `embd_id` model. Semantic duplicate, not byte-identical.
+Vietnamese: _bản sao gần đúng_
+_Avoid_: similar document, embedding duplicate
+
+**Duplicate Scan**:
+A read-only operation over a single Dataset that groups enabled Documents' Current Versions into exact groups (by `content_hash`) and optionally near groups (by embedding cosine). Scoped to one Dataset, never deletes or merges.
+Vietnamese: _quét trùng lặp_
+_Avoid_: dedup scan, duplicate detection job
+
 ### Product surfaces
 
 **Knowledge Base**:
