@@ -5,7 +5,7 @@ import en from '../en';
 import es from '../es';
 import fr from '../fr';
 import id from '../id';
-import it from '../it';
+import itLocale from '../it';
 import ja from '../ja';
 import ko from '../ko';
 import ptBr from '../pt-br';
@@ -36,7 +36,8 @@ const FULL_NAMESPACES = [
   'empty',
 ] as const;
 
-function leafPaths(node: LocaleTree, prefix = ''): string[] {
+function leafPaths(node: LocaleTree | undefined, prefix = ''): string[] {
+  if (!node || typeof node !== 'object') return [];
   return Object.entries(node).flatMap(([key, value]) => {
     const path = prefix ? `${prefix}.${key}` : key;
     return value !== null && typeof value === 'object'
@@ -57,7 +58,7 @@ const ALL_LOCALES: Record<string, TranslationModule> = {
   es: es as TranslationModule,
   fr: fr as TranslationModule,
   id: id as TranslationModule,
-  it: it as TranslationModule,
+  it: itLocale as TranslationModule,
   ja: ja as TranslationModule,
   ko: ko as TranslationModule,
   'pt-br': ptBr as TranslationModule,
