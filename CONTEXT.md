@@ -117,9 +117,13 @@ Vietnamese: _bộ nhớ_
 _Avoid__: ghi nhớ, trí nhớ
 
 **Assistant**:
-A chat-facing agent bound to datasets and model settings.
+A chat-facing agent bound to datasets and model settings. Code name **Dialog** (`DialogService`, REST `/api/v1/chats`); UI and MCP surface call it **Chat assistant** or **Assistant** interchangeably — one concept, one Vietnamese rendering.
 Vietnamese: _trợ lý_
-_Avoid_: trợ lí, bot
+_Avoid_: trợ lí, bot, Chat (as noun for the assistant itself)
+
+**Session** (Assistant):
+A single conversation thread under one Assistant, identified by `session_id` (`conversation_id` alias in REST, `id` in `ConversationService`). Stores ordered `message` history and per-turn `reference` citations. Created on first `chat_completion` when `session_id` is absent; continued when `session_id` is supplied.
+_Avoid_: Conversation (code legacy), thread, chat session (ambiguous)
 
 **Prompt**:
 Instruction text sent to an LLM (system or user role).
@@ -156,7 +160,7 @@ Vietnamese: keep **MCP**.
 ### MCP serving
 
 **Serving side** (MCP):
-RAGFlow acting as an MCP server: external agents connect to it and invoke read-only tools. The standalone Python MCP server (`mcp/server/server.py`) is this serving side.
+RAGFlow acting as an MCP server: external agents connect to it and invoke tools. The standalone Python MCP server (`mcp/server/server.py`) is this serving side. Original serving was read-only (retrieval, dataset reads); the assistant chat tool is generation but still tenant-scoped and read-side-effect-limited to adding `Session` messages.
 _Avoid_: server mode (ambiguous with self-host/host)
 
 **Client side** (MCP):
