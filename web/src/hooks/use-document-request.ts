@@ -39,6 +39,7 @@ import kbService, {
   createDocument,
   deleteDocument,
   documentFilter,
+  duplicateScan as duplicateScanService,
   listDocument,
   listDocumentVersions,
   renameDocument,
@@ -939,4 +940,41 @@ export const useRestoreDocumentVersion = (
   });
   const restore = (versionId: string) => mutateAsync(versionId);
   return { restoreDocumentVersion: restore, loading };
+};
+
+export interface IDuplicateScanGroup {
+  content_hash?: string;
+  doc_ids: string[];
+  doc_names: string[];
+  count: number;
+  max_similarity?: number;
+  threshold?: number;
+}
+
+export interface IDuplicateScanResponse {
+  exact_groups: IDuplicateScanGroup[];
+  near_groups: IDuplicateScanGroup[];
+  total_exact_groups: number;
+  total_near_groups: number;
+  mode: string;
+  threshold: number;
+  warning?: string;
+}
+
+// ponytail: fixed both/0.97 per Q5, synchronous read-only
+export const useDuplicateScan = (datasetId: string, enabled = false) => {
+  const { data, isFetching: loading, refetch } = useQuery<IDuplicateScanResponse>({
+    queryKey: DocumentKeys.duplicateScan(datasetId),
+    enabled: !!datasetId && enabled,
+    gcTime: 0,
+    queryFn: async () => {
+      const { data } = await duplicateScanService(datasetId, {
+        mode: 'both',
+        threshold: 0.97,
+      });
+      if (data.code === 0) return data.data as IDuplicateScanResponse;
+      throw new Error(data.message || 'duplicate scan failed');
+    },
+  });
+  return { data, loading, refetch };
 };

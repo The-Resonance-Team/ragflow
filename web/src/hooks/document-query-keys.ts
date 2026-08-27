@@ -29,6 +29,7 @@ export const enum DocumentApiAction {
   ParseDocument = 'parseDocument',
   FetchDocumentVersions = 'fetchDocumentVersions',
   RestoreDocumentVersion = 'restoreDocumentVersion',
+  DuplicateScan = 'duplicateScan',
 }
 
 export const DocumentKeys = {
@@ -44,4 +45,6 @@ export const DocumentKeys = {
     [DocumentApiAction.FetchDocumentList, 'byIds', ids] as const,
   versions: (datasetId: string, documentId: string) =>
     [DocumentApiAction.FetchDocumentVersions, datasetId, documentId] as const,
+  duplicateScan: (datasetId: string) =>
+    [DocumentApiAction.DuplicateScan, datasetId] as const,
 };

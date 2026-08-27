@@ -656,6 +656,16 @@ Example: A 1 KB message with 1024-dim embedding uses ~9 KB. The 5 MB default lim
         hash: 'Hash',
         origin: 'Origin',
         empty: 'No versions yet',
+        duplicateScan: 'Duplicate scan',
+        duplicateScanDescription:
+          'Find exact and near-duplicate documents in this dataset (read-only, does not delete).',
+        scanDuplicates: 'Scan duplicates',
+        scanning: 'Scanning...',
+        exactGroups: 'Exact duplicates (by content hash)',
+        nearGroups: 'Near duplicates (embedding ≥ {{threshold}})',
+        noDuplicates: 'No duplicates found',
+        documents: 'Documents',
+        similarity: 'Similarity',
       },
     },
     knowledgeConfiguration: {

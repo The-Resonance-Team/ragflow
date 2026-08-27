@@ -368,6 +368,11 @@ export const changeDocumentParser = (
 export const deleteDocument = (datasetId: string, documentIds: string[]) =>
   request.delete(api.documentDelete(datasetId), { data: { ids: documentIds } });
 
+export const duplicateScan = (
+  datasetId: string,
+  params?: { mode?: string; threshold?: number },
+) => request.get(api.duplicateScan(datasetId), { params });
+
 export const listDocumentVersions = (datasetId: string, documentId: string) =>
   request.get(api.documentVersions(datasetId, documentId));
 

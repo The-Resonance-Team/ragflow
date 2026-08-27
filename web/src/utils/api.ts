@@ -281,6 +281,8 @@ export default {
     `${restAPIv1}/datasets/${datasetId}/documents/${documentId}`,
   documentPreview: (documentId: string) =>
     `${restAPIv1}/documents/${documentId}/preview`,
+  duplicateScan: (datasetId: string) =>
+    `${restAPIv1}/datasets/${datasetId}/documents/duplicate-scan`,
   documentVersions: (datasetId: string, documentId: string) =>
     `${restAPIv1}/datasets/${datasetId}/documents/${documentId}/versions`,
   documentRestore: (
