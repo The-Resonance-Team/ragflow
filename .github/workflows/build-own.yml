@@ -78,7 +78,6 @@ jobs:
           platforms: linux/amd64
           build-args: |
             NEED_MIRROR=0
-          secrets: |
 
       - name: Verify image
         run: |
