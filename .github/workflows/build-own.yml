@@ -77,9 +77,8 @@ jobs:
           # ponytail: single-arch build on self-hosted runner; add platforms: linux/amd64,linux/arm64 when multi-arch needed
           platforms: linux/amd64
           build-args: |
-            NEED_MIRROR=1
+            NEED_MIRROR=0
           secrets: |
-            gitee_token=${{ secrets.GITEE_TOKEN }}
 
       - name: Verify image
         run: |

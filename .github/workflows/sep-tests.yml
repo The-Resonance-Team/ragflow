@@ -250,6 +250,9 @@ jobs:
 
       - name: Run unit test
         if: steps.detect_changes.outputs.has_python_changes == 'true'
+        env:
+          ZHIPU_AI_API_KEY: dummy
+          SILICONFLOW_API_KEY: dummy
         run: |
           source .venv/bin/activate
           which pytest || echo "pytest not in PATH"
