@@ -244,7 +244,7 @@ jobs:
       - name: Prepare Python test environment
         if: steps.detect_changes.outputs.has_python_changes == 'true'
         run: |
-          git config --global url."https://oauth2:${GITEE_TOKEN}@gitee.com/".insteadOf "https://gitee.com/"
+          git config --global url."https://oauth2:${GITEE_TOKEN:-}@gitee.com/".insteadOf "https://gitee.com/" 2>/dev/null || true
           uv sync --python 3.13 --group test --frozen
           uv pip install -e sdk/python
 
@@ -398,19 +398,19 @@ jobs:
           # Pass the Gitee personal access token to the Docker build as a BuildKit secret
           # (mounted inside the builder at /run/secrets/gitee_token, never persisted in any layer).
           GITEE_TOKEN_FILE="$(mktemp)"
-          printf '%s' '${GITEE_TOKEN}' > "${GITEE_TOKEN_FILE}"
+          printf '%s' "${GITEE_TOKEN:-}" > "${GITEE_TOKEN_FILE}"
           (
             flock -w 10800 9 || { echo "Timed out waiting for the shared Docker build slot" >&2; exit 1; }
             echo "Acquired Docker build slot for ${DOC_ENGINE}/${API_PROXY_SCHEME}"
             ##sudo docker pull ubuntu:24.04
-            sudo DOCKER_BUILDKIT=1 docker build --build-arg NEED_MIRROR=1 --build-arg HTTPS_PROXY=${HTTPS_PROXY} --build-arg HTTP_PROXY=${HTTP_PROXY} --secret id=gitee_token,src=${GITEE_TOKEN_FILE} -f Dockerfile_ci -t ${RAGFLOW_IMAGE} .
+            sudo DOCKER_BUILDKIT=1 docker build --build-arg NEED_MIRROR=0 --build-arg HTTPS_PROXY=${HTTPS_PROXY:-} --build-arg HTTP_PROXY=${HTTP_PROXY:-} --secret id=gitee_token,src=${GITEE_TOKEN_FILE} -f Dockerfile_ci -t ${RAGFLOW_IMAGE} .
           ) 9>"${BUILD_LOCK_FILE}"
           rm -f "${GITEE_TOKEN_FILE}"
 
       - name: Prepare Python test environment
         if: env.API_PROXY_SCHEME != 'web'
         run: |
-          git config --global url."https://oauth2:${GITEE_TOKEN}@gitee.com/".insteadOf "https://gitee.com/"
+          git config --global url."https://oauth2:${GITEE_TOKEN:-}@gitee.com/".insteadOf "https://gitee.com/" 2>/dev/null || true
           uv sync --python 3.13 --group test --frozen
           uv pip install -e sdk/python
 
@@ -1027,19 +1027,19 @@ jobs:
           # Pass the Gitee personal access token to the Docker build as a BuildKit secret
           # (mounted inside the builder at /run/secrets/gitee_token, never persisted in any layer).
           GITEE_TOKEN_FILE="$(mktemp)"
-          printf '%s' '${GITEE_TOKEN }' > "${GITEE_TOKEN_FILE}"
+          printf '%s' "${GITEE_TOKEN:-}" > "${GITEE_TOKEN_FILE}"
           (
             flock -w 10800 9 || { echo "Timed out waiting for the shared Docker build slot" >&2; exit 1; }
             echo "Acquired Docker build slot for ${DOC_ENGINE}/${API_PROXY_SCHEME}"
             ##sudo docker pull ubuntu:24.04
-            sudo DOCKER_BUILDKIT=1 docker build --build-arg NEED_MIRROR=1 --build-arg HTTPS_PROXY=${HTTPS_PROXY} --build-arg HTTP_PROXY=${HTTP_PROXY} --secret id=gitee_token,src=${GITEE_TOKEN_FILE} -f Dockerfile_ci -t ${RAGFLOW_IMAGE} .
+            sudo DOCKER_BUILDKIT=1 docker build --build-arg NEED_MIRROR=0 --build-arg HTTPS_PROXY=${HTTPS_PROXY:-} --build-arg HTTP_PROXY=${HTTP_PROXY:-} --secret id=gitee_token,src=${GITEE_TOKEN_FILE} -f Dockerfile_ci -t ${RAGFLOW_IMAGE} .
           ) 9>"${BUILD_LOCK_FILE}"
           rm -f "${GITEE_TOKEN_FILE}"
 
       - name: Prepare Python test environment
         if: env.API_PROXY_SCHEME != 'web'
         run: |
-          git config --global url."https://oauth2:${GITEE_TOKEN}@gitee.com/".insteadOf "https://gitee.com/"
+          git config --global url."https://oauth2:${GITEE_TOKEN:-}@gitee.com/".insteadOf "https://gitee.com/" 2>/dev/null || true
           uv sync --python 3.13 --group test --frozen
           uv pip install -e sdk/python
 
