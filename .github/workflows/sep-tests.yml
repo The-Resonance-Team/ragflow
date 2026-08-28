@@ -405,7 +405,14 @@ jobs:
             flock -w 10800 9 || { echo "Timed out waiting for the shared Docker build slot" >&2; exit 1; }
             echo "Acquired Docker build slot for ${DOC_ENGINE}/${API_PROXY_SCHEME}"
             ##sudo docker pull ubuntu:24.04
-            sudo DOCKER_BUILDKIT=1 docker build --build-arg NEED_MIRROR=1 --build-arg HTTPS_PROXY=${HTTPS_PROXY:-} --build-arg HTTP_PROXY=${HTTP_PROXY:-} --secret id=gitee_token,src=${GITEE_TOKEN_FILE} -f Dockerfile_ci -t ${RAGFLOW_IMAGE} .
+            # Retry docker build for flaky registry/network (graspologic git, pypi, apt)
+            for i in 1 2 3; do
+              if sudo DOCKER_BUILDKIT=1 docker build --build-arg NEED_MIRROR=1 --build-arg HTTPS_PROXY=${HTTPS_PROXY:-} --build-arg HTTP_PROXY=${HTTP_PROXY:-} --secret id=gitee_token,src=${GITEE_TOKEN_FILE} -f Dockerfile_ci -t ${RAGFLOW_IMAGE} .; then
+                break
+              fi
+              echo "docker build attempt $i failed, retrying in 10s..."
+              sleep 10
+            done
           ) 9>"${BUILD_LOCK_FILE}"
           rm -f "${GITEE_TOKEN_FILE}"
 
@@ -659,7 +666,15 @@ jobs:
         run: |
           sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} down -v || true
           sudo docker ps -a --filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME}" -q | xargs -r sudo docker rm -f
-          sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} up -d
+          # Retry compose up for flaky registry pulls (mysql TLS handshake timeout on shared runner)
+          for i in 1 2 3; do
+            if sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} up -d; then
+              break
+            fi
+            echo "docker compose up attempt $i failed, retrying in 10s..."
+            sleep 10
+            sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} pull --ignore-pull-failures || true
+          done
 
       - name: Run sdk tests against Infinity
         env:
@@ -1036,7 +1051,14 @@ jobs:
             flock -w 10800 9 || { echo "Timed out waiting for the shared Docker build slot" >&2; exit 1; }
             echo "Acquired Docker build slot for ${DOC_ENGINE}/${API_PROXY_SCHEME}"
             ##sudo docker pull ubuntu:24.04
-            sudo DOCKER_BUILDKIT=1 docker build --build-arg NEED_MIRROR=1 --build-arg HTTPS_PROXY=${HTTPS_PROXY:-} --build-arg HTTP_PROXY=${HTTP_PROXY:-} --secret id=gitee_token,src=${GITEE_TOKEN_FILE} -f Dockerfile_ci -t ${RAGFLOW_IMAGE} .
+            # Retry docker build for flaky registry/network (graspologic git, pypi, apt)
+            for i in 1 2 3; do
+              if sudo DOCKER_BUILDKIT=1 docker build --build-arg NEED_MIRROR=1 --build-arg HTTPS_PROXY=${HTTPS_PROXY:-} --build-arg HTTP_PROXY=${HTTP_PROXY:-} --secret id=gitee_token,src=${GITEE_TOKEN_FILE} -f Dockerfile_ci -t ${RAGFLOW_IMAGE} .; then
+                break
+              fi
+              echo "docker build attempt $i failed, retrying in 10s..."
+              sleep 10
+            done
           ) 9>"${BUILD_LOCK_FILE}"
           rm -f "${GITEE_TOKEN_FILE}"
 
@@ -1290,7 +1312,15 @@ jobs:
         run: |
           sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} down -v || true
           sudo docker ps -a --filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME}" -q | xargs -r sudo docker rm -f
-          sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} up -d
+          # Retry compose up for flaky registry pulls (mysql TLS handshake timeout on shared runner)
+          for i in 1 2 3; do
+            if sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} up -d; then
+              break
+            fi
+            echo "docker compose up attempt $i failed, retrying in 10s..."
+            sleep 10
+            sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} pull --ignore-pull-failures || true
+          done
 
       - name: Run sdk tests against Elasticsearch
         env:
