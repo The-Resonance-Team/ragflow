@@ -25,7 +25,8 @@ concurrency:
 jobs:
   build:
     # Only run workflow_run when sep-tests succeeded. Push/tags/dispatch always run.
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    # ponytail: fork's sep-tests heavy jobs are skipped on push, so workflow_run would duplicate the push build — skip it on fork
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.repository == 'infiniflow/ragflow') }}
     runs-on: [self-hosted]
     steps:
       - name: Ensure workspace ownership

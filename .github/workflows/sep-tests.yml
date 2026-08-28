@@ -264,10 +264,12 @@ jobs:
   ragflow_tests_infinity:
     name: ragflow_tests_infinity (${{ matrix.api_proxy_scheme }})
     needs: ragflow_preflight
-    if: ${{ github.event_name != 'pull_request' && github.event_name != 'pull_request_target' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci')) }}
+    # ponytail: fork skips heavy integration on push/schedule; upstream validates main, fork via PR ci label + preflight
+    if: ${{ (github.repository == 'infiniflow/ragflow' && github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci')) }}
     runs-on: [self-hosted]
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         api_proxy_scheme: ${{ fromJSON(needs.ragflow_preflight.outputs.api_proxy_schemes) }}
     env:
@@ -910,10 +912,12 @@ jobs:
   ragflow_tests_elasticsearch:
     name: ragflow_tests_elasticsearch (${{ matrix.api_proxy_scheme }})
     needs: ragflow_preflight
-    if: ${{ github.event_name != 'pull_request' && github.event_name != 'pull_request_target' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci')) }}
+    # ponytail: fork skips heavy integration on push/schedule; upstream validates main, fork via PR ci label + preflight
+    if: ${{ (github.repository == 'infiniflow/ragflow' && github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci')) }}
     runs-on: [self-hosted]
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         api_proxy_scheme: ${{ fromJSON(needs.ragflow_preflight.outputs.api_proxy_schemes) }}
     env:
