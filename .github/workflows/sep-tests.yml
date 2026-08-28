@@ -295,6 +295,8 @@ jobs:
           allow-unsafe-pr-checkout: true
 
       - name: Build ragflow go server
+        env:
+          PATH: /home/xiro/.local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/xiro/.local/bin
         if: env.API_PROXY_SCHEME == 'go'
         run: |
           set -euo pipefail
@@ -317,6 +319,8 @@ jobs:
           ./build.sh --go
 
       - name: Run Go unit tests
+        env:
+          PATH: /home/xiro/.local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/xiro/.local/bin
         if: env.API_PROXY_SCHEME == 'go'
         # Runs after `./build.sh --go`, which guarantees the C++ static
         # library (librag_tokenizer_c_api.a) is present on disk. The Go
@@ -656,6 +660,9 @@ jobs:
           sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} up -d
 
       - name: Run sdk tests against Infinity
+        env:
+          ZHIPU_AI_API_KEY: dummy
+          SILICONFLOW_API_KEY: dummy
         if: env.API_PROXY_SCHEME == 'python'
         run: |
           export http_proxy=""; export https_proxy=""; export no_proxy=""; export HTTP_PROXY=""; export HTTPS_PROXY=""; export NO_PROXY=""
@@ -677,6 +684,9 @@ jobs:
           source .venv/bin/activate && set -o pipefail; DOC_ENGINE=infinity pytest -s --tb=short --level=${HTTP_API_TEST_LEVEL} --junitxml=pytest-infinity-sdk.xml --cov=sdk/python/ragflow_sdk --cov-branch --cov-report=xml:coverage-infinity-sdk.xml test/testcases/test_sdk_api 2>&1 | tee infinity_sdk_test.log
 
       - name: Run New RESTFUL api tests against Infinity
+        env:
+          ZHIPU_AI_API_KEY: dummy
+          SILICONFLOW_API_KEY: dummy
         if: env.API_PROXY_SCHEME != 'web'
         run: |
           export http_proxy=""; export https_proxy=""; export no_proxy=""; export HTTP_PROXY=""; export HTTPS_PROXY=""; export NO_PROXY=""
@@ -914,6 +924,8 @@ jobs:
           allow-unsafe-pr-checkout: true
 
       - name: Build ragflow go server
+        env:
+          PATH: /home/xiro/.local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/xiro/.local/bin
         if: env.API_PROXY_SCHEME == 'go'
         run: |
           set -euo pipefail
@@ -936,6 +948,8 @@ jobs:
           ./build.sh --go
 
       - name: Run Go unit tests
+        env:
+          PATH: /home/xiro/.local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/xiro/.local/bin
         if: env.API_PROXY_SCHEME == 'go'
         # Runs after `./build.sh --go`, which guarantees the C++ static
         # library (librag_tokenizer_c_api.a) is present on disk. The Go
@@ -1275,6 +1289,9 @@ jobs:
           sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} up -d
 
       - name: Run sdk tests against Elasticsearch
+        env:
+          ZHIPU_AI_API_KEY: dummy
+          SILICONFLOW_API_KEY: dummy
         if: env.API_PROXY_SCHEME == 'python'
         run: |
           export http_proxy=""; export https_proxy=""; export no_proxy=""; export HTTP_PROXY=""; export HTTPS_PROXY=""; export NO_PROXY=""
@@ -1296,6 +1313,9 @@ jobs:
           source .venv/bin/activate && set -o pipefail; pytest -s --tb=short --level=${HTTP_API_TEST_LEVEL} --junitxml=pytest-es-sdk.xml --cov=sdk/python/ragflow_sdk --cov-branch --cov-report=xml:coverage-es-sdk.xml test/testcases/test_sdk_api 2>&1 | tee es_sdk_test.log
 
       - name: Run New RESTFUL api tests against Elasticsearch
+        env:
+          ZHIPU_AI_API_KEY: dummy
+          SILICONFLOW_API_KEY: dummy
         if: env.API_PROXY_SCHEME != 'web'
         run: |
           export http_proxy=""; export https_proxy=""; export no_proxy=""; export HTTP_PROXY=""; export HTTPS_PROXY=""; export NO_PROXY=""
