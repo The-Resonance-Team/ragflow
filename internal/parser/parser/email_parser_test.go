@@ -247,8 +247,17 @@ func TestEmailParser_MsgSupported(t *testing.T) {
 	if v, ok := item["subject"].(string); !ok || v != "asdf" {
 		t.Errorf("subject: got %q", v)
 	}
-	if v, ok := item["date"].(string); !ok || v != "2018-03-24 00:06:29+0800" {
-		t.Errorf("date: got %q, want 2018-03-24 00:06:29+0800", v)
+	if v, ok := item["date"].(string); !ok {
+		t.Fatalf("date missing or wrong type: %T", item["date"])
+	} else {
+		// Compare instants, not string representation, to avoid host TZ differences (+0700 vs +0800 are same instant)
+		if gotTime, err1 := time.Parse("2006-01-02 15:04:05-0700", v); err1 != nil {
+			t.Fatalf("date parse got: %v", err1)
+		} else if wantTime, err2 := time.Parse("2006-01-02 15:04:05-0700", "2018-03-24 00:06:29+0800"); err2 != nil {
+			t.Fatalf("date parse want: %v", err2)
+		} else if !gotTime.Equal(wantTime) {
+			t.Errorf("date: got %q, want %q (same instant)", v, "2018-03-24 00:06:29+0800")
+		}
 	}
 	if v, ok := item["text"].(string); !ok || v != " \r\n\r\n" {
 		t.Errorf("text: got %q", v)
