@@ -25,6 +25,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"ragflow/internal/common"
 )
 
 // ReasoningSimple represents simple reasoning capability
@@ -294,7 +296,10 @@ func InitProviderManager(dirPath string) error {
 
 		provider.ModelDriver, err = modelFactory.CreateModelDriver(provider.Name, provider.URL, provider.URLSuffix)
 		if err != nil {
-			return fmt.Errorf("error creating model driver for provider %s: %w", provider.Name, err)
+			// Provider defined in conf but without a Go driver: skip it loudly
+			// instead of registering a silent dummy that fails at first use.
+			common.Warn(fmt.Sprintf("skipping provider %s (%s): %v", provider.Name, filePath, err))
+			continue
 		}
 
 		// Add to providers list
