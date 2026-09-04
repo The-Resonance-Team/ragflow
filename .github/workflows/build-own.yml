@@ -1,0 +1,86 @@
+name: build-own
+
+# Build The-Resonance-Team's own image on self-hosted runner.
+# Triggers after PR refined & merged to main and verified by sep-tests.
+# Also builds on version tags and manual dispatch.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*', 'nightly']
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["sep-tests"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: build-own-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    # Only run workflow_run when sep-tests succeeded. Push/tags/dispatch always run.
+    # ponytail: fork's sep-tests heavy jobs are skipped on push, so workflow_run would duplicate the push build — skip it on fork
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.repository == 'infiniflow/ragflow') }}
+    runs-on: [self-hosted]
+    steps:
+      - name: Ensure workspace ownership
+        run: echo "chown -R ${USER} ${GITHUB_WORKSPACE}" && sudo chown -R ${USER} ${GITHUB_WORKSPACE}
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # workflow_run needs explicit ref
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Free disk
+        run: |
+          sudo docker system prune -af || true
+          sudo docker builder prune -af || true
+          df -h
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix={{branch}}-
+            type=ref,event=tag
+            type=raw,value=nightly,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # ponytail: single-arch build on self-hosted runner; add platforms: linux/amd64,linux/arm64 when multi-arch needed
+          platforms: linux/amd64
+          build-args: |
+            NEED_MIRROR=0
+
+      - name: Verify image
+        run: |
+          echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n'
+          sudo docker images ghcr.io/${{ github.repository }} --format '{{.Repository}}:{{.Tag}} {{.Size}}' | head -n 20

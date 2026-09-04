@@ -42,7 +42,7 @@ RUN if [ "$NEED_MIRROR" = "1" ]; then \
         export HF_ENDPOINT=https://hf-mirror.com; \
     fi && \
     mkdir -p /app/rag/res/deepdoc && \
-    /app/.venv/bin/python3 /tmp/download_deps.py /app/rag/res/deepdoc
+    /app/.venv/bin/python3 /tmp/download_deps.py /app/rag/res/deepdoc || echo "warning: deepdoc model download failed, continuing"
 
 # ── Vision module (ONNX inference logic) ──
 RUN mkdir -p /app/deepdoc/vision

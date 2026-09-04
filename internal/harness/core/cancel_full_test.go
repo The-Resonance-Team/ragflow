@@ -1256,7 +1256,14 @@ func TestAgentCancelFunc_MultiCall_TimeoutDeadlineJoinUsesAbsoluteTime(t *testin
 	if !ok2 {
 		t.Fatal("second should contribute")
 	}
-	time.Sleep(50 * time.Millisecond)
+	// Wait for timeout escalation with retry to avoid flakes on loaded CI runners (8 runners on xiro-server)
+	deadline := time.Now().Add(500 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		if cc.isImmediate() {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 	if !cc.isImmediate() {
 		t.Error("should escalate to immediate after short timeout")
 	}
@@ -1597,7 +1604,14 @@ func TestCancel_MultiCall_TimeoutDeadlineJoinAbsolute(t *testing.T) {
 	if !ok2 {
 		t.Fatal("second should contribute")
 	}
-	time.Sleep(50 * time.Millisecond)
+	// Wait for timeout escalation with retry to avoid flakes on loaded CI runners (8 runners on xiro-server)
+	deadline := time.Now().Add(500 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		if cc.isImmediate() {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 	if !cc.isImmediate() {
 		t.Error("should escalate to immediate after short timeout")
 	}

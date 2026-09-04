@@ -47,7 +47,7 @@ jobs:
     permissions:
       actions: write
       contents: read
-    runs-on: [ "self-hosted", "ragflow-test" ]
+    runs-on: [self-hosted]
     outputs:
       http_api_test_level: ${{ steps.test_level.outputs.http_api_test_level }}
       has_go_changes: ${{ steps.detect_changes.outputs.has_go_changes }}
@@ -81,7 +81,7 @@ jobs:
             echo "HEAD=${HEAD}"
             echo "PR_NUMBER=${PR_NUMBER}"
             if [[ -n "${PR_NUMBER}" ]]; then
-              PR_SHA_FP=${RUNNER_WORKSPACE_PREFIX}/artifacts/${GITHUB_REPOSITORY}/PR_${PR_NUMBER}
+              PR_SHA_FP=${RUNNER_WORKSPACE_PREFIX:-${HOME}}/artifacts/${GITHUB_REPOSITORY}/PR_${PR_NUMBER}
               if [[ -f "${PR_SHA_FP}" ]]; then
                 read -r PR_SHA PR_RUN_ID < "${PR_SHA_FP}"
                 # Calculate the hash of the current workspace content
@@ -100,14 +100,14 @@ jobs:
             fi
           elif [[ ${GITHUB_EVENT_NAME} == "pull_request" || ${GITHUB_EVENT_NAME} == "pull_request_target" ]]; then
             PR_NUMBER=${{ github.event.pull_request.number }}
-            PR_SHA_FP=${RUNNER_WORKSPACE_PREFIX}/artifacts/${GITHUB_REPOSITORY}/PR_${PR_NUMBER}
+            PR_SHA_FP=${RUNNER_WORKSPACE_PREFIX:-${HOME}}/artifacts/${GITHUB_REPOSITORY}/PR_${PR_NUMBER}
             # Calculate the hash of the current workspace content
             PR_SHA=$(git rev-parse HEAD^{tree})
             echo "PR #${PR_NUMBER} workspace content hash: ${PR_SHA}"
-            mkdir -p ${RUNNER_WORKSPACE_PREFIX}/artifacts/${GITHUB_REPOSITORY}
+            mkdir -p ${RUNNER_WORKSPACE_PREFIX:-${HOME}}/artifacts/${GITHUB_REPOSITORY}
             echo "${PR_SHA} ${GITHUB_RUN_ID}" > ${PR_SHA_FP}
           fi
-          ARTIFACTS_DIR=${RUNNER_WORKSPACE_PREFIX}/artifacts/${GITHUB_REPOSITORY}/${GITHUB_RUN_ID}
+          ARTIFACTS_DIR=${RUNNER_WORKSPACE_PREFIX:-${HOME}}/artifacts/${GITHUB_REPOSITORY}/${GITHUB_RUN_ID}
           echo "ARTIFACTS_DIR=${ARTIFACTS_DIR}" >> ${GITHUB_ENV}
           rm -rf ${ARTIFACTS_DIR} && mkdir -p ${ARTIFACTS_DIR}
 
@@ -277,12 +277,15 @@ jobs:
       - name: Prepare Python test environment
         if: steps.detect_changes.outputs.has_python_changes == 'true'
         run: |
-          git config --global url."https://oauth2:${GITEE_TOKEN}@gitee.com/".insteadOf "https://gitee.com/"
+          git config --global url."https://oauth2:${GITEE_TOKEN:-}@gitee.com/".insteadOf "https://gitee.com/" 2>/dev/null || true
           uv sync --python 3.13 --group test --frozen
           uv pip install -e sdk/python
 
       - name: Run unit test
         if: steps.detect_changes.outputs.has_python_changes == 'true'
+        env:
+          ZHIPU_AI_API_KEY: dummy
+          SILICONFLOW_API_KEY: dummy
         run: |
           source .venv/bin/activate
           which pytest || echo "pytest not in PATH"
@@ -294,10 +297,12 @@ jobs:
   ragflow_tests_infinity:
     name: ragflow_tests_infinity (${{ matrix.api_proxy_scheme }})
     needs: ragflow_preflight
-    if: ${{ github.event_name != 'pull_request' && github.event_name != 'pull_request_target' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci')) }}
-    runs-on: [ "self-hosted", "ragflow-test" ]
+    # ponytail: fork skips heavy integration on push/schedule; upstream validates main, fork via PR ci label + preflight
+    if: ${{ (github.repository == 'infiniflow/ragflow' && github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci')) }}
+    runs-on: [self-hosted]
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         api_proxy_scheme: ${{ fromJSON(needs.ragflow_preflight.outputs.api_proxy_schemes) }}
     env:
@@ -325,6 +330,8 @@ jobs:
           allow-unsafe-pr-checkout: true
 
       - name: Build ragflow go server
+        env:
+          PATH: /home/xiro/.local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/xiro/.local/bin
         if: env.API_PROXY_SCHEME == 'go'
         run: |
           set -euo pipefail
@@ -347,6 +354,9 @@ jobs:
           ./build.sh --go
 
       - name: Run Go unit tests
+        env:
+          TZ: Asia/Shanghai
+          PATH: /home/xiro/.local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/xiro/.local/bin
         if: env.API_PROXY_SCHEME == 'go'
         # Runs after `./build.sh --go`, which guarantees the C++ static
         # library (librag_tokenizer_c_api.a) is present on disk. The Go
@@ -431,24 +441,32 @@ jobs:
         run: |
           set -euo pipefail
           RUNNER_WORKSPACE_PREFIX=${RUNNER_WORKSPACE_PREFIX:-${HOME}}
-          BUILD_LOCK_FILE=${RUNNER_WORKSPACE_PREFIX}/artifacts/${GITHUB_REPOSITORY}/docker-build.lock
+          BUILD_LOCK_FILE=${RUNNER_WORKSPACE_PREFIX:-${HOME}}/artifacts/${GITHUB_REPOSITORY}/docker-build.lock
           mkdir -p "$(dirname "${BUILD_LOCK_FILE}")"
           # Pass the Gitee personal access token to the Docker build as a BuildKit secret
           # (mounted inside the builder at /run/secrets/gitee_token, never persisted in any layer).
           GITEE_TOKEN_FILE="$(mktemp)"
-          printf '%s' '${GITEE_TOKEN}' > "${GITEE_TOKEN_FILE}"
+          printf '%s' "${GITEE_TOKEN:-}" > "${GITEE_TOKEN_FILE}"
+           sed -i 's|gitee.com|github.com|g' uv.lock || true
           (
             flock -w 10800 9 || { echo "Timed out waiting for the shared Docker build slot" >&2; exit 1; }
             echo "Acquired Docker build slot for ${DOC_ENGINE}/${API_PROXY_SCHEME}"
             ##sudo docker pull ubuntu:24.04
-            sudo DOCKER_BUILDKIT=1 docker build --build-arg NEED_MIRROR=1 --build-arg HTTPS_PROXY=${HTTPS_PROXY} --build-arg HTTP_PROXY=${HTTP_PROXY} --secret id=gitee_token,src=${GITEE_TOKEN_FILE} -f Dockerfile_ci -t ${RAGFLOW_IMAGE} .
+            # Retry docker build for flaky registry/network (graspologic git, pypi, apt)
+            for i in 1 2 3; do
+              if sudo DOCKER_BUILDKIT=1 docker build --build-arg NEED_MIRROR=1 --build-arg HTTPS_PROXY=${HTTPS_PROXY:-} --build-arg HTTP_PROXY=${HTTP_PROXY:-} --secret id=gitee_token,src=${GITEE_TOKEN_FILE} -f Dockerfile_ci -t ${RAGFLOW_IMAGE} .; then
+                break
+              fi
+              echo "docker build attempt $i failed, retrying in 10s..."
+              sleep 10
+            done
           ) 9>"${BUILD_LOCK_FILE}"
           rm -f "${GITEE_TOKEN_FILE}"
 
       - name: Prepare Python test environment
         if: env.API_PROXY_SCHEME != 'web'
         run: |
-          git config --global url."https://oauth2:${GITEE_TOKEN}@gitee.com/".insteadOf "https://gitee.com/"
+          git config --global url."https://oauth2:${GITEE_TOKEN:-}@gitee.com/".insteadOf "https://gitee.com/" 2>/dev/null || true
           uv sync --python 3.13 --group test --frozen
           uv pip install -e sdk/python
 
@@ -463,7 +481,7 @@ jobs:
           COMPOSE_PROJECT_NAME="${GITHUB_RUN_ID}-${DOC_ENGINE}-${API_PROXY_SCHEME}"
           echo "COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}" >> ${GITHUB_ENV}
           echo "RAGFLOW_CONTAINER=${COMPOSE_PROJECT_NAME}-ragflow-cpu-1" >> ${GITHUB_ENV}
-          ARTIFACTS_DIR=${RUNNER_WORKSPACE_PREFIX}/artifacts/${GITHUB_REPOSITORY}/${GITHUB_RUN_ID}/${DOC_ENGINE}/${API_PROXY_SCHEME}
+          ARTIFACTS_DIR=${RUNNER_WORKSPACE_PREFIX:-${HOME}}/artifacts/${GITHUB_REPOSITORY}/${GITHUB_RUN_ID}/${DOC_ENGINE}/${API_PROXY_SCHEME}
           echo "ARTIFACTS_DIR=${ARTIFACTS_DIR}" >> ${GITHUB_ENV}
           rm -rf "${ARTIFACTS_DIR}" && mkdir -p "${ARTIFACTS_DIR}"
 
@@ -695,9 +713,20 @@ jobs:
         run: |
           sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} down -v || true
           sudo docker ps -a --filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME}" -q | xargs -r sudo docker rm -f
-          sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} up -d
+          # Retry compose up for flaky registry pulls (mysql TLS handshake timeout on shared runner)
+          for i in 1 2 3; do
+            if sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} up -d; then
+              break
+            fi
+            echo "docker compose up attempt $i failed, retrying in 10s..."
+            sleep 10
+            sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} pull --ignore-pull-failures || true
+          done
 
       - name: Run sdk tests against Infinity
+        env:
+          ZHIPU_AI_API_KEY: dummy
+          SILICONFLOW_API_KEY: dummy
         if: env.API_PROXY_SCHEME == 'python'
         run: |
           export http_proxy=""; export https_proxy=""; export no_proxy=""; export HTTP_PROXY=""; export HTTPS_PROXY=""; export NO_PROXY=""
@@ -719,6 +748,9 @@ jobs:
           source .venv/bin/activate && set -o pipefail; DOC_ENGINE=infinity pytest -s --tb=short --level=${HTTP_API_TEST_LEVEL} --junitxml=pytest-infinity-sdk.xml --cov=sdk/python/ragflow_sdk --cov-branch --cov-report=xml:coverage-infinity-sdk.xml test/testcases/test_sdk_api 2>&1 | tee infinity_sdk_test.log
 
       - name: Run New RESTFUL api tests against Infinity
+        env:
+          ZHIPU_AI_API_KEY: dummy
+          SILICONFLOW_API_KEY: dummy
         if: env.API_PROXY_SCHEME != 'web'
         run: |
           export http_proxy=""; export https_proxy=""; export no_proxy=""; export HTTP_PROXY=""; export HTTPS_PROXY=""; export NO_PROXY=""
@@ -925,10 +957,12 @@ jobs:
   ragflow_tests_elasticsearch:
     name: ragflow_tests_elasticsearch (${{ matrix.api_proxy_scheme }})
     needs: ragflow_preflight
-    if: ${{ github.event_name != 'pull_request' && github.event_name != 'pull_request_target' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci')) }}
-    runs-on: [ "self-hosted", "ragflow-test" ]
+    # ponytail: fork skips heavy integration on push/schedule; upstream validates main, fork via PR ci label + preflight
+    if: ${{ (github.repository == 'infiniflow/ragflow' && github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci')) }}
+    runs-on: [self-hosted]
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         api_proxy_scheme: ${{ fromJSON(needs.ragflow_preflight.outputs.api_proxy_schemes) }}
     env:
@@ -956,6 +990,8 @@ jobs:
           allow-unsafe-pr-checkout: true
 
       - name: Build ragflow go server
+        env:
+          PATH: /home/xiro/.local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/xiro/.local/bin
         if: env.API_PROXY_SCHEME == 'go'
         run: |
           set -euo pipefail
@@ -978,6 +1014,9 @@ jobs:
           ./build.sh --go
 
       - name: Run Go unit tests
+        env:
+          TZ: Asia/Shanghai
+          PATH: /home/xiro/.local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/xiro/.local/bin
         if: env.API_PROXY_SCHEME == 'go'
         # Runs after `./build.sh --go`, which guarantees the C++ static
         # library (librag_tokenizer_c_api.a) is present on disk. The Go
@@ -1062,24 +1101,32 @@ jobs:
         run: |
           set -euo pipefail
           RUNNER_WORKSPACE_PREFIX=${RUNNER_WORKSPACE_PREFIX:-${HOME}}
-          BUILD_LOCK_FILE=${RUNNER_WORKSPACE_PREFIX}/artifacts/${GITHUB_REPOSITORY}/docker-build.lock
+          BUILD_LOCK_FILE=${RUNNER_WORKSPACE_PREFIX:-${HOME}}/artifacts/${GITHUB_REPOSITORY}/docker-build.lock
           mkdir -p "$(dirname "${BUILD_LOCK_FILE}")"
           # Pass the Gitee personal access token to the Docker build as a BuildKit secret
           # (mounted inside the builder at /run/secrets/gitee_token, never persisted in any layer).
           GITEE_TOKEN_FILE="$(mktemp)"
-          printf '%s' '${GITEE_TOKEN }' > "${GITEE_TOKEN_FILE}"
+          printf '%s' "${GITEE_TOKEN:-}" > "${GITEE_TOKEN_FILE}"
+           sed -i 's|gitee.com|github.com|g' uv.lock || true
           (
             flock -w 10800 9 || { echo "Timed out waiting for the shared Docker build slot" >&2; exit 1; }
             echo "Acquired Docker build slot for ${DOC_ENGINE}/${API_PROXY_SCHEME}"
             ##sudo docker pull ubuntu:24.04
-            sudo DOCKER_BUILDKIT=1 docker build --build-arg NEED_MIRROR=1 --build-arg HTTPS_PROXY=${HTTPS_PROXY} --build-arg HTTP_PROXY=${HTTP_PROXY} --secret id=gitee_token,src=${GITEE_TOKEN_FILE} -f Dockerfile_ci -t ${RAGFLOW_IMAGE} .
+            # Retry docker build for flaky registry/network (graspologic git, pypi, apt)
+            for i in 1 2 3; do
+              if sudo DOCKER_BUILDKIT=1 docker build --build-arg NEED_MIRROR=1 --build-arg HTTPS_PROXY=${HTTPS_PROXY:-} --build-arg HTTP_PROXY=${HTTP_PROXY:-} --secret id=gitee_token,src=${GITEE_TOKEN_FILE} -f Dockerfile_ci -t ${RAGFLOW_IMAGE} .; then
+                break
+              fi
+              echo "docker build attempt $i failed, retrying in 10s..."
+              sleep 10
+            done
           ) 9>"${BUILD_LOCK_FILE}"
           rm -f "${GITEE_TOKEN_FILE}"
 
       - name: Prepare Python test environment
         if: env.API_PROXY_SCHEME != 'web'
         run: |
-          git config --global url."https://oauth2:${GITEE_TOKEN}@gitee.com/".insteadOf "https://gitee.com/"
+          git config --global url."https://oauth2:${GITEE_TOKEN:-}@gitee.com/".insteadOf "https://gitee.com/" 2>/dev/null || true
           uv sync --python 3.13 --group test --frozen
           uv pip install -e sdk/python
 
@@ -1094,7 +1141,7 @@ jobs:
           COMPOSE_PROJECT_NAME="${GITHUB_RUN_ID}-${DOC_ENGINE}-${API_PROXY_SCHEME}"
           echo "COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}" >> ${GITHUB_ENV}
           echo "RAGFLOW_CONTAINER=${COMPOSE_PROJECT_NAME}-ragflow-cpu-1" >> ${GITHUB_ENV}
-          ARTIFACTS_DIR=${RUNNER_WORKSPACE_PREFIX}/artifacts/${GITHUB_REPOSITORY}/${GITHUB_RUN_ID}/${DOC_ENGINE}/${API_PROXY_SCHEME}
+          ARTIFACTS_DIR=${RUNNER_WORKSPACE_PREFIX:-${HOME}}/artifacts/${GITHUB_REPOSITORY}/${GITHUB_RUN_ID}/${DOC_ENGINE}/${API_PROXY_SCHEME}
           echo "ARTIFACTS_DIR=${ARTIFACTS_DIR}" >> ${GITHUB_ENV}
           rm -rf "${ARTIFACTS_DIR}" && mkdir -p "${ARTIFACTS_DIR}"
 
@@ -1326,9 +1373,20 @@ jobs:
         run: |
           sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} down -v || true
           sudo docker ps -a --filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME}" -q | xargs -r sudo docker rm -f
-          sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} up -d
+          # Retry compose up for flaky registry pulls (mysql TLS handshake timeout on shared runner)
+          for i in 1 2 3; do
+            if sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} up -d; then
+              break
+            fi
+            echo "docker compose up attempt $i failed, retrying in 10s..."
+            sleep 10
+            sudo docker compose -f docker/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} pull --ignore-pull-failures || true
+          done
 
       - name: Run sdk tests against Elasticsearch
+        env:
+          ZHIPU_AI_API_KEY: dummy
+          SILICONFLOW_API_KEY: dummy
         if: env.API_PROXY_SCHEME == 'python'
         run: |
           export http_proxy=""; export https_proxy=""; export no_proxy=""; export HTTP_PROXY=""; export HTTPS_PROXY=""; export NO_PROXY=""
@@ -1350,6 +1408,9 @@ jobs:
           source .venv/bin/activate && set -o pipefail; pytest -s --tb=short --level=${HTTP_API_TEST_LEVEL} --junitxml=pytest-es-sdk.xml --cov=sdk/python/ragflow_sdk --cov-branch --cov-report=xml:coverage-es-sdk.xml test/testcases/test_sdk_api 2>&1 | tee es_sdk_test.log
 
       - name: Run New RESTFUL api tests against Elasticsearch
+        env:
+          ZHIPU_AI_API_KEY: dummy
+          SILICONFLOW_API_KEY: dummy
         if: env.API_PROXY_SCHEME != 'web'
         run: |
           export http_proxy=""; export https_proxy=""; export no_proxy=""; export HTTP_PROXY=""; export HTTPS_PROXY=""; export NO_PROXY=""
@@ -1545,86 +1606,3 @@ jobs:
               sudo docker network rm "${guard}" >/dev/null 2>&1 || true
             done
           fi
-
-  ragflow_native_backend:
-    name: ragflow_native_backend
-    # Runs AFTER both per-engine go jobs (which contain the doc-engine-specific
-    # server build + Python RESTFUL correctness runs). The DeepDoc native
-    # backend is doc-engine-independent, so running it ONCE here — instead of
-    # duplicated (and memory-competing) inside each go job — removes the
-    # redundant second -race pass and the concurrent -race OOM risk. Running it
-    # last also keeps a flaky -race OOM from ever obscuring the functional
-    # verdict produced by the go jobs.
-    needs: [ragflow_tests_infinity, ragflow_tests_elasticsearch]
-    # Skip unless DeepDoc native backend code/build/testdata actually changed.
-    if: ${{ (github.event_name != 'pull_request' && github.event_name != 'pull_request_target' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci'))) && needs.ragflow_preflight.outputs.has_native_deepdoc_changes == 'true' }}
-    runs-on: [ "self-hosted", "ragflow-test" ]
-    steps:
-      - name: Ensure workspace ownership
-        run: |
-          echo "Workflow triggered by ${{ github.event_name }}"
-          echo "chown -R ${USER} ${GITHUB_WORKSPACE}" && sudo chown -R ${USER} ${GITHUB_WORKSPACE}
-
-      - name: Check out code
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.sha }}
-          fetch-depth: 0
-          fetch-tags: true
-          allow-unsafe-pr-checkout: true
-
-      - name: Build C++ static library (ragflow native backend)
-        # Produces librag_tokenizer_c_api.a with the re2 symbols renamed into
-        # the ragtokre2_ namespace (so it no longer collides with onnxruntime's
-        # bundled re2 copy at link time). Only the .a is needed for the native
-        # integration tests; the per-engine go jobs build the full server.
-        run: |
-          set -euo pipefail
-          BUILDER_CONTAINER=ragflow_build_${GITHUB_RUN_ID}_native_$(od -An -N4 -tx4 /dev/urandom | tr -d ' ')
-          cleanup_builder() {
-            if [[ -n "${BUILDER_CONTAINER:-}" ]]; then
-              sudo docker rm -f -v "${BUILDER_CONTAINER}" >/dev/null 2>&1 || true
-            fi
-          }
-          trap cleanup_builder EXIT
-
-          TZ=${TZ:-$(readlink -f /etc/localtime | awk -F '/zoneinfo/' '{print $2}')}
-          sudo docker run --privileged -d --name "${BUILDER_CONTAINER}" \
-            -e TZ="${TZ}" \
-            -e UV_INDEX=https://mirrors.aliyun.com/pypi/simple \
-            -v "${PWD}:/ragflow" \
-            -v "${PWD}/internal/binding/cpp/resource:/usr/share/infinity/resource" \
-            infiniflow/infinity_builder:ubuntu22_clang20
-          sudo docker exec "${BUILDER_CONTAINER}" bash -c 'git config --global safe.directory "*" && cd /ragflow && ./build.sh --cpp'
-
-      - name: Cache external DeepDoc testdata
-        # The native backend tests fetch pinned test assets from
-        # infiniflow/ragflow-testdata (see scripts/fetch_deepdoc_testdata.sh).
-        # Cache them across runs, keyed by the pinned ref recorded in
-        # internal/deepdoc/native/testdata.ref so a ref bump invalidates the cache.
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/.cache/ragflow-testdata
-          key: deepdoc-testdata-${{ hashFiles('internal/deepdoc/native/testdata.ref') }}
-
-      - name: Run in-process DeepDoc backend integration tests (correctness + race)
-        # Doc-engine-independent: the same native backend (det/layout/tsr/rec
-        # ONNX models + onnxruntime) is exercised regardless of DOC_ENGINE, so
-        # it is run ONCE here instead of duplicated inside each go job.
-        #
-        # Inside build.sh, the golden/comparison tests run WITHOUT -race (no
-        # race-detection value, ~10x memory tax) and only the concurrency
-        # correctness tests run WITH -race (see run_native_integration_tests).
-        #
-        # XDG_CACHE_HOME is pinned to a workspace path so the test fetch script
-        # and this job's actions/cache step agree on a single, deterministic
-        # location (the self-hosted runner's $HOME is not stable across steps).
-        env:
-          MODEL_DIR: /opt/ragflow-deepdoc-models
-          CGO_ENABLED: '1'
-          DEEPDOC_NATIVE_REQUIRED: '1'
-          XDG_CACHE_HOME: ${{ github.workspace }}/.cache
-        run: |
-          set -euo pipefail
-          ./build.sh --test-native
-

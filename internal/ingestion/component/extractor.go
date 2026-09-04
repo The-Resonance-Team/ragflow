@@ -403,13 +403,11 @@ func getExtractorChatInvoker() extractorChatInvoker {
 	return defaultExtractorChatInvoker
 }
 
-// einoExtractorChatInvoker is the production seam. It dispatches
-// through the entity/models factory (which knows 48 of 56
-// providers) and returns the assistant text via
-// models.EinoChatModel.Generate. An unknown provider falls
-// through to NewDummyModel in the factory's default branch — we
-// surface that as a typed "no driver for %q" wrap so callers can
-// decide whether to retry, route around, or log.
+// einoExtractorChatInvoker is the production seam. It dispatches through the
+// entity/models provider registry and returns the assistant text via
+// models.EinoChatModel.Generate. An unknown provider surfaces as a typed
+// "extractor: resolve driver %q" wrap so callers can decide whether to retry,
+// route around, or log.
 type einoExtractorChatInvoker struct{}
 
 // Chat implements extractorChatInvoker for the production path.

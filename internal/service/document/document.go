@@ -44,6 +44,9 @@ type DocumentService struct {
 	fileDAO             *dao.FileDAO
 	canvasDAO           *dao.UserCanvasDAO
 	api4ConvDAO         *dao.API4ConversationDAO
+	// embedTexts overrides the model-provider encoding in DuplicateScan;
+	// production leaves it nil, unit tests inject a deterministic double.
+	embedTexts embedTextsFunc
 }
 
 // NewDocumentService create document service
