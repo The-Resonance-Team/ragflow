@@ -94,9 +94,20 @@ class DocumentVersionService(CommonService):
         )
 
     @classmethod
-    @DB.connection_context()
-    def replace_document_version(cls, kb, doc, blob, user_id):
-        """Store ``blob`` as a new immutable version of ``doc`` and repoint it.
+    def _as_current(cls, doc, user_id):
+        """Report ``doc`` as already-current, synthesizing a v1 row if it has none."""
+        cls.ensure_current_version_recorded(doc, user_id)
+        current = doc.to_dict()
+        current["current_version_number"] = getattr(doc, "current_version_number", None) or cls.next_version_number(doc.id) - 1
+        return current
+
+    @classmethod
+    def commit_version(cls, kb, doc, blob, user_id, origin="upload"):
+        """The single writer of versioned blobs (ADR-0001).
+
+        Stores ``blob`` under the next immutable key, records the version row
+        with ``origin``, repoints Current Version, and resets parsing so the
+        pipeline re-runs on the new bytes.
 
         Returns ``(updated_doc_dict, noop)``. A noop means the incoming bytes
         are identical to the current version: nothing was written and the
@@ -104,10 +115,7 @@ class DocumentVersionService(CommonService):
         """
         new_hash = xxhash.xxh128(blob).hexdigest()
         if doc.content_hash and doc.content_hash == new_hash:
-            cls.ensure_current_version_recorded(doc, user_id)
-            current = doc.to_dict()
-            current["current_version_number"] = getattr(doc, "current_version_number", None) or cls.next_version_number(doc.id) - 1
-            return current, True
+            return cls._as_current(doc, user_id), True
 
         if not cls.query(document_id=doc.id):
             # Legacy document: capture its current bytes before they lose the pointer.
@@ -141,7 +149,7 @@ class DocumentVersionService(CommonService):
             size=len(blob),
             content_hash=new_hash,
             created_by=user_id,
-            origin="upload",
+            origin=origin,
         )
         DocumentService.update_by_id(doc.id, updates)
 
@@ -151,8 +159,17 @@ class DocumentVersionService(CommonService):
 
     @classmethod
     @DB.connection_context()
+    def replace_document_version(cls, kb, doc, blob, user_id):
+        """Replacement Upload: ``blob`` becomes the next immutable version of ``doc``.
+
+        Returns ``(updated_doc_dict, noop)`` — see :meth:`commit_version`.
+        """
+        return cls.commit_version(kb, doc, blob, user_id, origin="upload")
+
+    @classmethod
+    @DB.connection_context()
     def restore_document_version(cls, kb, doc, version_id, user_id):
-        """Restore ``doc`` to ``version_id`` by copying bytes to a new version.
+        """Restore ``doc`` to ``version_id`` by copying its bytes into a new version.
 
         Returns ``(updated_doc_dict, noop, error)``. A noop means the target
         version is already current — no new row, no re-parse. On error the
@@ -162,55 +179,14 @@ class DocumentVersionService(CommonService):
         if not version:
             return None, False, f"Version {version_id} not found for document {doc.id}."
 
-        # Already-current content — do not create a redundant version.
+        # Already-current content — do not fetch or copy anything.
         if doc.content_hash and version.content_hash and doc.content_hash == version.content_hash:
-            cls.ensure_current_version_recorded(doc, user_id)
-            current = doc.to_dict()
-            # keep pointer consistent for callers that read it
-            current["current_version_number"] = getattr(doc, "current_version_number", None) or cls.next_version_number(doc.id) - 1
-            return current, True, None
+            return cls._as_current(doc, user_id), True, None
 
-        if not cls.query(document_id=doc.id):
-            cls.ensure_current_version_recorded(doc, user_id)
-
-        # ponytail: copy bytes to a fresh immutable key — sharing would break GC invariant
+        # ponytail: copy bytes to a fresh immutable key — sharing would break the delete-CASCADE invariant
         blob = settings.STORAGE_IMPL.get(kb.id, version.location)
         if blob is None:
             return None, False, f"Blob for version {version_id} not found."
 
-        new_hash = xxhash.xxh128(blob).hexdigest()
-        next_n = cls.next_version_number(doc.id)
-        key = version_blob_key(doc.id, next_n, doc.name)
-        settings.STORAGE_IMPL.put(kb.id, key, blob, kb.tenant_id)
-
-        updates = {
-            "location": key,
-            "size": len(blob),
-            "content_hash": new_hash,
-            "current_version_number": next_n,
-            "progress": 0,
-            "progress_msg": "",
-            "process_begin_at": None,
-            "process_duration": 0,
-            "run": TaskStatus.UNSTART.value,
-        }
-        img = thumbnail_img(doc.name, blob)
-        if img is not None:
-            thumbnail_location = f"thumbnail_{doc.id}.png"
-            settings.STORAGE_IMPL.put(kb.id, thumbnail_location, img)
-            updates["thumbnail"] = thumbnail_location
-
-        cls.record_version(
-            document_id=doc.id,
-            version_number=next_n,
-            location=key,
-            size=len(blob),
-            content_hash=new_hash,
-            created_by=user_id,
-            origin="restore",
-        )
-        DocumentService.update_by_id(doc.id, updates)
-
-        updated = doc.to_dict()
-        updated.update(updates)
-        return updated, False, None
+        updated, noop = cls.commit_version(kb, doc, blob, user_id, origin="restore")
+        return updated, noop, None

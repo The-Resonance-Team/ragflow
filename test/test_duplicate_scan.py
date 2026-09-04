@@ -1,6 +1,8 @@
 """Unit test for document duplicate scan (exact hash + embedding)."""
 
-from api.db.services.duplicate_scan_service import cosine_similarity, exact_duplicate_groups
+import pytest
+
+from api.db.services.duplicate_scan_service import NO_EMBEDDING_MODEL, cosine_similarity, exact_duplicate_groups, scan
 
 
 class _Doc:
@@ -56,3 +58,48 @@ def test_exact_groups_empty():
 def test_exact_ignores_empty_hash():
     docs = [_Doc("d1", "a.pdf", ""), _Doc("d2", "b.pdf", ""), _Doc("d3", "c.pdf", "  ")]
     assert exact_duplicate_groups(docs) == []
+
+
+def _dup_docs():
+    return [_Doc("d1", "same text", "abc"), _Doc("d2", "same text", "abc"), _Doc("d3", "other text", "xyz")]
+
+
+def test_scan_exact_only():
+    data = scan(_dup_docs(), "kb-1", mode="exact", threshold=0.97, embed=None)
+    assert data["total_exact_groups"] == 1
+    assert data["near_groups"] == []
+    assert "warning" not in data
+
+
+def test_scan_both_without_embedding_model_warns():
+    data = scan(_dup_docs(), "kb-1", mode="both", threshold=0.97, embed=None)
+    assert data["warning"] == NO_EMBEDDING_MODEL
+    assert data["total_exact_groups"] == 1
+    assert data["near_groups"] == []
+
+
+def test_scan_clusters_near_duplicates_via_injected_embed():
+    vectors = {"same text": [1.0, 0.0], "other text": [0.0, 1.0]}
+
+    def embed(texts):
+        return [vectors[t] for t in texts]
+
+    data = scan(_dup_docs(), "kb-1", mode="both", threshold=0.97, embed=embed)
+    assert data["total_near_groups"] == 1
+    group = data["near_groups"][0]
+    assert set(group["doc_ids"]) == {"d1", "d2"}
+    assert group["max_similarity"] > 0.99
+
+
+def test_scan_embed_failure_warns_in_both_and_raises_in_embedding_mode():
+    def broken_embed(_texts):
+        raise RuntimeError("model down")
+
+    docs = _dup_docs()
+    data = scan(docs, "kb-1", mode="both", threshold=0.97, embed=broken_embed)
+    assert "model down" in data["warning"]
+    assert data["near_groups"] == []
+    assert data["total_exact_groups"] == 1
+
+    with pytest.raises(RuntimeError):
+        scan(docs, "kb-1", mode="embedding", threshold=0.97, embed=broken_embed)
