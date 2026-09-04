@@ -17,6 +17,7 @@
 package models
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -166,6 +167,6 @@ func (f *ModelFactory) CreateModelDriver(providerName string, baseURL map[string
 	case "synthorai":
 		return NewSynthoraiModel(baseURL, urlSuffix), nil
 	default:
-		return NewDummyModel(baseURL, urlSuffix), nil
+		return nil, fmt.Errorf("no model driver implemented for provider %q", providerLower)
 	}
 }
