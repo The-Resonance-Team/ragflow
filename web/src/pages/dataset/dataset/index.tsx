@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useGoToPreviousPageOnEmpty } from '@/hooks/logic-hooks';
+import { useClearSelectionOnPageChange } from '@/hooks/logic-hooks/use-clear-selection-on-page-change';
 import {
   useRowSelection,
   useSelectedIds,
@@ -96,8 +97,15 @@ export default function Dataset() {
     checkValue(filters);
   }, [filters]);
 
-  const { rowSelection, rowSelectionIsEmpty, setRowSelection, selectedCount } =
-    useRowSelection();
+  const {
+    rowSelection,
+    rowSelectionIsEmpty,
+    setRowSelection,
+    selectedCount,
+    clearRowSelection,
+  } = useRowSelection();
+
+  useClearSelectionOnPageChange(pagination, clearRowSelection);
 
   const {
     chunkNum,

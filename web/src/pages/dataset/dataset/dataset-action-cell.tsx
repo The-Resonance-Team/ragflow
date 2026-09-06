@@ -17,7 +17,7 @@ import { Copy, Download, Eye, History, PenLine, Trash2 } from 'lucide-react';
 import { omit } from 'lodash';
 import { useCallback, useState } from 'react';
 import { UseRenameDocumentShowType } from './use-rename-document';
-import { isParserRunning } from './utils';
+import { isDocumentProcessing } from './utils';
 import { DocumentVersionHistoryDrawer } from './document-version-history-drawer';
 import { DuplicateScanDialog } from './duplicate-scan-dialog';
 
@@ -35,8 +35,8 @@ export function DatasetActionCell({
   setRowSelection,
 }: { record: IDocumentInfo } & UseRenameDocumentShowType &
   Pick<UseRowSelectionType, 'setRowSelection'>) {
-  const { id, run, type } = record;
-  const isRunning = isParserRunning(run);
+  const { id, type } = record;
+  const isRunning = isDocumentProcessing(record);
   const isVirtualDocument = type === DocumentType.Virtual;
 
   const { removeDocument } = useRemoveDocument();

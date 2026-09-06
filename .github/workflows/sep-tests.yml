@@ -30,6 +30,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}${{ github.event.action == 'labeled' && github.event.label.name != 'ci' && format('-ignore-{0}', github.run_id) || '' }}
   cancel-in-progress: true
 
+# infiniflow/onnxruntime_go is a fresh org mirror that is not yet present in the
+# public Go checksum database / proxy. Mark it private so Go skips the proxy and
+# sumdb for this path and resolves it directly from GitHub (Go's default
+# GOPROXY keeps the ",direct" fallback). Required for the in-process DeepDoc
+# backend to build against github.com/infiniflow/onnxruntime_go.
+env:
+  GOPRIVATE: github.com/infiniflow/onnxruntime_go
+
 jobs:
   ragflow_preflight:
     name: ragflow_preflight
@@ -45,6 +53,7 @@ jobs:
       has_go_changes: ${{ steps.detect_changes.outputs.has_go_changes }}
       has_python_changes: ${{ steps.detect_changes.outputs.has_python_changes }}
       has_web_changes: ${{ steps.detect_changes.outputs.has_web_changes }}
+      has_native_deepdoc_changes: ${{ steps.detect_changes.outputs.has_native_deepdoc_changes }}
       api_proxy_schemes: ${{ steps.detect_changes.outputs.api_proxy_schemes }}
     steps:
       - name: Ensure workspace ownership
@@ -134,6 +143,13 @@ jobs:
 #            fi
 #          fi
 
+      # lefthook's web-checks hook resolves oxlint/oxfmt through
+      # tools/hooks/web_tools.sh, which needs node and npm on PATH.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Run Lefthook on changed files
         run: |
           set -euo pipefail
@@ -158,6 +174,10 @@ jobs:
             # applying --fix or `git add`, so CI only checks and reports
             # failures instead of rewriting the working tree.
             LEFTHOOK_CHECK_ONLY=1 lefthook run pre-commit --files-from-stdin --no-auto-install < "$changed_files"
+            # web-checks is a separate hook because it is not wired into local
+            # commits: it installs a Node toolchain that only CI has a reason to
+            # pay for. It is always check-only, so it needs no CHECK_ONLY flag.
+            lefthook run web-checks --files-from-stdin --no-auto-install < "$changed_files"
           fi
 
       - name: Set test level
@@ -179,11 +199,13 @@ jobs:
           has_go=false
           has_python=false
           has_web=false
+          has_native_deepdoc=false
 
           if [[ "${GITHUB_EVENT_NAME}" == "schedule" ]]; then
             has_go=true
             has_python=true
             has_web=true
+            has_native_deepdoc=true
           else
             if [[ "${GITHUB_EVENT_NAME}" == "pull_request" || "${GITHUB_EVENT_NAME}" == "pull_request_target" ]]; then
               CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }})
@@ -199,9 +221,11 @@ jobs:
             while IFS= read -r file; do
               case "$file" in
                 # Docker, test, SDK, and workflow changes can alter either server path.
-                Dockerfile|Dockerfile_ci|docker/**|.github/workflows/**|sdk/**)
+                # build.sh also controls the C++/native build, so it must trigger native backend.
+                Dockerfile|Dockerfile_ci|docker/**|.github/workflows/**|sdk/**|build.sh)
                   has_go=true
                   has_python=true
+                  has_native_deepdoc=true
                   ;;
                 test/unit_test/**)
                   has_python=true
@@ -210,7 +234,14 @@ jobs:
                   has_go=true
                   has_python=true
                   ;;
-                *.go|go.mod|go.sum|build.sh)              has_go=true ;;
+                # DeepDoc native backend (Go inference layer, C++ static lib, pinned testdata).
+                # Must come BEFORE the generic "*.go"/"*.py" rules, otherwise deepdoc/*.go
+                # would be caught by "*.go" first and never set has_native_deepdoc.
+                internal/deepdoc/**|internal/binding/cpp/**|internal/deepdoc/native/testdata.ref)
+                  has_go=true
+                  has_native_deepdoc=true
+                  ;;
+                *.go|go.mod|go.sum)                       has_go=true ;;
                 *.py|pyproject.toml|requirements*.txt)    has_python=true ;;
                 web/*)                                    has_web=true ;;
               esac
@@ -220,6 +251,7 @@ jobs:
               has_go=true
               has_python=true
               has_web=true
+              has_native_deepdoc=true
             fi
           fi
 
@@ -238,8 +270,9 @@ jobs:
           echo "has_go_changes=${has_go}"        >> $GITHUB_OUTPUT
           echo "has_python_changes=${has_python}" >> $GITHUB_OUTPUT
           echo "has_web_changes=${has_web}"       >> $GITHUB_OUTPUT
+          echo "has_native_deepdoc_changes=${has_native_deepdoc}" >> $GITHUB_OUTPUT
           echo "api_proxy_schemes=${api_proxy_schemes}" >> $GITHUB_OUTPUT
-          echo "Go: ${has_go}, Python: ${has_python}, Web: ${has_web}, proxy schemes: ${api_proxy_schemes}"
+          echo "Go: ${has_go}, Python: ${has_python}, Web: ${has_web}, Native DeepDoc: ${has_native_deepdoc}, proxy schemes: ${api_proxy_schemes}"
 
       - name: Prepare Python test environment
         if: steps.detect_changes.outputs.has_python_changes == 'true'
@@ -391,6 +424,18 @@ jobs:
           else
             ./build.sh --test -- $PKGS
           fi
+
+      - name: Run ORT deps-download regression guard
+        if: env.API_PROXY_SCHEME == 'go'
+        # Pure-Python, local, needs no API keys or model downloads; guards the
+        # ONNX Runtime extraction logic the in-process (Go) DeepDoc backend build
+        # depends on (notably the version-bump path C2 hardened). Run it in
+        # isolation so the test/testcases conftest (which requires
+        # SILICONFLOW_API_KEY) cannot fail the collection.
+        run: |
+          set -euo pipefail
+          uv sync --python 3.13 --group test --frozen
+          uv run pytest ragflow_deps/test_download_go_deps.py -q
 
       - name: Build ragflow:nightly
         run: |
@@ -1039,6 +1084,18 @@ jobs:
           else
             ./build.sh --test -- $PKGS
           fi
+
+      - name: Run ORT deps-download regression guard
+        if: env.API_PROXY_SCHEME == 'go'
+        # Pure-Python, local, needs no API keys or model downloads; guards the
+        # ONNX Runtime extraction logic the in-process (Go) DeepDoc backend build
+        # depends on (notably the version-bump path C2 hardened). Run it in
+        # isolation so the test/testcases conftest (which requires
+        # SILICONFLOW_API_KEY) cannot fail the collection.
+        run: |
+          set -euo pipefail
+          uv sync --python 3.13 --group test --frozen
+          uv run pytest ragflow_deps/test_download_go_deps.py -q
 
       - name: Build ragflow:nightly
         run: |
