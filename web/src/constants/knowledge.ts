@@ -131,6 +131,7 @@ export enum DocumentParserType {
   Paper = 'paper',
   Book = 'book',
   Laws = 'laws',
+  Clinical = 'clinical',
   Presentation = 'presentation',
   Picture = 'picture',
   One = 'one',

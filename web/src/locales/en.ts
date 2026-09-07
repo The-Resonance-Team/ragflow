@@ -804,6 +804,7 @@ Example: A 1 KB message with 1024-dim embedding uses ~9 KB. The 5 MB default lim
         paper: 'Paper',
         book: 'Book',
         laws: 'Laws',
+        clinical: 'Clinical',
         presentation: 'Presentation',
         picture: 'Picture',
         one: 'One',
@@ -834,6 +835,11 @@ Example: A 1 KB message with 1024-dim embedding uses ~9 KB. The 5 MB default lim
       Legal documents typically follow a rigorous writing format. We use text feature to identify split point.
       </p><p>
       The chunk has a granularity consistent with 'ARTICLE', ensuring all upper level text is included in the chunk.
+      </p>`,
+      clinical: `<p>Supported file formats are <b>DOCX</b>, <b>PDF</b>, <b>TXT</b>.</p><p>
+      Clinical documents such as practice guidelines and reference literature have a hierarchical section structure. We use text features to identify section and recommendation headings as split points.
+      </p><p>
+      Each numbered recommendation is kept as a distinct chunk, with its enclosing section path included so the supporting context is not lost.
       </p>`,
       manual: `<p>Only <b>PDF</b> is supported.</p><p>
       We assume that the manual has a hierarchical section structure, using the lowest section titles as basic unit for chunking documents. Therefore, figures and tables in the same section will not be separated, which may result in larger chunk sizes.

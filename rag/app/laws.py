@@ -165,7 +165,7 @@ class Pdf(PdfParser):
         return [(b["text"], self._line_tag(b, zoomin)) for b in self.boxes], None
 
 
-def chunk(filename, binary=None, from_page=0, to_page=MAXIMUM_PAGE_NUMBER, lang="Chinese", callback=None, **kwargs):
+def chunk(filename, binary=None, from_page=0, to_page=MAXIMUM_PAGE_NUMBER, lang="Chinese", callback=None, heading_level=2, **kwargs):
     """
     Supported file formats are docx, pdf, txt.
     """
@@ -265,7 +265,7 @@ def chunk(filename, binary=None, from_page=0, to_page=MAXIMUM_PAGE_NUMBER, lang=
 
     make_colon_as_title(sections)
     bull = bullets_category(sections)
-    res = tree_merge(bull, sections, 2)
+    res = tree_merge(bull, sections, heading_level)
 
     if not res:
         callback(0.99, "No chunk parsed out.")
