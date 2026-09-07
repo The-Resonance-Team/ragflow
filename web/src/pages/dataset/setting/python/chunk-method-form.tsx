@@ -27,6 +27,7 @@ const ConfigurationComponentMap = {
   [DocumentParserType.Paper]: PaperConfiguration,
   [DocumentParserType.Book]: BookConfiguration,
   [DocumentParserType.Laws]: LawsConfiguration,
+  [DocumentParserType.Clinical]: LawsConfiguration,
   [DocumentParserType.Presentation]: PresentationConfiguration,
   [DocumentParserType.Picture]: PictureConfiguration,
   [DocumentParserType.One]: OneConfiguration,
