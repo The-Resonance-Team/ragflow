@@ -142,6 +142,7 @@ export const useSelectParserList = (): Array<{
       { value: 'paper', label: t('knowledgeConfiguration.parserLabel.paper') },
       { value: 'book', label: t('knowledgeConfiguration.parserLabel.book') },
       { value: 'laws', label: t('knowledgeConfiguration.parserLabel.laws') },
+      { value: 'clinical', label: t('knowledgeConfiguration.parserLabel.clinical') },
       {
         value: 'presentation',
         label: t('knowledgeConfiguration.parserLabel.presentation'),

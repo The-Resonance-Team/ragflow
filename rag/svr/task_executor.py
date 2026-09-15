@@ -81,7 +81,7 @@ from api.db.services.file2document_service import File2DocumentService
 from api.db.joint_services.tenant_model_service import get_tenant_default_model_by_type, resolve_model_config, get_model_config_by_id
 from common.versions import get_ragflow_version
 from api.db.db_models import close_connection
-from rag.app import laws, paper, presentation, manual, qa, table, book, resume, picture, naive, one, audio, email, tag
+from rag.app import laws, paper, presentation, manual, qa, table, book, resume, picture, naive, one, audio, email, tag, clinical
 from rag.nlp import search, rag_tokenizer, add_positions, DEFAULT_DELIMITER
 
 from common.token_utils import num_tokens_from_string, truncate
@@ -125,6 +125,7 @@ FACTORY = {
     ParserType.EMAIL.value: email,
     ParserType.KG.value: naive,
     ParserType.TAG.value: tag,
+    ParserType.CLINICAL.value: clinical,
 }
 
 TASK_TYPE_TO_PIPELINE_TASK_TYPE = {

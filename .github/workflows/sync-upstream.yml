@@ -8,12 +8,14 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 jobs:
   sync:
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     env:
       BRANCH: sync/upstream-main
+      REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,7 +39,10 @@ jobs:
           echo "skip=$([ "$COUNT" -eq 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
       - name: Merge into sync branch
+        id: merge
         if: steps.check.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_PAT || github.token }}
         run: |
           if git ls-remote --exit-code --heads origin "$BRANCH"; then
             git fetch origin "$BRANCH"
@@ -45,20 +50,33 @@ jobs:
           else
             git switch -c "$BRANCH"
           fi
-          git merge upstream/main --no-edit
-          git push origin "$BRANCH"
+          if git merge upstream/main --no-edit; then
+            git push origin "$BRANCH"
+          else
+            CONFLICTED=$(git diff --name-only --diff-filter=U)
+            git merge --abort || true
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+            BODY=$(printf 'Upstream main is %s commits ahead and cannot merge cleanly into `%s`.\n\nConflicted files:\n\n```\n%s\n```\n\nResolve the conflicts manually and open a sync PR.' "${{ steps.check.outputs.count }}" "$BRANCH" "$CONFLICTED")
+            EXISTING=$(gh issue list --repo "$REPO" --state open --search 'Upstream sync conflict in:title' --json number --jq '.[0].number // empty')
+            if [ -n "$EXISTING" ]; then
+              gh issue comment "$EXISTING" --repo "$REPO" --body "$BODY"
+            else
+              gh issue create --repo "$REPO" --title "Upstream sync conflict" --body "$BODY"
+            fi
+            echo "::notice::Upstream sync conflicted; see the 'Upstream sync conflict' issue. Manual sync required."
+          fi
 
       - name: Open PR
-        if: steps.check.outputs.skip != 'true'
+        if: steps.check.outputs.skip != 'true' && steps.merge.outputs.conflict != 'true'
         env:
           GH_TOKEN: ${{ secrets.SYNC_PAT || github.token }}
         run: |
           sleep 10
-          EXISTING=$(gh pr list --state open --json number,headRefName \
+          EXISTING=$(gh pr list --repo "$REPO" --state open --json number,headRefName \
             --jq "[.[] | select(.headRefName == \"$BRANCH\")] | length")
           if [ "$EXISTING" -eq 0 ]; then
             for i in 1 2 3; do
-              gh pr create \
+              gh pr create --repo "$REPO" \
                 --base main \
                 --head "$BRANCH" \
                 --title "Sync upstream main" \

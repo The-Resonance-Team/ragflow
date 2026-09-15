@@ -1,0 +1,17 @@
+# See docs/adr/0003-vendored-infinity-runtime-base.md.
+ARG TARGETARCH
+FROM infiniflow/infinity:v0.7.3-x64-v3 AS source-amd64
+FROM infiniflow/infinity:v0.7.3-arm64 AS source-arm64
+FROM source-${TARGETARCH} AS source
+
+FROM ubuntu:24.04
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates curl libatomic1 && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=source /usr/bin/infinity /usr/bin/infinity
+COPY --from=source /usr/share/infinity /usr/share/infinity
+
+EXPOSE 23817/tcp 23820/tcp 5432/tcp
+ENTRYPOINT ["/usr/bin/infinity"]
