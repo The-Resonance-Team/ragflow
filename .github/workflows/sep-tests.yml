@@ -47,7 +47,7 @@ jobs:
     permissions:
       actions: write
       contents: read
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     outputs:
       http_api_test_level: ${{ steps.test_level.outputs.http_api_test_level }}
       has_go_changes: ${{ steps.detect_changes.outputs.has_go_changes }}
@@ -299,7 +299,7 @@ jobs:
     needs: ragflow_preflight
     # ponytail: fork skips heavy integration on push/schedule; upstream validates main, fork via PR ci label + preflight
     if: ${{ (github.repository == 'infiniflow/ragflow' && github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci')) }}
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       max-parallel: 1
@@ -330,8 +330,6 @@ jobs:
           allow-unsafe-pr-checkout: true
 
       - name: Build ragflow go server
-        env:
-          PATH: /home/xiro/.local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/xiro/.local/bin
         if: env.API_PROXY_SCHEME == 'go'
         run: |
           set -euo pipefail
@@ -356,7 +354,6 @@ jobs:
       - name: Run Go unit tests
         env:
           TZ: Asia/Shanghai
-          PATH: /home/xiro/.local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/xiro/.local/bin
         if: env.API_PROXY_SCHEME == 'go'
         # Runs after `./build.sh --go`, which guarantees the C++ static
         # library (librag_tokenizer_c_api.a) is present on disk. The Go
@@ -959,7 +956,7 @@ jobs:
     needs: ragflow_preflight
     # ponytail: fork skips heavy integration on push/schedule; upstream validates main, fork via PR ci label + preflight
     if: ${{ (github.repository == 'infiniflow/ragflow' && github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci') && (github.event.action != 'labeled' || github.event.label.name == 'ci')) }}
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       max-parallel: 1
@@ -990,8 +987,6 @@ jobs:
           allow-unsafe-pr-checkout: true
 
       - name: Build ragflow go server
-        env:
-          PATH: /home/xiro/.local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/xiro/.local/bin
         if: env.API_PROXY_SCHEME == 'go'
         run: |
           set -euo pipefail
@@ -1016,7 +1011,6 @@ jobs:
       - name: Run Go unit tests
         env:
           TZ: Asia/Shanghai
-          PATH: /home/xiro/.local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/xiro/.local/bin
         if: env.API_PROXY_SCHEME == 'go'
         # Runs after `./build.sh --go`, which guarantees the C++ static
         # library (librag_tokenizer_c_api.a) is present on disk. The Go
