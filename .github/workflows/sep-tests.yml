@@ -71,7 +71,7 @@ jobs:
           allow-unsafe-pr-checkout: true
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v10
+        uses: astral-sh/setup-uv@v10.1.0
 
       - name: Check workflow duplication
         if: ${{ !cancelled() && !failure() }}
@@ -336,7 +336,7 @@ jobs:
           allow-unsafe-pr-checkout: true
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v10
+        uses: astral-sh/setup-uv@v10.1.0
 
       - name: Build ragflow go server
         if: env.API_PROXY_SCHEME == 'go'
@@ -996,7 +996,7 @@ jobs:
           allow-unsafe-pr-checkout: true
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v10
+        uses: astral-sh/setup-uv@v10.1.0
 
       - name: Build ragflow go server
         if: env.API_PROXY_SCHEME == 'go'
