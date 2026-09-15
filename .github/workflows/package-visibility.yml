@@ -1,0 +1,34 @@
+name: package-visibility
+
+on:
+  workflow_dispatch:
+
+permissions:
+  packages: write
+  contents: read
+
+jobs:
+  publicize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Try GITHUB_TOKEN
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method PATCH /orgs/The-Resonance-Team/packages/container/ragflow -f visibility=public \
+            || echo "GITHUB_TOKEN: failed"
+
+      - name: Try SYNC_PAT
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_PAT }}
+        run: |
+          gh api --method PATCH /orgs/The-Resonance-Team/packages/container/ragflow -f visibility=public \
+            || echo "SYNC_PAT: failed"
+
+      - name: Verify anonymous pull
+        run: |
+          if docker manifest inspect ghcr.io/the-resonance-team/ragflow:latest >/dev/null 2>&1; then
+            echo "PACKAGE PUBLIC"
+          else
+            echo "PACKAGE STILL PRIVATE"
+          fi
