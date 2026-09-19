@@ -140,7 +140,7 @@ class TestDocumentsUpload:
         assert documents[0].dataset_id == dataset.id, str(documents)
         assert documents[0].name == fp.name, str(documents)
 
-    @pytest.mark.p2
+    @pytest.mark.p3
     def test_same_file_repeat(self, add_dataset_func, tmp_path):
         dataset = add_dataset_func
         fp = create_txt_file(tmp_path / "ragflow_test.txt")
@@ -175,7 +175,7 @@ class TestDocumentsUpload:
         assert document.dataset_id == dataset.id, str(document)
         assert document.name == fp.name, str(document)
 
-    @pytest.mark.p1
+    @pytest.mark.p3
     def test_multiple_files(self, client, add_dataset_func, tmp_path):
         dataset = add_dataset_func
         expected_document_count = 20

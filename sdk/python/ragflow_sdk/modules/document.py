@@ -14,10 +14,12 @@
 #  limitations under the License.
 #
 
-import json
+import logging
 
 from .base import Base
 from .chunk import Chunk
+
+logger = logging.getLogger(__name__)
 
 
 class Document(Base):
@@ -65,16 +67,18 @@ class Document(Base):
     def download(self, version_id: str | None = None):
         params = {"version_id": version_id} if version_id else None
         res = self.get(f"/datasets/{self.dataset_id}/documents/{self.id}", params=params)
-        error_keys = set(["code", "message"])
+        content_disposition = res.headers.get("Content-Disposition", "")
+        if content_disposition.lstrip().lower().startswith("attachment"):
+            logger.debug("Document.download returning attachment content dataset_id=%s document_id=%s", self.dataset_id, self.id)
+            return res.content
         try:
             response = res.json()
-            actual_keys = set(response.keys())
-            if actual_keys == error_keys:
+            if isinstance(response, dict) and "code" in response and response["code"] != 0:
                 raise Exception(response.get("message"))
-            else:
-                return res.content
-        except json.JSONDecodeError:
-            return res.content
+        except ValueError:
+            pass
+        logger.debug("Document.download returning non-attachment content dataset_id=%s document_id=%s", self.dataset_id, self.id)
+        return res.content
 
     def list_versions(self):
         res = self.get(f"/datasets/{self.dataset_id}/documents/{self.id}/versions")

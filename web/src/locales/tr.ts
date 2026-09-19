@@ -124,7 +124,7 @@ export default {
       chat: 'Sohbet',
       register: 'Kayıt ol',
       signin: 'Giriş yap',
-      home: 'Ana Sayfa',
+      home: 'Ana sayfa',
       setting: 'Kullanıcı ayarları',
       logout: 'Çıkış yap',
       fileManager: 'Dosya',
@@ -612,9 +612,9 @@ Prosedürel Bellek: Öğrenilen beceriler, alışkanlıklar ve otomatik prosedü
       html4excel: "Excel'i HTML'ye dönüştür",
       html4excelTip: `Genel parçalama yöntemi ile kullanın. Devre dışı bırakıldığında, datasetteki elektronik tablolar (XLSX veya XLS(Excel 97-2003)) anahtar-değer çiftlerine ayrıştırılır. Etkinleştirildiğinde HTML tablolarına ayrıştırılır; orijinal tabloda 12'den fazla satır varsa her 12 satırda bölünür. Ayrıntılar için bkz. https://ragflow.io/docs/dataset_configuration#other-format-processing-configuration.`,
       autoKeywords: 'Otomatik anahtar kelime',
-      autoKeywordsTip: `Her parça için otomatik olarak N anahtar kelime çıkarır ve o anahtar kelimeleri içeren sorgular için sıralamalarını artırır. 'Yapılandırma'da belirtilen indeksleme modeli tarafından ekstra tokenlar tüketileceğini unutmayın. Bir parçaya eklenen anahtar kelimeleri parça listesinden kontrol edebilir veya güncelleyebilirsiniz. Ayrıntılar için bkz. https://ragflow.io/docs/dev/autokeyword_autoquestion.`,
+      autoKeywordsTip: `Her parça için otomatik olarak N anahtar kelime çıkarır ve o anahtar kelimeleri içeren sorgular için sıralamalarını artırır. 'Yapılandırma'da belirtilen indeksleme modeli tarafından ekstra tokenlar tüketileceğini unutmayın. Bir parçaya eklenen anahtar kelimeleri parça listesinden kontrol edebilir veya güncelleyebilirsiniz. Ayrıntılar için bkz. https://ragflow.io/docs/dataset_configuration#content-enhancement-configuration.`,
       autoQuestions: 'Otomatik soru',
-      autoQuestionsTip: `Her parça için otomatik olarak N soru çıkarır ve o soruları içeren sorgular için sıralamalarını artırır. Bir parçaya eklenen soruları parça listesinden kontrol edebilir veya güncelleyebilirsiniz. Bir hata oluşursa bu özellik parçalama işlemini bozmaz, ancak orijinal parçaya boş bir sonuç ekleyebilir. 'Yapılandırma'da belirtilen indeksleme modeli tarafından ekstra tokenlar tüketileceğini unutmayın. Ayrıntılar için bkz. https://ragflow.io/docs/dev/autokeyword_autoquestion.`,
+      autoQuestionsTip: `Her parça için otomatik olarak N soru çıkarır ve o soruları içeren sorgular için sıralamalarını artırır. Bir parçaya eklenen soruları parça listesinden kontrol edebilir veya güncelleyebilirsiniz. Bir hata oluşursa bu özellik parçalama işlemini bozmaz, ancak orijinal parçaya boş bir sonuç ekleyebilir. 'Yapılandırma'da belirtilen indeksleme modeli tarafından ekstra tokenlar tüketileceğini unutmayın. Ayrıntılar için bkz. https://ragflow.io/docs/dataset_configuration#content-enhancement-configuration.`,
       autoTags: 'Otomatik etiketler',
       redo: 'Mevcut {{chunkNum}} parçayı temizlemek istiyor musunuz?',
       setMetaData: 'Meta veri ayarla',
@@ -905,7 +905,7 @@ Prosedürel Bellek: Öğrenilen beceriler, alışkanlıklar ve otomatik prosedü
 `,
       useRaptor: 'RAPTOR',
       useRaptorTip:
-        "RAPTOR çok adımlı soru-cevap görevleri için kullanılabilir. Dosyalar sayfasına gidin, Oluştur > RAPTOR'a tıklayarak etkinleştirin. Ayrıntılar için bkz. https://ragflow.io/docs/dev/enable_raptor.",
+        "RAPTOR çok adımlı soru-cevap görevleri için kullanılabilir. Dosyalar sayfasına gidin, Oluştur > RAPTOR'a tıklayarak etkinleştirin. Ayrıntılar için bkz. https://ragflow.io/docs/knowledge_compilation/built_in_templates_and_dedicated_configuration#tree.",
       prompt: 'İstem',
       promptTip:
         'Görevi tanımlamak, nasıl yanıt vermesi gerektiğini belirtmek ve diğer çeşitli gereksinimleri belirlemek için sistem istemini kullanın. Sistem istemi genellikle LLM için çeşitli veri girdileri olarak hizmet eden anahtarlarla (değişkenlerle) birlikte kullanılır. Kullanacağınız anahtarları göstermek için eğik çizgi `/` veya (x) düğmesini kullanın.',
@@ -960,7 +960,7 @@ Bu otomatik etiketleme özelliği, mevcut datasete alanına özgü bilgi katman�
       addTag: 'Etiket ekle',
       useGraphRag: 'Bilgi grafiği',
       useGraphRagTip:
-        'İç içe geçmiş mantık içeren çok adımlı soru-cevabı geliştirmek için mevcut dataset dosya parçaları üzerinde bir bilgi grafiği oluşturun. Ayrıntılar için bkz. https://ragflow.io/docs/dev/construct_knowledge_graph.',
+        'İç içe geçmiş mantık içeren çok adımlı soru-cevabı geliştirmek için mevcut dataset dosya parçaları üzerinde bir bilgi grafiği oluşturun. Ayrıntılar için bkz. https://ragflow.io/docs/knowledge_compilation/built_in_templates_and_dedicated_configuration#graph.',
       graphRagMethod: 'Yöntem',
       graphRagMethodTip: `
       Hafif: (Varsayılan) Varlıkları ve ilişkileri çıkarmak için github.com/HKUDS/LightRAG tarafından sağlanan istemler kullanılır.</br>
@@ -1325,7 +1325,7 @@ Bu otomatik etiketleme özelliği, mevcut datasete alanına özgü bilgi katman�
       dataSourceFieldContainerUrl: "Konteyner URL'si",
       dataSourceFieldSasToken: "SAS Token'ı",
       dataSourceFieldContainerName: 'Konteyner Adı',
-      dataSourceFieldPrefixOptional: 'Ön Ek (isteğe bağlı)',
+      dataSourceFieldPrefixOptional: 'Ön ek (isteğe bağlı)',
       dataSourceFieldFeedUrl: "Besleme URL'si",
       dataSourceFieldGcsAccessKeyId: 'GCS Erişim Anahtarı Kimliği',
       dataSourceFieldGcsSecretAccessKey: 'GCS Gizli Erişim Anahtarı',
@@ -1377,7 +1377,7 @@ Bu otomatik etiketleme özelliği, mevcut datasete alanına özgü bilgi katman�
       dataSourceFieldGithubAccessToken: "GitHub Erişim Token'ı",
       dataSourceFieldHost: 'Ana bilgisayar',
       dataSourceFieldPort: 'Bağlantı noktası',
-      dataSourceFieldMailboxes: 'Posta Kutuları',
+      dataSourceFieldMailboxes: 'Posta kutuları',
       dataSourceFieldPollRange: 'Yoklama Aralığı',
       dataSourceFieldZendeskDomain: 'Zendesk Alan Adı',
       dataSourceFieldZendeskEmail: 'Zendesk E-postası',
@@ -1454,8 +1454,8 @@ Bu otomatik etiketleme özelliği, mevcut datasete alanına özgü bilgi katman�
       dataSourceFieldJiraPassword: 'Jira Şifresi',
       dataSourceFieldUseScopedToken: 'Kapsamlı Token Kullan',
       dataSourceFieldRegion: 'Bölge',
-      dataSourceFieldPrefix: 'Ön Ek',
-      dataSourceFieldAuthentication: 'Kimlik Doğrulama',
+      dataSourceFieldPrefix: 'Ön ek',
+      dataSourceFieldAuthentication: 'Kimlik doğrulama',
       dataSourceFieldAwsAccessKeyId: 'AWS Erişim Anahtarı Kimliği',
       dataSourceFieldAwsSecretAccessKey: 'AWS Gizli Erişim Anahtarı',
       dataSourceFieldRoleArn: 'Rol ARN',
@@ -1470,7 +1470,7 @@ Bu otomatik etiketleme özelliği, mevcut datasete alanına özgü bilgi katman�
       dataSourceFieldDirectoryPath: 'Dizin Yolu',
       dataSourceFieldBitbucketAccountEmail: 'Bitbucket Hesap E-postası',
       dataSourceFieldBitbucketApiToken: "Bitbucket API Token'ı",
-      dataSourceFieldWorkspace: 'Çalışma Alanı',
+      dataSourceFieldWorkspace: 'Çalışma alanı',
       dataSourceFieldRepositorySlugs: 'Depo Kısa Adları',
       dataSourceFieldProjects: 'Projeler',
       dataSourceIncludePullRequests: 'Çekme İsteklerini Dahil Et',
@@ -1504,7 +1504,7 @@ Bu otomatik etiketleme özelliği, mevcut datasete alanına özgü bilgi katman�
       dataSourceOptionSpecificDirectory: 'Belirli Dizin',
       dataSourceOptionRepositories: 'Depolar',
       dataSourceOptionProjects: 'Projeler',
-      dataSourceOptionWorkspace: 'Çalışma Alanı',
+      dataSourceOptionWorkspace: 'Çalışma alanı',
       dataSourceValidationFieldRequired: '{{label}} zorunludur',
       dataSourceValidationMinOne: '{{label}} en az 1 olmalıdır',
       dataSourceConfluenceEverythingTip:
@@ -1624,6 +1624,8 @@ Bu otomatik etiketleme özelliği, mevcut datasete alanına özgü bilgi katman�
         "Bu kuruluşta token'ın görebildiği her depo dizinlenecektir.",
       azureDevOpsContentTypesTip:
         'Neyin dizinleneceğini seçin: kaynak dosyalar, çekme istekleri veya her ikisi.',
+      sitemapDescription:
+        'Listelenen web sayfalarını ve PDF belgelerini bilgi tabanınıza eşitlemek için herkese açık bir sitemap.xml bağlayın.',
       azure_devopsDescription:
         "Depo dosyalarını ve pull request'leri senkronize etmek için Azure DevOps'u bağlayın.",
       bitbucketDescription:
@@ -2428,6 +2430,14 @@ Bu otomatik etiketleme özelliği, mevcut datasete alanına özgü bilgi katman�
         'Bu düğümü ve alt düğümlerini silmek istediğinizden emin misiniz?',
       representationEmpty: 'Kullanılabilir artifact şablonu yok.',
       representationUnsupported: 'Bu gösterim türü henüz desteklenmiyor.',
+      claimsPanelTitle: 'İddia · {{name}}',
+      claimsTotal: 'Toplam {{count}}',
+      claimsLoading: 'İddialar yükleniyor…',
+      claimsEmpty: 'Bu küme için iddia çıkarılmadı.',
+      claimsLoadMore: 'Daha fazla yükle ({{remaining}} kaldı)',
+      claimsMoreEvidence: '+{{count}} kanıt daha',
+      claimsCollapseEvidence: 'Daha az göster',
+      claimsNodeDetail: 'Ayrıntılar',
     },
     message: {
       registered: 'Kayıt olundu!',
@@ -3692,7 +3702,7 @@ Temel Talimatlar:
       changeStepModalConfirmText: 'Yine de Geç',
       changeStepModalCancelText: 'İptal',
       unlinkPipelineModalTitle: 'Alım hattı bağlantısını kes',
-      unlinkPipelineModalConfirmText: 'Bağlantıyı Kes',
+      unlinkPipelineModalConfirmText: 'Bağlantıyı kes',
       unlinkPipelineModalContent: `
       <p>Bağlantı kesildikten sonra bu Dataset artık geçerli alım hattına bağlı olmayacak.</p>
       <p>Zaten ayrıştırılmakta olan dosyalar tamamlanana kadar devam edecek</p>
@@ -3700,7 +3710,7 @@ Temel Talimatlar:
       <p>Devam etmek istediğinizden emin misiniz?</p>`,
       unlinkSourceModalTitle: 'Veri kaynağı bağlantısını kes',
       unlinkSourceModalContent: `<p>Bu veri kaynağının bağlantısını kesmek istediğinizden emin misiniz?</p>`,
-      unlinkSourceModalConfirmText: 'Bağlantıyı Kes',
+      unlinkSourceModalConfirmText: 'Bağlantıyı kes',
     },
     datasetOverview: {
       downloadTip: 'Veri kaynaklarından indirilen dosyalar.',
