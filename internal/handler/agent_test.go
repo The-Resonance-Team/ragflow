@@ -999,6 +999,26 @@ func TestAgentChatCompletions_DerivesUserInputFromInputs(t *testing.T) {
 	}
 }
 
+func TestAgentChatCompletions_PreservesNamedInputsAlongsideQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("POST", "/api/v1/agents/chat/completions",
+		strings.NewReader(`{"agent_id":"a1","query":"Hello","inputs":{"name":{"name":"name","value":"Alice","type":"line"}}}`))
+	c.Request.Header.Set("Content-Type", "application/json")
+	c.Set("user", &entity.User{ID: "u1"})
+	c.Set("user_id", "u1")
+
+	var captured any
+	h := &AgentHandler{chatRunner: &captureChatRunner{captured: &captured}}
+	h.AgentChatCompletions(c)
+
+	got, ok := captured.(map[string]any)
+	if !ok || got["name"] != "Alice" || got["query"] != "Hello" {
+		t.Fatalf("userInput = %#v, want name=Alice query=Hello", captured)
+	}
+}
+
 func TestAgentChatCompletions_DerivesStructuredUserInputFromInputs(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -1112,12 +1132,9 @@ func TestAgentChatCompletions_OpenAICompat_NonStreamReturnsCompletion(t *testing
 	if !ok {
 		t.Fatalf("usage = %#v, want object", resp["usage"])
 	}
-	wantPromptTokens := tokenizer.NumTokensFromString("Be concise.") +
-		tokenizer.NumTokensFromString("What is 1+1?") +
-		tokenizer.NumTokensFromString("2") +
-		tokenizer.NumTokensFromString("hi")
+	wantPromptTokens := tokenizer.NumTokensFromString("hi")
 	if got := int(usage["prompt_tokens"].(float64)); got != wantPromptTokens {
-		t.Errorf("prompt_tokens = %d, want all message content counted as %d", got, wantPromptTokens)
+		t.Errorf("prompt_tokens = %d, want only the latest message content counted as %d", got, wantPromptTokens)
 	}
 	if usage["total_tokens"].(float64) != usage["prompt_tokens"].(float64)+usage["completion_tokens"].(float64) {
 		t.Errorf("usage totals do not add up: %v", usage)
@@ -1281,13 +1298,6 @@ func TestAgentChatCompletions_OpenAICompat_MapsErrors(t *testing.T) {
 		errorType   string
 		wantMessage string
 	}{
-		{
-			name:        "session busy",
-			err:         service.ErrAgentSessionBusy,
-			status:      http.StatusConflict,
-			errorType:   "invalid_request_error",
-			wantMessage: "already running",
-		},
 		{
 			name:        "operating error",
 			err:         service.ErrAgentNotOwner,

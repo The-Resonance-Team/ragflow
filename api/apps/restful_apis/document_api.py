@@ -76,6 +76,7 @@ from api.utils.validation_utils import (
 
 from common import settings
 from common.constants import ParserType, RetCode, TaskStatus, SANDBOX_ARTIFACT_BUCKET
+from common.llm_request_context import normalize_llm_user_id
 from common.metadata_utils import convert_conditions, meta_filter, turn2jsonschema
 from common.misc_utils import get_uuid, thread_pool_exec, thread_pool_exec_long_time
 from api.utils.file_utils import filename_type, thumbnail
@@ -95,12 +96,6 @@ def _normalize_legacy_raptor_config(req: dict) -> None:
         return
 
     normalized_fields = []
-    legacy_ext = raptor.pop("ext", None)
-    if legacy_ext is not None:
-        normalized_fields.append("ext")
-        if isinstance(legacy_ext, dict) and "clustering_threshold" in legacy_ext and "clustering_threshold" not in raptor:
-            raptor["clustering_threshold"] = legacy_ext["clustering_threshold"]
-            normalized_fields.append("ext.clustering_threshold")
     for field in ("threshold", "clustering_method", "tree_builder"):
         if field in raptor:
             raptor.pop(field)
@@ -120,13 +115,10 @@ def _normalize_parser_config_compilation_template_group_ids(parser_config) -> bo
 
     if not isinstance(parser_config, dict):
         return False
-    if "compilation_template_group_id" not in parser_config and not (isinstance(parser_config.get("ext"), dict) and "compilation_template_group_id" in parser_config["ext"]):
+    if "compilation_template_group_id" not in parser_config:
         return False
     group_ids = _parser_config_compilation_template_group_ids(parser_config)
     parser_config["compilation_template_group_id"] = group_ids
-    ext = parser_config.get("ext")
-    if isinstance(ext, dict) and "compilation_template_group_id" in ext:
-        ext["compilation_template_group_id"] = group_ids
     return True
 
 
@@ -296,7 +288,6 @@ async def update_document(tenant_id, dataset_id, document_id):
     # Changing the document-scoped knowledge compilation template group must
     # not remove the existing chunks.
     if update_doc_req.parser_config:
-        req["parser_config"].update(update_doc_req.parser_config.ext)
         _normalize_parser_config_compilation_template_group_ids(req["parser_config"])
         DocumentService.update_parser_config(doc.id, req["parser_config"])
 
@@ -1058,7 +1049,7 @@ def _get_docs_with_request(req, dataset_id: str):
     except ValueError as e:
         return RetCode.ARGUMENT_ERROR, str(e), [], 0
     if doc_id and len(doc_ids) > 0:
-        return RetCode.DATA_ERROR, f"Should not provide both 'id':{doc_id} and 'ids'{doc_ids}"
+        return RetCode.DATA_ERROR, f"Should not provide both 'id':{doc_id} and 'ids'{doc_ids}", [], 0
     if len(doc_ids) > 0:
         doc_ids_filter = doc_ids
 
@@ -1678,12 +1669,12 @@ def _run_sync(user_id: str, req):
                 doc.parser_config["metadata"] = kb.parser_config.get("metadata", {})
                 DocumentService.update_parser_config(doc.id, doc.parser_config)
             doc_dict = doc.to_dict()
-            DocumentService.run(doc_tenant_id, doc_dict, kb_table_num_map)
+            DocumentService.run(doc_tenant_id, doc_dict, kb_table_num_map, user_id=normalize_llm_user_id(req.get("user_id")))
 
     return None, None
 
 
-def _reset_and_parse_documents(tenant_id, doc_ids, errors):
+def _reset_and_parse_documents(tenant_id, doc_ids, errors, user_id=None):
     """Reset parse state and queue fresh parses for the given documents.
 
     Shared by the re-parse endpoint and replacement uploads: cancels pending
@@ -1717,7 +1708,7 @@ def _reset_and_parse_documents(tenant_id, doc_ids, errors):
             settings.docStoreConn.delete({"doc_id": doc_id}, search.index_name(tenant_id), doc.kb_id)
 
         doc_dict = doc.to_dict()
-        DocumentService.run(tenant_id, doc_dict, kb_table_num_map)
+        DocumentService.run(tenant_id, doc_dict, kb_table_num_map, user_id=user_id)
         success_count += 1
         success_ids.append(doc_id)
     return success_count, success_ids
@@ -1757,6 +1748,9 @@ async def parse_documents(tenant_id, dataset_id):
               items:
                 type: string
               description: List of document IDs to parse.
+            user_id:
+              type: string
+              description: Optional end-user identifier forwarded as the OpenAI user field on embedding requests.
     responses:
       200:
         description: Successful operation.
@@ -1773,6 +1767,7 @@ async def parse_documents(tenant_id, dataset_id):
         return get_error_data_result(message="`document_ids` is required")
     if len(document_ids) == 0:
         return get_error_data_result(message="`document_ids` is required")
+    llm_user_id = normalize_llm_user_id(req.get("user_id"))
 
     # Check for duplicate document IDs
     unique_doc_ids, duplicate_messages = check_duplicate_ids(document_ids, "document")
@@ -1797,7 +1792,7 @@ async def parse_documents(tenant_id, dataset_id):
     try:
 
         def _run_sync():
-            success_count, _success_ids = _reset_and_parse_documents(tenant_id, valid_doc_ids, errors)
+            success_count, _success_ids = _reset_and_parse_documents(tenant_id, valid_doc_ids, errors, user_id=llm_user_id)
             result = {"success_count": success_count}
             if errors:
                 result["errors"] = errors
@@ -1951,7 +1946,7 @@ def _parse_document_image_id(image_id: str) -> tuple[str, str] | None:
         ``(bucket, object_key)`` when valid, otherwise ``None``.
     """
     parts = image_id.split("-", 1)
-    if len(parts) != 2 or not parts[0] or not parts[1]:
+    if len(parts) != 2 or not re.fullmatch(r"[0-9a-fA-F]{32}", parts[0]) or not parts[1]:
         return None
     return parts[0], parts[1]
 
@@ -2012,7 +2007,8 @@ async def get_document_image(image_id):
             return get_data_error_result(message="Image not found.")
         bkt, nm = parsed
         data = await thread_pool_exec(settings.STORAGE_IMPL.get, bkt, nm)
-        if not data:
+        if data is None:
+            logging.warning("get_document_image: storage miss image_id: %s, bucket: %s, key: %s", image_id, bkt, nm)
             return get_data_error_result(message="Image not found.")
         content_type = _content_type_for_document_image(nm, data)
         response = await make_response(data)
@@ -2272,8 +2268,9 @@ async def get(doc_id):
         else:
             b, n = File2DocumentService.get_storage_address(doc_id=doc_id)
             data = await thread_pool_exec(settings.STORAGE_IMPL.get, b, n)
-        if not data:
-            return get_data_error_result(message="This file is empty.")
+        if data is None:
+            logging.warning("get document preview: storage miss doc_id: %s, bucket: %s, key: %s", doc_id, b, n)
+            return get_data_error_result(message="Document not found!")
         response = await make_response(data)
 
         ext = re.search(r"\.([^.]+)$", doc.name.lower())
